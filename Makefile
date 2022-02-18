@@ -7,12 +7,13 @@ CPPFLAGS = -D_NO_GUI_ -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++
            -m64 -pipe
 CPPLIBS =
 
-OBJFILES = src/control_unit.o \
-	   src/cpu.o \
-	   src/mem.o \
-	   src/mips_sim.o
-			
-DEPS = 
+OBJFILES = src/cpu/control_unit.o \
+	         src/cpu/cpu.o \
+	         src/mem.o \
+		       src/utils.o \
+	         src/mips_sim.o
+
+DEPS =
 
 all: $(OBJFILES)
 	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(CPPLIBS)
@@ -20,7 +21,7 @@ all: $(OBJFILES)
 
 src/%.o: src/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"
-	$(CC) $(CPPFLAGS) -c -o $@ $< 
+	$(CC) $(CPPFLAGS) -c -o $@ $<
 
 clean:
 	rm -rf src/*.o

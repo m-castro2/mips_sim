@@ -2,30 +2,37 @@
 #include <cassert>
 #include <iostream>
 
+namespace mips_sim
+{
+
 Cpu::Cpu(ControlUnit & _cu, Memory & _memory)
   : cu(_cu), memory(_memory)
 {
   PC = MEM_TEXT_START;
-  
+
   cycle = 0;
   mi_index = 0;
-  
+
   /* set register $0 */
   gpr[0] = 0;
 }
+
 
 void Cpu::next_cycle( void )
 {
   /* temporary data */
   uint32_t alu_input_a, alu_input_b, alu_output = 0;
+  float cop0_input_a = 0.0, cop0_input_b = 0.0, cop0_output = 0.0;
+  double cop1_input_a = 0.0, cop1_input_b = 0.0, cop1_output = 0.0;
+
   uint32_t word_read = 0;
-  
+
   uint32_t microinstruction = cu.get_microinstruction(mi_index);
   printf("Next microinstruction [%d]: 0x%08x\n", mi_index, microinstruction);
   printf("PC: 0x%08x, A_REG: 0x%08x, B_REG: 0x%08x\n", PC, A_REG, B_REG);
 
   cu.print_microinstruction(mi_index);
-  
+
   if (cu.test(microinstruction, SIG_MEMREAD))
   {
     uint32_t address;
@@ -39,11 +46,11 @@ void Cpu::next_cycle( void )
   {
     /* prevent writing instruction data */
     assert(cu.test(microinstruction, SIG_IOD) == 1);
-    
+
     uint32_t address = ALU_OUT_REG;
     memory.mem_write_32(address, B_REG);
   }
-  
+
   /* ALU */
   if (cu.test(microinstruction, SIG_SELALUA) == 0)
       alu_input_a = PC;
@@ -51,7 +58,7 @@ void Cpu::next_cycle( void )
       alu_input_a = A_REG;
   else
       assert(0);
-            
+
   if (cu.test(microinstruction, SIG_SELALUB) == 0)
       alu_input_b = B_REG;
   else if (cu.test(microinstruction, SIG_SELALUB) == 1)
@@ -68,7 +75,7 @@ void Cpu::next_cycle( void )
   }
   else
       assert(0);
-      
+
   switch (cu.test(microinstruction, SIG_ALUOP))
   {
     case 0:
@@ -114,6 +121,38 @@ void Cpu::next_cycle( void )
             assert(0);
         }
       }
+      else if (instruction.fp_op)
+      {
+        switch(instruction.funct)
+        {
+          case SUBOP_FPADD:
+            if (instruction.cop == 0)
+              cop0_output = cop0_input_a + cop0_input_b;
+            else if (instruction.cop == 0)
+              cop1_output = cop1_input_a + cop1_input_b;
+            break;
+          case SUBOP_FPSUB:
+            if (instruction.cop == 0)
+              cop0_output = cop0_input_a - cop0_input_b;
+            else if (instruction.cop == 0)
+              cop1_output = cop1_input_a - cop1_input_b;
+            break;
+          case SUBOP_FPMUL:
+            if (instruction.cop == 0)
+              cop0_output = cop0_input_a * cop0_input_b;
+            else if (instruction.cop == 0)
+              cop1_output = cop1_input_a * cop1_input_b;
+            break;
+          case SUBOP_FPDIV:
+            if (instruction.cop == 0)
+              cop0_output = cop0_input_a / cop0_input_b;
+            else if (instruction.cop == 0)
+              cop1_output = cop1_input_a / cop1_input_b;
+            break;
+          default:
+            assert(0);
+        }
+      }
       else
       {
         switch(instruction.opcode)
@@ -144,7 +183,7 @@ void Cpu::next_cycle( void )
        assert(0);
   }
   printf("ALU: 0x%08x op 0x%08x = 0x%08x\n", alu_input_a, alu_input_b, alu_output);
-    
+
   if (cu.test(microinstruction, SIG_PCWRITE))
   {
     bool pcwrite = true;
@@ -174,42 +213,54 @@ void Cpu::next_cycle( void )
       }
     }
   }
-  
+
   /* Update registers */
-  
+
   if (cu.test(microinstruction, SIG_IRWRITE))
   {
       instruction.code = word_read;
       instruction.opcode = instruction.code >> 26;
-  
-      /* R type fields */
-      instruction.rs = (instruction.code >> 21) & 0x1F;
-      instruction.rt = (instruction.code >> 16) & 0x1F;
-      instruction.rd = (instruction.code >> 11) & 0x1F;
-      instruction.shamt = (instruction.code >> 6) & 0x1F;
-      instruction.funct = instruction.code & 0x3F; 
-      /* I type fields */
-      instruction.addr_i = instruction.code & 0xFFFF; 
-      /* J type fields */
+
+      instruction.fp_op = (instruction.opcode == OP_FP);
+      if (instruction.fp_op)
+      {
+        /* F format fields */
+        instruction.cop = (instruction.code >> 21) & 0x1F;
+        instruction.rs  = (instruction.code >> 16) & 0x1F;
+        instruction.rt  = (instruction.code >> 11) & 0x1F;
+        instruction.rd  = (instruction.code >> 6) & 0x1F;
+      }
+      else
+      {
+        /* R format fields */
+        instruction.rs = (instruction.code >> 21) & 0x1F;
+        instruction.rt = (instruction.code >> 16) & 0x1F;
+        instruction.rd = (instruction.code >> 11) & 0x1F;
+        instruction.shamt = (instruction.code >> 6) & 0x1F;
+      }
+      instruction.funct = instruction.code & 0x3F;
+      /* I format fields */
+      instruction.addr_i = instruction.code & 0xFFFF;
+      /* J format fields */
       instruction.addr_j = instruction.code & 0x3FFFFFF;
-  
+
       printf("Instruction: %08x\n", instruction.code);
       printf("IR write: OP=%02x, Rs=%02x, Rt=%02x, Rd=%02x, shamt=%02x, funct=%02x, address16=%04x, address26=%07x\n",
                                 instruction.opcode, instruction.rs, instruction.rt, instruction.rd, instruction.shamt,
                                 instruction.funct, instruction.addr_i, instruction.addr_j);
   }
-  
+
   if (cu.test(microinstruction, SIG_REGWRITE))
   {
       uint32_t writereg, writedata;
-      
+
       if (cu.test(microinstruction, SIG_REGDST) == 0)
         writereg = instruction.rt;
       else if (cu.test(microinstruction, SIG_REGDST) == 1)
         writereg = instruction.rd;
       else
         assert(0);
-              
+
       if (cu.test(microinstruction, SIG_MEM2REG) == 0)
         writedata = ALU_OUT_REG;
       else if (cu.test(microinstruction, SIG_MEM2REG) == 1)
@@ -218,16 +269,20 @@ void Cpu::next_cycle( void )
         assert(0);
 
       gpr[writereg] = writedata;
-        
+
       printf("Register write: Reg=%02x, Data=%08x\n",
                                 writereg, writedata);
   }
-    
+
   A_REG = gpr[instruction.rs];
   B_REG = gpr[instruction.rt];
+  cop0_input_a = fpr[instruction.rs];
+  cop0_input_b = fpr[instruction.rt];
+  cop1_input_a = fpr[instruction.rs];
+  cop1_input_b = fpr[instruction.rt];
   ALU_OUT_REG = alu_output;
   MEM_DATA_REG = word_read;
-  
+
   /* update MI index */
   mi_index = cu.get_next_microinstruction(mi_index, instruction.opcode);
   if (mi_index < 0)
@@ -288,3 +343,5 @@ void Cpu::syscall( uint32_t value )
       assert(0);
   }
 }
+
+} /* namespace */

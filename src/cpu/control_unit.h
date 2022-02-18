@@ -1,11 +1,26 @@
-#ifndef CONTROL_UNIT_H
-#define CONTROL_UNIT_H
+#ifndef MIPS_SIM_CONTROL_UNIT_H
+#define MIPS_SIM_CONTROL_UNIT_H
 
 #include <string>
 
 #define X -1
 #define MAX_MICROINSTRUCTIONS 32
 
+namespace mips_sim
+{
+
+// SIMULA:
+// https://www.sciencedirect.com/topics/computer-science/floating-point-register
+// FTYPE
+// OP(6) COP(5) FT(5) FS(5) FD(5) FUNCT(6)
+// add.s Opcode = 0x11 (17) r0 rs rt rd func(0)
+// add.d Opcode = 0x11 (17) r1 rs rt rd func(0)
+// sub.s Opcode = 0x11 (17) r0 rs rt rd func(1)
+// sub.d Opcode = 0x11 (17) r1 rs rt rd func(1)
+// mul.s Opcode = 0x11 (17) r0 rs rt rd func(2)
+// mul.d Opcode = 0x11 (17) r1 rs rt rd func(2)
+// div.s Opcode = 0x11 (17) r0 rs rt rd func(3)
+// div.d Opcode = 0x11 (17) r1 rs rt rd func(3)
 typedef enum
 {
   SUBOP_SLL     = 0x0,
@@ -27,7 +42,7 @@ typedef enum
   SUBOP_SUBU    = 0x23,
   SUBOP_AND     = 0x24,
   SUBOP_OR      = 0x25,
-  SUBOP_XOR     = 0x26, 
+  SUBOP_XOR     = 0x26,
   SUBOP_NOR     = 0x27,
   SUBOP_SLT     = 0x2A,
   SUBOP_SLTU    = 0x2B,
@@ -36,6 +51,14 @@ typedef enum
   SUBOP_MFLO    = 0x12,
   SUBOP_MTLO    = 0x13
 } subopcode_t;
+
+typedef enum
+{
+  SUBOP_FPADD = 0x0,
+  SUBOP_FPSUB = 0x1,
+  SUBOP_FPMUL = 0x2,
+  SUBOP_FPDIV = 0x3
+} fpsubopcode_t;
 
 /* special sub-opcodes (opcode=0) */
 /*
@@ -59,7 +82,7 @@ typedef enum
 #define SUBOP_SUBU 0x23
 #define SUBOP_AND  0x24
 #define SUBOP_OR   0x25
-#define SUBOP_XOR  0x26 
+#define SUBOP_XOR  0x26
 #define SUBOP_NOR  0x27
 #define SUBOP_SLT  0x2A
 #define SUBOP_SLTU 0x2B
@@ -90,6 +113,7 @@ typedef enum
   OP_ORI   = 0x0d,
   OP_XORI  = 0x0e,
   OP_LUI   = 0x0f,
+  OP_FP    = 0x11,
   OP_LB    = 0x20,
   OP_LH    = 0x21,
   OP_LW    = 0x23,
@@ -116,6 +140,7 @@ typedef enum
 #define OP_ORI   0x0d
 #define OP_XORI  0x0e
 #define OP_LUI   0x0f
+#define OP_ADDF  0x11
 #define OP_LB    0x20
 #define OP_LH    0x21
 #define OP_LW    0x23
@@ -132,7 +157,7 @@ typedef enum
 {
   SIG_PCWRITE   = 0,
   SIG_PCSRC     = 1,
-  SIG_IOD       = 2, 
+  SIG_IOD       = 2,
   SIG_MEMREAD   = 3,
   SIG_MEMWRITE  = 4,
   SIG_IRWRITE   = 5,
@@ -155,7 +180,7 @@ typedef struct
 } ctrl_dir_t;
 
 const std::string signal_names[] = {
- "PCWrite",  "PCSrc",  "IoD", "MemRead", "MemWrite", "IRWrite", 
+ "PCWrite",  "PCSrc",  "IoD", "MemRead", "MemWrite", "IRWrite",
  "MemToReg", "RegDst", "RegWrite", "SelALUA", "SelALUB", "ALUSrc",
  "ALUOp", "Branch"
 };
@@ -186,35 +211,35 @@ const int microcode_multi[12][SIGNAL_COUNT + 1] =
   {X,  2,  2,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,     3 }, //10 0101 0100 0000 0000
   {X,  X,  X,  X,  1,  0,  0,  X,  X,  X,  X,  X,  X,     0 }  //11 0000 0010 0000 0000
 };
-  
+
 const ctrl_dir_t uc_ctrl_dir_multi[OP_COUNT] =
 {
-  {0x00,  6, -1,  7}, // OP_RTYPE 
-  {0x02,  9, -1, -1}, // OP_J     
-  {0x03, -1, -1, -1}, // OP_JAL   
-  {0x04,  8, -1, -1}, // OP_BEQ   
-  {0x05,  8, -1, -1}, // OP_BNE   
-  {0x06, -1, -1, -1}, // OP_BLEZ  
-  {0x07, -1, -1, -1}, // OP_BGTZ  
-  {0x08, 10, -1,  7}, // OP_ADDI  
-  {0x09, 10, -1,  7}, // OP_ADDIU 
-  {0x0a, 10, -1,  7}, // OP_SLTI  
-  {0x0b, 10, -1,  7}, // OP_SLTIU 
-  {0x0c, 10, -1,  7}, // OP_ANDI  
-  {0x0d, 10, -1,  7}, // OP_ORI   
-  {0x0e, 10, -1,  7}, // OP_XORI  
-  {0x0f, 10, -1,  7}, // OP_LUI   
-  {0x20, -1, -1, -1}, // OP_LB    
-  {0x21, -1, -1, -1}, // OP_LH    
-  {0x23,  2,  3, -1}, // OP_LW    
-  {0x24, -1, -1, -1}, // OP_LBU   
-  {0x25, -1, -1, -1}, // OP_LHU   
-  {0x28, -1, -1, -1}, // OP_SB    
-  {0x29, -1, -1, -1}, // OP_SH    
-  {0x2b,  2,  5, -1}   
+  {0x00,  6, -1,  7}, // OP_RTYPE
+  {0x02,  9, -1, -1}, // OP_J
+  {0x03, -1, -1, -1}, // OP_JAL
+  {0x04,  8, -1, -1}, // OP_BEQ
+  {0x05,  8, -1, -1}, // OP_BNE
+  {0x06, -1, -1, -1}, // OP_BLEZ
+  {0x07, -1, -1, -1}, // OP_BGTZ
+  {0x08, 10, -1,  7}, // OP_ADDI
+  {0x09, 10, -1,  7}, // OP_ADDIU
+  {0x0a, 10, -1,  7}, // OP_SLTI
+  {0x0b, 10, -1,  7}, // OP_SLTIU
+  {0x0c, 10, -1,  7}, // OP_ANDI
+  {0x0d, 10, -1,  7}, // OP_ORI
+  {0x0e, 10, -1,  7}, // OP_XORI
+  {0x0f, 10, -1,  7}, // OP_LUI
+  {0x20, -1, -1, -1}, // OP_LB
+  {0x21, -1, -1, -1}, // OP_LH
+  {0x23,  2,  3, -1}, // OP_LW
+  {0x24, -1, -1, -1}, // OP_LBU
+  {0x25, -1, -1, -1}, // OP_LHU
+  {0x28, -1, -1, -1}, // OP_SB
+  {0x29, -1, -1, -1}, // OP_SH
+  {0x2b,  2,  5, -1}
 };
 
-const uint32_t uc_signals_multi[SIGNAL_COUNT] = 
+const uint32_t uc_signals_multi[SIGNAL_COUNT] =
   { 1, 2, 1,  1, 1, 1, 1,  1, 1, 1, 2, 0, 2, 1 };
 
 // CtrlDir(4) -(12)
@@ -236,8 +261,8 @@ const uint32_t uc_microcode_multi[MAX_MICROINSTRUCTIONS] =
     0x30005400, // Iformat
     0x00000200,
   };
-  
-const uint32_t uc_signals_pipelined[SIGNAL_COUNT] = 
+
+const uint32_t uc_signals_pipelined[SIGNAL_COUNT] =
   { 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 2, 2, 1 };
 
 class ControlUnit
@@ -245,17 +270,17 @@ class ControlUnit
 public:
 
   ControlUnit(const uint32_t * uc_signal_bits, const uint32_t * uc_microcode, const ctrl_dir_t * uc_ctrl_dir);
-  
+
   uint32_t test(uint32_t state, signal_t signal) const;
 
   void set(uint32_t & state, signal_t signal, int value = -1) const;
-  
+
   uint32_t get_microinstruction(int index) const;
-  
+
   int get_next_microinstruction(int index, int opcode) const;
-  
+
   void print_microcode( void ) const;
-  
+
   void print_microinstruction( int index ) const;
 
 private:
@@ -263,4 +288,6 @@ private:
   uint32_t uc_microcode[MAX_MICROINSTRUCTIONS];
   ctrl_dir_t uc_ctrl_dir[OP_COUNT];
 };
+
+} /* namespace */
 #endif

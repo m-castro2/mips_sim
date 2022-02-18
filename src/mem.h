@@ -1,5 +1,5 @@
-#ifndef MEM_H
-#define MEM_H
+#ifndef MIPS_SIM_MEM_H
+#define MIPS_SIM_MEM_H
 
 #include <cstring>
 #include <cstdint>
@@ -16,6 +16,9 @@
 #define MEM_KTEXT_START 0x80000000
 #define MEM_KTEXT_SIZE  0x00100000
 
+namespace mips_sim
+{
+
 typedef struct {
     uint32_t start, size;
     uint8_t *mem;
@@ -28,10 +31,11 @@ class Memory
 {
   public:
     Memory( void );
-    
+    ~Memory();
+
     void mem_write_32(uint32_t address, uint32_t value);
     uint32_t mem_read_32(uint32_t address);
-    
+
     int load_word(unsigned int address);
     //int store_word(unsigned int address, void value);
   private:
@@ -42,7 +46,8 @@ class Memory
     { MEM_KDATA_START, MEM_KDATA_SIZE, nullptr },
     { MEM_KTEXT_START, MEM_KTEXT_SIZE, nullptr }
 };
-    
+
 };
 
+} /* namespace */
 #endif
