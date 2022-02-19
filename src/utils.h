@@ -9,13 +9,18 @@ namespace mips_sim
 class Utils
 {
 public:
-
-  //static uint32_t float_to_word(float f);
   template  <typename T>
   static void float_to_word(T f, uint32_t word[]);
 
-  static float word_to_float(uint32_t f);
-  //static double word_to_double(uint32_t f);
+  template<> void float_to_word(float f, uint32_t word[]);
+  template<> void float_to_word(double f, uint32_t word[]);
+
+  template  <typename T>
+  static T word_to_float(uint32_t word[]);
+
+
+  template<> float word_to_float<>(uint32_t word[]);
+  template<> double word_to_float<>(uint32_t word[]);
 };
 
 } /* namespace */
