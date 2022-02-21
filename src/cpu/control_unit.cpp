@@ -27,7 +27,7 @@ ControlUnit::ControlUnit(const uint32_t * _uc_signal_bits, const uint32_t * _uc_
 
       uc_signals[i] = static_cast<uint32_t>(((1<<_uc_signal_bits[i])-1) << bit_count);
 
-      std::cout << "Signal " << i << ": " << (1<<_uc_signal_bits[i])-1 << "<<" << bit_count << std::endl;
+      // std::cout << "Signal " << i << ": " << (1<<_uc_signal_bits[i])-1 << "<<" << bit_count << std::endl;
 
       bit_count += _uc_signal_bits[i];
     }
@@ -38,11 +38,13 @@ ControlUnit::ControlUnit(const uint32_t * _uc_signal_bits, const uint32_t * _uc_
   for (size_t i = 0; i < MAX_MICROINSTRUCTIONS; ++i)
     uc_microcode[i] = _uc_microcode[i];
 
-  for (size_t i = 0; i < SIGNAL_COUNT; ++i)
-  {
-    std::bitset<16> x(uc_signals[i]);
-    std::cout << "Signal " << std::setw(2) << i << ": " << std::setw(10) << signal_names[i] << " " << x << std::endl;
-  }
+  // for (size_t i = 0; i < SIGNAL_COUNT; ++i)
+  // {
+  //   std::bitset<16> x(uc_signals[i]);
+  //   std::cout << "Signal " << std::setfill('0') << std::setw(2) << i << ": "
+  //             << std::setfill(' ') << std::setw(10) << signal_names[i] << " "
+  //             << x << std::endl;
+  // }
 
   for (size_t i = 0; i < OP_COUNT; ++i)
     uc_ctrl_dir[i] = _uc_ctrl_dir[i];
@@ -61,9 +63,20 @@ void ControlUnit::set(uint32_t & state, signal_t signal, int value) const
 
 void ControlUnit::print_microcode( void ) const
 {
+  int l = 10;
+  std::cout << "           ";
+  for (size_t i = 0; i < SIGNAL_COUNT && uc_microcode[i] != 0; ++i)
+  {
+    std::cout << i/10 << " ";
+    l += 2;
+  }
+  std::cout << std::endl << "           ";
+  for (size_t i = 0; i < SIGNAL_COUNT && uc_microcode[i] != 0; ++i)
+    std::cout << i%10 << " ";
+  std::cout << std::endl << std::setfill('-') << std::setw(l) << "" << std::endl;
   for (size_t i = 0; i < SIGNAL_COUNT; ++i)
   {
-    std::cout << std::setw(10) << signal_names[i] << " ";
+    std::cout << std::setfill(' ') << std::setw(10) << signal_names[i] << " ";
     for (size_t j = 0; j < MAX_MICROINSTRUCTIONS; ++j)
     {
       if (uc_microcode[j] == 0) break;
@@ -79,7 +92,8 @@ void ControlUnit::print_microinstruction( int index ) const
   for (size_t i = 0; i < SIGNAL_COUNT; ++i)
   {
     uint32_t sigvalue = test(microinstruction, static_cast<signal_t>(i));
-    std::cout << std::setw(10) << signal_names[i] << " " << sigvalue << std::endl;
+    std::cout << std::setfill(' ') << std::setw(10) << signal_names[i] << " "
+              << sigvalue << std::endl;
   }
 }
 

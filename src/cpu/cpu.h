@@ -2,7 +2,14 @@
 #define MIPS_SIM_CPU_H
 
 #include "control_unit.h"
+#include "../global_defs.h"
 #include "../mem.h"
+
+#include <memory>
+
+//TODO: Change into config file
+#define MULT_STALL 4
+#define DIV_STALL 6
 
 namespace mips_sim
 {
@@ -10,41 +17,26 @@ namespace mips_sim
 #define ERROR_UNSUPPORTED_OPERATION 101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
 
-/*
- * R format: opcode(6) rs(5) rt(5) rd(5) shamt(5) funct(6)
- * I format: opcode(6) rs(5) rt(5) imm(16)
- * J format: opcode(6) addr(6)
- * F format: opcode(6) cop(5) rs(5) rt(5) rd(5) funct(6)
- */
-typedef struct {
-    uint32_t code;
-    bool fp_op; // FP instruction
-    uint8_t opcode;
-    uint8_t cop; // for FP instructions
-    uint8_t rs; // or fs
-    uint8_t rt; // or ft
-    uint8_t rd; // or fd
-    uint8_t shamt;
-    uint8_t funct;
-    uint16_t addr_i;
-    uint32_t addr_j;
-} instruction_t;
-
 class Cpu
 {
 public:
-  Cpu(ControlUnit & cu, Memory & memory);
+  Cpu(ControlUnit &, std::shared_ptr<Memory>);
+  virtual ~Cpu();
 
-  void next_cycle( void );
+  virtual void next_cycle( void ) = 0;
 
-private:
+  uint32_t PC;
+
+protected:
+  uint32_t alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op);
+  uint32_t alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_subop);
+
   ControlUnit cu;
-  Memory memory;
+  std::shared_ptr<Memory> memory;
 
   size_t cycle;
   int mi_index;
 
-  uint32_t PC;
   uint32_t HI, LO;
 
   uint32_t A_REG;
@@ -53,10 +45,11 @@ private:
   uint32_t MEM_DATA_REG;
 
   uint32_t gpr[32];
-  float fpr[32];
+  uint32_t fpr[32];
 
   instruction_t instruction;
 
+  int execution_stall;
   void syscall( uint32_t value );
 };
 

@@ -9,6 +9,7 @@ CPPLIBS =
 
 OBJFILES = src/cpu/control_unit.o \
 	         src/cpu/cpu.o \
+					 src/cpu/cpu_multi.o \
 	         src/mem.o \
 		       src/utils.o \
 	         src/mips_sim.o
@@ -24,4 +25,4 @@ src/%.o: src/%.cpp $(DEPS)
 	$(CC) $(CPPFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf src/*.o
+	find src -name "*.o" | xargs rm -f

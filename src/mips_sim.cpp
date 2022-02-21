@@ -1,6 +1,6 @@
 #include "cpu/control_unit.h"
 #include "mem.h"
-#include "cpu/cpu.h"
+#include "cpu/cpu_multi.h"
 #include "utils.h"
 
 #include <iostream>
@@ -8,6 +8,7 @@
 
 #include <iomanip>
 #include <bitset>
+#include <memory>
 
 using namespace mips_sim;
 
@@ -25,19 +26,24 @@ int main(int argc, char * argv[])
   ControlUnit cu(uc_signals_multi, uc_microcode_multi, uc_ctrl_dir_multi);
   cu.print_microcode();
 
-  Memory mem;
+  std::shared_ptr<Memory> mem = std::shared_ptr<Memory>(new Memory());
 
   std::cout << "Reading " << argv[1] << std::endl;
-  load_program(argv[1], mem);
+  load_program(argv[1], *mem);
   std::cout << "Done" << std::endl;
 
-  Cpu cpu(cu, mem);
+  CpuMulti cpu(cu, mem);
 
-  for (size_t i = 0;; i++)
+  for (size_t i = 0; i<4; i++)
   {
-    std::cout << "------------------------------------------ cycle " << i << std::endl;
+    std::cout << "------------------------------------------ cycle " << std::dec << i << std::endl;
     cpu.next_cycle();
+
+    if (cpu.PC < 0x00400000)
+      break;
   }
+
+  return 0;
 }
 
 void load_program(char *program_filename, Memory & memory)

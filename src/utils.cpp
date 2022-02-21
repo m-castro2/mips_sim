@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cassert>
 #include <iostream>
+#include <sstream>
 
 namespace mips_sim
 {
@@ -151,6 +152,79 @@ static double _word_to_double(uint32_t w32[], uint32_t te, uint32_t tm)
     v *= -1;
 
   return v;
+}
+
+static size_t find_instruction(instruction_t instruction)
+{
+  size_t instruction_index = UNDEF32;
+  for (size_t i=0; i<(sizeof(instructions_def)/sizeof(instruction_format_t)); ++i)
+  {
+    if (instruction.opcode == instructions_def[i].opcode)
+    {
+      if (instruction.opcode == OP_RTYPE || instruction.opcode == OP_FTYPE)
+      {
+        if (instruction.funct == instructions_def[i].subopcode)
+        {
+          instruction_index = i;
+          break;
+        }
+      }
+      else
+      {
+        instruction_index = i;
+        break;
+      }
+    }
+  }
+
+  assert(instruction_index != UNDEF32);
+
+  return instruction_index;
+}
+
+std::string Utils::decode_instruction(instruction_t instruction)
+{
+  std::stringstream ss;
+
+  size_t instruction_index = find_instruction(instruction);
+
+  ss << instructions_def[instruction_index].opname << " ";
+  if (instructions_def[instruction_index].format == FORMAT_R)
+  {
+    if (instruction.funct != SUBOP_SYSCALL)
+    {
+      ss << registers_def[instruction.rd].regname_int << ", ";
+      ss << registers_def[instruction.rs].regname_int << ", ";
+      ss << registers_def[instruction.rt].regname_int;
+    }
+  }
+  else if (instructions_def[instruction_index].format == FORMAT_F)
+  {
+    ss << registers_def[instruction.rd].regname_fp << ", ";
+    ss << registers_def[instruction.rs].regname_fp << ", ";
+    ss << registers_def[instruction.rt].regname_fp;
+  }
+  else if (instructions_def[instruction_index].format == FORMAT_F)
+  {
+    ss << "0x" << std::hex << instruction.addr_j;
+  }
+  else
+  {
+    ss << registers_def[instruction.rt].regname_int << ", ";
+    if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
+        instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+    {
+      ss << "0x" << std::hex << instruction.addr_i << "(";
+      ss << registers_def[instruction.rs].regname_int << ")";
+    }
+    else
+    {
+      ss << registers_def[instruction.rs].regname_int << ", ";
+      ss << "0x" << std::hex << instruction.addr_i;
+    }
+  }
+
+  return ss.str();
 }
 
 } /* namespace */

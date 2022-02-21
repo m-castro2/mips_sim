@@ -31,6 +31,7 @@ class Memory
 {
   public:
     Memory( void );
+    Memory( Memory const& ) = default;
     ~Memory();
 
     void mem_write_32(uint32_t address, uint32_t value);

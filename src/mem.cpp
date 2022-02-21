@@ -22,7 +22,11 @@ Memory::~Memory()
 {
   /* initialize memory */
   for (size_t i = 0; i < MEM_NREGIONS; i++) {
-    free(MEM_REGIONS[i].mem);
+    if (MEM_REGIONS[i].mem)
+    {
+      free(MEM_REGIONS[i].mem);
+      MEM_REGIONS[i].mem = nullptr;
+    }
   }
 }
 
@@ -41,7 +45,6 @@ uint32_t Memory::mem_read_32(uint32_t address)
                 (MEM_REGIONS[i].mem[offset+1] <<  8) |
                 (MEM_REGIONS[i].mem[offset+0] <<  0));
 
-            printf("READ ADDRESS %08x > %08x\n", address, v);
             return v;
         }
     }
@@ -63,7 +66,6 @@ void Memory::mem_write_32(uint32_t address, uint32_t value)
             MEM_REGIONS[i].mem[offset+1] = (value >>  8) & 0xFF;
             MEM_REGIONS[i].mem[offset+0] = (value >>  0) & 0xFF;
 
-            printf("WRITE ADDRESS %08x > %08x\n", address, value);
             return;
         }
     }
