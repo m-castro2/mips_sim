@@ -20,7 +20,7 @@ namespace mips_sim
 class Cpu
 {
 public:
-  Cpu(ControlUnit &, std::shared_ptr<Memory>);
+  Cpu(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
   virtual ~Cpu();
 
   virtual void next_cycle( void ) = 0;
@@ -31,7 +31,7 @@ protected:
   uint32_t alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op);
   uint32_t alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_subop);
 
-  ControlUnit cu;
+  std::shared_ptr<ControlUnit> control_unit;
   std::shared_ptr<Memory> memory;
 
   size_t cycle;

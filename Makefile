@@ -7,7 +7,8 @@ CPPFLAGS = -D_NO_GUI_ -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++
            -m64 -pipe
 CPPLIBS =
 
-OBJFILES = src/cpu/control_unit.o \
+OBJFILES = src/assembler/assembler.o \
+           src/cpu/control_unit.o \
 	         src/cpu/cpu.o \
 					 src/cpu/cpu_multi.o \
 	         src/mem.o \

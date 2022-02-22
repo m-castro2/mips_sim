@@ -1,9 +1,12 @@
 #include "utils.h"
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <cassert>
 #include <iostream>
 #include <sstream>
+
+using namespace std;
 
 namespace mips_sim
 {
@@ -182,16 +185,54 @@ static size_t find_instruction(instruction_t instruction)
   return instruction_index;
 }
 
-std::string Utils::decode_instruction(instruction_t instruction)
+uint32_t Utils::find_instruction_by_name(string opname)
 {
-  std::stringstream ss;
+  uint32_t instruction_index = UNDEF32;
+  for (uint32_t i=0; i<(sizeof(instructions_def)/sizeof(instruction_format_t)); ++i)
+  {
+    if (opname == instructions_def[i].opname)
+    {
+      instruction_index = i;
+      break;
+    }
+  }
+
+  return instruction_index;
+}
+
+uint8_t Utils::find_register_by_name(string regname)
+{
+  uint8_t register_index = UNDEF8;
+  for (uint8_t i=0; i<(sizeof(registers_def)/sizeof(register_format_t)); ++i)
+  {
+    if (regname == registers_def[i].regname_generic ||
+        regname == registers_def[i].regname_int ||
+        regname == registers_def[i].regname_fp)
+    {
+      register_index = i;
+      break;
+    }
+  }
+
+  return register_index;
+}
+
+string Utils::decode_instruction(instruction_t instruction)
+{
+  stringstream ss;
 
   size_t instruction_index = find_instruction(instruction);
 
   ss << instructions_def[instruction_index].opname << " ";
   if (instructions_def[instruction_index].format == FORMAT_R)
   {
-    if (instruction.funct != SUBOP_SYSCALL)
+    if (instruction.funct == SUBOP_SLL || instruction.funct == SUBOP_SRL)
+    {
+      ss << registers_def[instruction.rd].regname_int << ", ";
+      ss << registers_def[instruction.rt].regname_int << ", ";
+      ss << static_cast<uint32_t>(instruction.shamt);
+    }
+    else if (instruction.funct != SUBOP_SYSCALL)
     {
       ss << registers_def[instruction.rd].regname_int << ", ";
       ss << registers_def[instruction.rs].regname_int << ", ";
@@ -204,27 +245,125 @@ std::string Utils::decode_instruction(instruction_t instruction)
     ss << registers_def[instruction.rs].regname_fp << ", ";
     ss << registers_def[instruction.rt].regname_fp;
   }
-  else if (instructions_def[instruction_index].format == FORMAT_F)
+  else if (instructions_def[instruction_index].format == FORMAT_J)
   {
-    ss << "0x" << std::hex << instruction.addr_j;
+    ss << "0x" << hex << instruction.addr_j;
   }
   else
   {
-    ss << registers_def[instruction.rt].regname_int << ", ";
+    ss << registers_def[instruction.rs].regname_int << ", ";
     if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
         instruction.opcode == OP_LB || instruction.opcode == OP_SB)
     {
-      ss << "0x" << std::hex << instruction.addr_i << "(";
-      ss << registers_def[instruction.rs].regname_int << ")";
+      ss << "0x" << hex << instruction.addr_i << "(";
+      ss << registers_def[instruction.rt].regname_int << ")";
     }
     else
     {
-      ss << registers_def[instruction.rs].regname_int << ", ";
-      ss << "0x" << std::hex << instruction.addr_i;
+      ss << registers_def[instruction.rt].regname_int << ", ";
+      ss << "0x" << hex << instruction.addr_i;
     }
   }
 
   return ss.str();
+}
+
+uint32_t Utils::encode_instruction(instruction_t instruction)
+{
+  uint32_t instcode = static_cast<uint32_t>(instruction.opcode << 26);
+  if (instruction.opcode == OP_J)
+  {
+    instcode |= instruction.addr_j;
+  }
+  else
+  {
+    instcode |= static_cast<uint32_t>(instruction.rs << 21);
+    instcode |= static_cast<uint32_t>(instruction.rt << 16);
+    if (instruction.opcode != OP_RTYPE && instruction.opcode != OP_FTYPE)
+    {
+      instcode |= instruction.addr_i;
+    }
+    else
+    {
+      instcode |= static_cast<uint32_t>(instruction.rd << 11);
+      instcode |= static_cast<uint32_t>(instruction.shamt << 6);
+      instcode |= instruction.funct;
+    }
+  }
+  return instcode;
+}
+
+uint32_t Utils::assemble_instruction(string instruction_str)
+{
+  uint32_t instcode = 0;
+  char instruction_cstr[100];
+  char * tok;
+  instruction_t instruction = {};
+
+  strcpy(instruction_cstr, instruction_str.c_str());
+  tok = strtok(instruction_cstr, " ");
+  if (tok == nullptr)
+    return 0;
+  size_t instruction_index = find_instruction_by_name(tok);
+  if (instruction_index == UNDEF32)
+    return 0;
+
+  instruction_format_t instruction_def = instructions_def[instruction_index];
+
+  instruction.opcode = static_cast<uint8_t>(instruction_def.opcode);
+  if (instruction_def.format == FORMAT_R)
+  {
+    if (!strcmp(tok, "syscall"))
+    {
+      instruction.funct = SUBOP_SYSCALL;
+    }
+    else
+    {
+      instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
+      tok = strtok(nullptr, ", ");
+      instruction.rd = find_register_by_name(tok);
+      tok = strtok(nullptr, ", ");
+      instruction.rs = find_register_by_name(tok);
+      tok = strtok(nullptr, ", ");
+      instruction.rt = find_register_by_name(tok);
+    }
+  }
+  else if (instruction_def.format == FORMAT_I)
+  {
+    tok = strtok(nullptr, ",() ");
+    instruction.rt = find_register_by_name(tok);
+    tok = strtok(nullptr, ",() ");
+    if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
+        instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+    {
+      if (tok[1] == 'x')
+        instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
+      else
+        instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+      tok = strtok(nullptr, ",() ");
+      instruction.rs = find_register_by_name(tok);
+    }
+    else
+    {
+      instruction.rs = find_register_by_name(tok);
+      tok = strtok(nullptr, ",() ");
+      if (tok[1] == 'x')
+        instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
+      else
+        instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+    }
+  }
+  else if (instruction_def.format == FORMAT_J)
+  {
+    tok = strtok(nullptr, ", ");
+    if (tok[1] == 'x')
+      instruction.addr_j = static_cast<uint32_t>(strtol(tok, nullptr, 16));
+    else
+      instruction.addr_j = static_cast<uint32_t>(atoi(tok));
+  }
+
+  instcode = Utils::encode_instruction(instruction);
+  return instcode;
 }
 
 } /* namespace */

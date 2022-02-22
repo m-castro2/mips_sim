@@ -7,8 +7,8 @@
 namespace mips_sim
 {
 
-  CpuMulti::CpuMulti(ControlUnit & _cu, std::shared_ptr<Memory> _memory)
-    : Cpu(_cu, _memory)
+  CpuMulti::CpuMulti(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
+    : Cpu(_control_unit, _memory)
   {
 
   }
@@ -34,7 +34,7 @@ namespace mips_sim
       return;
     }
 
-    uint32_t microinstruction = cu.get_microinstruction(mi_index);
+    uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
     std::cout << "Next microinstruction [" << mi_index << "]: 0x"
               << std::setw(8) << std::setfill('0') << std::hex
               << microinstruction << std::endl;
@@ -42,44 +42,44 @@ namespace mips_sim
               << " A_REG: 0x" << A_REG
               << " B_REG: 0x" << B_REG << std::endl;
 
-    //cu.print_microinstruction(mi_index);
+    //control_unit->print_microinstruction(mi_index);
 
-    if (cu.test(microinstruction, SIG_MEMREAD))
+    if (control_unit->test(microinstruction, SIG_MEMREAD))
     {
       uint32_t address;
-      if (cu.test(microinstruction, SIG_IOD) == 0)
+      if (control_unit->test(microinstruction, SIG_IOD) == 0)
         address = PC;
       else
         address = ALU_OUT_REG;
       word_read = memory->mem_read_32(address);
     }
-    else if (cu.test(microinstruction, SIG_MEMWRITE))
+    else if (control_unit->test(microinstruction, SIG_MEMWRITE))
     {
       /* prevent writing instruction data */
-      assert(cu.test(microinstruction, SIG_IOD) == 1);
+      assert(control_unit->test(microinstruction, SIG_IOD) == 1);
 
       uint32_t address = ALU_OUT_REG;
       memory->mem_write_32(address, B_REG);
     }
 
     /* ALU */
-    if (cu.test(microinstruction, SIG_SELALUA) == 0)
+    if (control_unit->test(microinstruction, SIG_SELALUA) == 0)
         alu_input_a = PC;
-    else if (cu.test(microinstruction, SIG_SELALUA) == 1)
+    else if (control_unit->test(microinstruction, SIG_SELALUA) == 1)
         alu_input_a = A_REG;
     else
         assert(0);
 
-    if (cu.test(microinstruction, SIG_SELALUB) == 0)
+    if (control_unit->test(microinstruction, SIG_SELALUB) == 0)
         alu_input_b = B_REG;
-    else if (cu.test(microinstruction, SIG_SELALUB) == 1)
+    else if (control_unit->test(microinstruction, SIG_SELALUB) == 1)
         alu_input_b = 4;
-    else if (cu.test(microinstruction, SIG_SELALUB) == 2)
+    else if (control_unit->test(microinstruction, SIG_SELALUB) == 2)
     {
         /* 16 bit w sign extension */
         alu_input_b = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
     }
-    else if (cu.test(microinstruction, SIG_SELALUB) == 3)
+    else if (control_unit->test(microinstruction, SIG_SELALUB) == 3)
     {
         alu_input_b = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
         alu_input_b <<= 2;
@@ -123,11 +123,11 @@ namespace mips_sim
     }
     else
     {
-      if (cu.test(microinstruction, SIG_ALUOP) == 0)
+      if (control_unit->test(microinstruction, SIG_ALUOP) == 0)
         alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_ADDU);
-      else if (cu.test(microinstruction, SIG_ALUOP) == 1)
+      else if (control_unit->test(microinstruction, SIG_ALUOP) == 1)
         alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_SUBU);
-      else if (cu.test(microinstruction, SIG_ALUOP) == 2)
+      else if (control_unit->test(microinstruction, SIG_ALUOP) == 2)
       {
         if (instruction.opcode == OP_RTYPE)
         {
@@ -148,17 +148,17 @@ namespace mips_sim
     std::cout << "ALU: 0x" << std::hex << alu_input_a << " op 0x" << alu_input_b
               << " = 0x" << alu_output << std::endl;
 
-    if (cu.test(microinstruction, SIG_PCWRITE))
+    if (control_unit->test(microinstruction, SIG_PCWRITE))
     {
       bool pcwrite = true;
-      if (cu.test(microinstruction, SIG_BRANCH))
+      if (control_unit->test(microinstruction, SIG_BRANCH))
       {
         pcwrite = (instruction.opcode == OP_BNE && alu_output > 0) |
                   (instruction.opcode == OP_BEQ && alu_output == 0);
       }
       if (pcwrite)
       {
-        switch (cu.test(microinstruction, SIG_PCSRC))
+        switch (control_unit->test(microinstruction, SIG_PCSRC))
         {
         case 0:
           PC = alu_output;
@@ -179,7 +179,7 @@ namespace mips_sim
 
     /* Update registers */
 
-    if (cu.test(microinstruction, SIG_IRWRITE))
+    if (control_unit->test(microinstruction, SIG_IRWRITE))
     {
         instruction.code = word_read;
         instruction.opcode = instruction.code >> 26;
@@ -207,7 +207,10 @@ namespace mips_sim
         /* J format fields */
         instruction.addr_j = instruction.code & 0x3FFFFFF;
 
-        std::cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << std::endl;
+        //std::cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << std::endl;
+//TMP: TEST ENCODER
+std::cout << "Instruction: " << " " << std::setw(8) << instruction.code << " " << std::setw(8) << Utils::encode_instruction(instruction) << " " << Utils::decode_instruction(instruction) << std::endl;
+std::cout << "Instruction asm: " << " " << std::setw(8) << Utils::assemble_instruction(Utils::decode_instruction(instruction)) << std::endl;
         std::cout << "Binary: 0x" << std::setw(8) <<  std::setfill('0') << std::hex << instruction.code << std::endl;
         std::cout << "IR write:" << std::hex << std::setfill('0')
                   << " OP=0x" << std::setw(4)<< static_cast<uint32_t>(instruction.opcode)
@@ -222,20 +225,20 @@ namespace mips_sim
                   << std::endl;
     }
 
-    if (cu.test(microinstruction, SIG_REGWRITE))
+    if (control_unit->test(microinstruction, SIG_REGWRITE))
     {
         uint32_t writereg, writedata;
 
-        if (cu.test(microinstruction, SIG_REGDST) == 0)
+        if (control_unit->test(microinstruction, SIG_REGDST) == 0)
           writereg = instruction.rt;
-        else if (cu.test(microinstruction, SIG_REGDST) == 1)
+        else if (control_unit->test(microinstruction, SIG_REGDST) == 1)
           writereg = instruction.rd;
         else
           assert(0);
 
-        if (cu.test(microinstruction, SIG_MEM2REG) == 0)
+        if (control_unit->test(microinstruction, SIG_MEM2REG) == 0)
           writedata = ALU_OUT_REG;
-        else if (cu.test(microinstruction, SIG_MEM2REG) == 1)
+        else if (control_unit->test(microinstruction, SIG_MEM2REG) == 1)
           writedata = MEM_DATA_REG;
         else
           assert(0);
@@ -257,7 +260,7 @@ namespace mips_sim
     MEM_DATA_REG = word_read;
 
     /* update MI index */
-    mi_index = cu.get_next_microinstruction(mi_index, instruction.opcode);
+    mi_index = control_unit->get_next_microinstruction(mi_index, instruction.opcode);
     if (mi_index < 0)
        exit(ERROR_UNSUPPORTED_OPERATION);
   }

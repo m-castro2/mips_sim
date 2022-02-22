@@ -22,7 +22,12 @@ public:
   template<> float word_to_float<>(uint32_t word[]);
   template<> double word_to_float<>(uint32_t word[]);
 
+  static uint32_t find_instruction_by_name(std::string opname);
+  static uint8_t find_register_by_name(std::string regname);
+
   static std::string decode_instruction(instruction_t instruction);
+  static uint32_t encode_instruction(instruction_t instruction);
+  static uint32_t assemble_instruction(std::string instruction_str);
 };
 
 } /* namespace */

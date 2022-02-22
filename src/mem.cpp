@@ -49,6 +49,7 @@ uint32_t Memory::mem_read_32(uint32_t address)
         }
     }
 
+    assert(0);
     return 0;
 }
 
@@ -69,6 +70,8 @@ void Memory::mem_write_32(uint32_t address, uint32_t value)
             return;
         }
     }
+
+    assert(0);
 }
 
 } /* namespace */

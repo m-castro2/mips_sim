@@ -9,6 +9,8 @@
 #define FORMAT_F 3
 
 #define UNDEF32 0xFFFFFFFF
+#define UNDEF16 0xFFFF
+#define UNDEF8  0xFF
 
 typedef enum
 {
@@ -104,83 +106,85 @@ typedef struct {
     uint32_t opcode;
     uint32_t subopcode; // for R format
     std::string opname;
+    uint32_t symbols_count;
     int format;
 } instruction_format_t;
 
 typedef struct {
     uint32_t reg_index;
+    std::string regname_generic;
     std::string regname_int;
     std::string regname_fp;
 } register_format_t;
 
 const register_format_t registers_def[]
 {
-  {  0, "$0",  "$f0" },   {  1, "$at", "$f1" },   {  2, "$v0", "$f2" },   {  3, "$v1", "$f3" },
-  {  4, "$a0", "$f4" },   {  5, "$a1", "$f5" },   {  6, "$a2", "$f6" },   {  7, "$a3", "$f7" },
-  {  8, "$t0", "$f8" },   {  9, "$t1", "$f9" },   { 10, "$t2", "$f10" },  { 11, "$t3", "$f11" },
-  { 12, "$t4", "$f12" },  { 13, "$t5", "$f13" },  { 14, "$t6", "$f14" },  { 15, "$t7", "$f15" },
-  { 16, "$s0", "$f16" },  { 17, "$s1", "$f17" },  { 18, "$s2", "$f18" },  { 19, "$s3", "$f19" },
-  { 20, "$s4", "$f20" },  { 21, "$s5", "$f21" },  { 22, "$s6", "$f22" },  { 23, "$s7", "$f23" },
-  { 24, "$t8", "$f24" },  { 25, "$s9", "$f25" },  { 26, "$k0", "$f26" },  { 27, "$k1", "$f27" },
-  { 28, "$gp", "$f28" },  { 29, "$sp", "$f29" },  { 30, "$s8", "$f30" },  { 31, "$ra", "$f31" }
+  {  0, "$0", "$0",  "$f0" },   {  1, "$1", "$at", "$f1" },   {  2, "$2", "$v0", "$f2" },   {  3, "$3", "$v1", "$f3" },
+  {  4, "$4", "$a0", "$f4" },   {  5, "$5", "$a1", "$f5" },   {  6, "$6", "$a2", "$f6" },   {  7, "$7", "$a3", "$f7" },
+  {  8, "$8", "$t0", "$f8" },   {  9, "$9", "$t1", "$f9" },   { 10, "$10", "$t2", "$f10" },  { 11, "$11", "$t3", "$f11" },
+  { 12, "$12", "$t4", "$f12" },  { 13, "$13", "$t5", "$f13" },  { 14, "$14", "$t6", "$f14" },  { 15, "$15", "$t7", "$f15" },
+  { 16, "$16", "$s0", "$f16" },  { 17, "$17", "$s1", "$f17" },  { 18, "$18", "$s2", "$f18" },  { 19, "$19", "$s3", "$f19" },
+  { 20, "$20", "$s4", "$f20" },  { 21, "$21", "$s5", "$f21" },  { 22, "$22", "$s6", "$f22" },  { 23, "$23", "$s7", "$f23" },
+  { 24, "$24", "$t8", "$f24" },  { 25, "$25", "$s9", "$f25" },  { 26, "$26", "$k0", "$f26" },  { 27, "$27", "$k1", "$f27" },
+  { 28, "$28", "$gp", "$f28" },  { 29, "$29", "$sp", "$f29" },  { 30, "$30", "$s8", "$f30" },  { 31, "$31", "$ra", "$f31" }
 };
 
 const instruction_format_t instructions_def[]
 {
-  { OP_RTYPE, SUBOP_ADD,     "add",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SLL ,    "sll",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SRL ,    "srl",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SRA ,    "sra",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SLLV,    "sllv",    FORMAT_R },
-  { OP_RTYPE, SUBOP_SRLV,    "srlv",    FORMAT_R },
-  { OP_RTYPE, SUBOP_SRAV,    "srav",    FORMAT_R },
-  { OP_RTYPE, SUBOP_JR  ,    "jr",      FORMAT_R },
-  { OP_RTYPE, SUBOP_JALR,    "jalr",    FORMAT_R },
-  { OP_RTYPE, SUBOP_SYSCALL, "syscall", FORMAT_R },
-  { OP_RTYPE, SUBOP_MULT,    "mult",    FORMAT_R },
-  { OP_RTYPE, SUBOP_MULTU,   "multu",   FORMAT_R },
-  { OP_RTYPE, SUBOP_DIV,     "div",     FORMAT_R },
-  { OP_RTYPE, SUBOP_DIVU,    "divu",    FORMAT_R },
-  { OP_RTYPE, SUBOP_ADD,     "add",     FORMAT_R },
-  { OP_RTYPE, SUBOP_ADDU,    "addu",    FORMAT_R },
-  { OP_RTYPE, SUBOP_SUB,     "sub",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SUBU,    "subu",    FORMAT_R },
-  { OP_RTYPE, SUBOP_AND,     "and",     FORMAT_R },
-  { OP_RTYPE, SUBOP_OR,      "or",      FORMAT_R },
-  { OP_RTYPE, SUBOP_XOR,     "xor",     FORMAT_R },
-  { OP_RTYPE, SUBOP_NOR,     "nor",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SLT,     "slt",     FORMAT_R },
-  { OP_RTYPE, SUBOP_SLTU,    "sltu",    FORMAT_R },
-  { OP_RTYPE, SUBOP_MFHI,    "mfhi",    FORMAT_R },
-  { OP_RTYPE, SUBOP_MTHI,    "mthi",    FORMAT_R },
-  { OP_RTYPE, SUBOP_MFLO,    "mflo",    FORMAT_R },
-  { OP_RTYPE, SUBOP_MTLO,    "mtlo",    FORMAT_R },
-  { OP_J,     0,            "j",        FORMAT_J },
-  { OP_JAL,   0,            "jal",      FORMAT_I },
-  { OP_BEQ,   0,            "beq",      FORMAT_I },
-  { OP_BNE,   0,            "bne",      FORMAT_I },
-  { OP_BLEZ,  0,            "blez",     FORMAT_I },
-  { OP_BGTZ,  0,            "bgtz",     FORMAT_I },
-  { OP_ADDI,  0,            "addi",     FORMAT_I },
-  { OP_ADDIU, 0,            "addiu",    FORMAT_I },
-  { OP_SLTI,  0,            "slti",     FORMAT_I },
-  { OP_SLTIU, 0,            "sltiu",    FORMAT_I },
-  { OP_ANDI,  0,            "andi",     FORMAT_I },
-  { OP_ORI,   0,            "ori",      FORMAT_I },
-  { OP_XORI,  0,            "xori",     FORMAT_I },
-  { OP_LUI,   0,            "lui",      FORMAT_I },
-  { OP_FTYPE, SUBOP_FPADD,  "add.",     FORMAT_F },
-  { OP_FTYPE, SUBOP_FPSUB,  "sub.",     FORMAT_F },
-  { OP_FTYPE, SUBOP_FPMUL,  "mul.",     FORMAT_F },
-  { OP_FTYPE, SUBOP_FPDIV,  "div.",     FORMAT_F },
-  { OP_LB,    0,            "lb",       FORMAT_I },
-  { OP_LH,    0,            "lh",       FORMAT_I },
-  { OP_LW,    0,            "lw",       FORMAT_I },
-  { OP_LBU,   0,            "lbu",      FORMAT_I },
-  { OP_LHU,   0,            "lhu",      FORMAT_I },
-  { OP_SB,    0,            "sb",       FORMAT_I },
-  { OP_SH,    0,            "sh",       FORMAT_I },
-  { OP_SW,    0,            "sw",       FORMAT_I }
+  { OP_RTYPE, SUBOP_ADD,     "add",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SLL ,    "sll",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRL ,    "srl",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRA ,    "sra",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SLLV,    "sllv",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRLV,    "srlv",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRAV,    "srav",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_JR  ,    "jr",      2, FORMAT_R },
+  { OP_RTYPE, SUBOP_JALR,    "jalr",    2, FORMAT_R },
+  { OP_RTYPE, SUBOP_SYSCALL, "syscall", 1, FORMAT_R },
+  { OP_RTYPE, SUBOP_MULT,    "mult",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MULTU,   "multu",   4, FORMAT_R },
+  { OP_RTYPE, SUBOP_DIV,     "div",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_DIVU,    "divu",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_ADD,     "add",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_ADDU,    "addu",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SUB,     "sub",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SUBU,    "subu",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_AND,     "and",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_OR,      "or",      4, FORMAT_R },
+  { OP_RTYPE, SUBOP_XOR,     "xor",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_NOR,     "nor",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SLT,     "slt",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SLTU,    "sltu",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MFHI,    "mfhi",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MTHI,    "mthi",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MFLO,    "mflo",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MTLO,    "mtlo",    4, FORMAT_R },
+  { OP_J,     0,            "j",        2, FORMAT_J },
+  { OP_JAL,   0,            "jal",      2, FORMAT_J },
+  { OP_BEQ,   0,            "beq",      4, FORMAT_I },
+  { OP_BNE,   0,            "bne",      4, FORMAT_I },
+  { OP_BLEZ,  0,            "blez",     4, FORMAT_I },
+  { OP_BGTZ,  0,            "bgtz",     4, FORMAT_I },
+  { OP_ADDI,  0,            "addi",     4, FORMAT_I },
+  { OP_ADDIU, 0,            "addiu",    4, FORMAT_I },
+  { OP_SLTI,  0,            "slti",     4, FORMAT_I },
+  { OP_SLTIU, 0,            "sltiu",    4, FORMAT_I },
+  { OP_ANDI,  0,            "andi",     4, FORMAT_I },
+  { OP_ORI,   0,            "ori",      4, FORMAT_I },
+  { OP_XORI,  0,            "xori",     4, FORMAT_I },
+  { OP_LUI,   0,            "lui",      3, FORMAT_I },
+  { OP_FTYPE, SUBOP_FPADD,  "add.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPSUB,  "sub.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPMUL,  "mul.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPDIV,  "div.",     4, FORMAT_F },
+  { OP_LB,    0,            "lb",       4, FORMAT_I },
+  { OP_LH,    0,            "lh",       4, FORMAT_I },
+  { OP_LW,    0,            "lw",       4, FORMAT_I },
+  { OP_LBU,   0,            "lbu",      4, FORMAT_I },
+  { OP_LHU,   0,            "lhu",      4, FORMAT_I },
+  { OP_SB,    0,            "sb",       4, FORMAT_I },
+  { OP_SH,    0,            "sh",       4, FORMAT_I },
+  { OP_SW,    0,            "sw",       4, FORMAT_I }
 };
 
 #define SIGNAL_COUNT 14

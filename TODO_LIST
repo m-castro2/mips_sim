@@ -1,0 +1,5 @@
+* Update <assembler> for parsing data blocks
+* Handle invalid accesses in <memory>
+* Cache system simulation in <memory>
+* Pipelined <cpu>
+* Better interface

@@ -9,7 +9,7 @@ namespace mips_sim
 class CpuMulti : public Cpu
 {
   public:
-    CpuMulti(ControlUnit &, std::shared_ptr<Memory>);
+    CpuMulti(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
     virtual ~CpuMulti();
 
     virtual void next_cycle( void );

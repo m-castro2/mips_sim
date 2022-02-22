@@ -37,8 +37,6 @@ class Memory
     void mem_write_32(uint32_t address, uint32_t value);
     uint32_t mem_read_32(uint32_t address);
 
-    int load_word(unsigned int address);
-    //int store_word(unsigned int address, void value);
   private:
     mem_region_t MEM_REGIONS[5] = {
     { MEM_TEXT_START, MEM_TEXT_SIZE, nullptr },

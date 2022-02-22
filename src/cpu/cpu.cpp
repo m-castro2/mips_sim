@@ -5,8 +5,8 @@
 namespace mips_sim
 {
 
-Cpu::Cpu(ControlUnit & _cu, std::shared_ptr<Memory> _memory)
-  : cu(_cu), memory(_memory)
+Cpu::Cpu(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
+  : control_unit(_control_unit), memory(_memory)
 {
   PC = MEM_TEXT_START;
   A_REG = UNDEF32;
