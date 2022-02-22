@@ -113,7 +113,7 @@ void Assembler::setup_code()
 
 uint32_t Assembler::load_code(shared_ptr<Memory> memory)
 {
-  size_t i = 0, words_read = 0;
+  uint32_t i = 0, words_read = 0;
 
   /* Read in the program. */
   for (uint32_t word : instructions)

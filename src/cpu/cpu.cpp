@@ -1,18 +1,18 @@
 #include "cpu.h"
+#include "../utils.h"
+
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 
+using namespace std;
 namespace mips_sim
 {
 
-Cpu::Cpu(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
+Cpu::Cpu(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
   : control_unit(_control_unit), memory(_memory)
 {
   PC = MEM_TEXT_START;
-  A_REG = UNDEF32;
-  B_REG = UNDEF32;
-  ALU_OUT_REG = UNDEF32;
-  MEM_DATA_REG = UNDEF32;
 
   instruction.opcode = 0;
   instruction.funct = 0;
@@ -147,12 +147,15 @@ void Cpu::syscall( uint32_t value )
   {
     case 1:
       //TODO: print_integer $a0
+      cout << "[SYSCALL] " << gpr[Utils::find_register_by_name("$a0")] << endl;
       break;
     case 2:
       //TODO: print_float $f12
+      cout << "[SYSCALL] " << Utils::word_to_float<float>(&fpr[12]) << endl;
       break;
     case 3:
       //TODO: print_double $f12
+      cout << "[SYSCALL] " << Utils::word_to_float<double>(&fpr[12]) << endl;
       break;
     case 4:
       //TODO: print_string $a0
@@ -174,9 +177,8 @@ void Cpu::syscall( uint32_t value )
       break;
     case 10:
       //TODO: Send stop signal or something
-      std::cout << "Program done: exiting" << std::endl;
+      cout << "Program done: exiting" << endl;
       exit(0);
-      break;
     case 41:
       //TODO: random_integer $a0(seed) $a0
       break;
@@ -191,9 +193,55 @@ void Cpu::syscall( uint32_t value )
       break;
     default:
       //TODO: Exception
-      std::cout << "Undefined syscall" << std::endl;
+      cout << "Undefined syscall" << endl;
       assert(0);
   }
+}
+
+void Cpu::write_instruction_register( uint32_t instruction_code )
+{
+  instruction.code = instruction_code;
+  instruction.opcode = instruction.code >> 26;
+
+  instruction.fp_op = (instruction.opcode == OP_FTYPE);
+  if (instruction.fp_op)
+  {
+    /* F format fields */
+    instruction.cop = (instruction.code >> 21) & 0x1F;
+    instruction.rs  = (instruction.code >> 16) & 0x1F;
+    instruction.rt  = (instruction.code >> 11) & 0x1F;
+    instruction.rd  = (instruction.code >> 6) & 0x1F;
+  }
+  else
+  {
+    /* R format fields */
+    instruction.rs = (instruction.code >> 21) & 0x1F;
+    instruction.rt = (instruction.code >> 16) & 0x1F;
+    instruction.rd = (instruction.code >> 11) & 0x1F;
+    instruction.shamt = (instruction.code >> 6) & 0x1F;
+  }
+  instruction.funct = instruction.code & 0x3F;
+  /* I format fields */
+  instruction.addr_i = instruction.code & 0xFFFF;
+  /* J format fields */
+  instruction.addr_j = instruction.code & 0x3FFFFFF;
+
+  //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
+  //TMP: TEST ENCODER
+  cout << "Instruction: " << " " << setw(8) << instruction.code << " " << setw(8) << Utils::encode_instruction(instruction) << " " << Utils::decode_instruction(instruction) << endl;
+  cout << "Instruction asm: " << " " << setw(8) << Utils::assemble_instruction(Utils::decode_instruction(instruction)) << endl;
+  cout << "Binary: 0x" << setw(8) <<  setfill('0') << hex << instruction.code << endl;
+  cout << "IR write:" << hex << setfill('0')
+            << " OP=0x" << setw(4)<< static_cast<uint32_t>(instruction.opcode)
+            << " Rs=0x" << setw(2)<< static_cast<uint32_t>(instruction.rs)
+            << " Rt=0x" << setw(2) << static_cast<uint32_t>(instruction.rt)
+            << " Rd=0x" << setw(2) << static_cast<uint32_t>(instruction.rd)
+            << " Shamt=0x" << setw(2) << static_cast<uint32_t>(instruction.shamt)
+            << " Func=0x" << setw(2) << static_cast<uint32_t>(instruction.funct)
+            << endl << "         "
+            << " addr16=0x" << setw(4) << static_cast<uint32_t>(instruction.addr_i)
+            << " addr26=0x" << setw(7) << static_cast<uint32_t>(instruction.addr_j)
+            << endl;
 }
 
 } /* namespace */

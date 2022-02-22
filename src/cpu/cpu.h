@@ -24,6 +24,7 @@ public:
   virtual ~Cpu();
 
   virtual void next_cycle( void ) = 0;
+  void write_instruction_register( uint32_t instruction_code );
 
   uint32_t PC;
 
@@ -38,11 +39,6 @@ protected:
   int mi_index;
 
   uint32_t HI, LO;
-
-  uint32_t A_REG;
-  uint32_t B_REG;
-  uint32_t ALU_OUT_REG;
-  uint32_t MEM_DATA_REG;
 
   uint32_t gpr[32];
   uint32_t fpr[32];

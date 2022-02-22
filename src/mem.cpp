@@ -1,5 +1,6 @@
 #include "mem.h"
 #include <stdio.h>
+#include <cassert>
 
 namespace mips_sim
 {

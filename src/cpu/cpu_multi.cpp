@@ -10,7 +10,10 @@ namespace mips_sim
   CpuMulti::CpuMulti(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
     : Cpu(_control_unit, _memory)
   {
-
+    A_REG = UNDEF32;
+    B_REG = UNDEF32;
+    ALU_OUT_REG = UNDEF32;
+    MEM_DATA_REG = UNDEF32;
   }
 
   CpuMulti::~CpuMulti()
@@ -181,48 +184,7 @@ namespace mips_sim
 
     if (control_unit->test(microinstruction, SIG_IRWRITE))
     {
-        instruction.code = word_read;
-        instruction.opcode = instruction.code >> 26;
-
-        instruction.fp_op = (instruction.opcode == OP_FTYPE);
-        if (instruction.fp_op)
-        {
-          /* F format fields */
-          instruction.cop = (instruction.code >> 21) & 0x1F;
-          instruction.rs  = (instruction.code >> 16) & 0x1F;
-          instruction.rt  = (instruction.code >> 11) & 0x1F;
-          instruction.rd  = (instruction.code >> 6) & 0x1F;
-        }
-        else
-        {
-          /* R format fields */
-          instruction.rs = (instruction.code >> 21) & 0x1F;
-          instruction.rt = (instruction.code >> 16) & 0x1F;
-          instruction.rd = (instruction.code >> 11) & 0x1F;
-          instruction.shamt = (instruction.code >> 6) & 0x1F;
-        }
-        instruction.funct = instruction.code & 0x3F;
-        /* I format fields */
-        instruction.addr_i = instruction.code & 0xFFFF;
-        /* J format fields */
-        instruction.addr_j = instruction.code & 0x3FFFFFF;
-
-        //std::cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << std::endl;
-//TMP: TEST ENCODER
-std::cout << "Instruction: " << " " << std::setw(8) << instruction.code << " " << std::setw(8) << Utils::encode_instruction(instruction) << " " << Utils::decode_instruction(instruction) << std::endl;
-std::cout << "Instruction asm: " << " " << std::setw(8) << Utils::assemble_instruction(Utils::decode_instruction(instruction)) << std::endl;
-        std::cout << "Binary: 0x" << std::setw(8) <<  std::setfill('0') << std::hex << instruction.code << std::endl;
-        std::cout << "IR write:" << std::hex << std::setfill('0')
-                  << " OP=0x" << std::setw(4)<< static_cast<uint32_t>(instruction.opcode)
-                  << " Rs=0x" << std::setw(2)<< static_cast<uint32_t>(instruction.rs)
-                  << " Rt=0x" << std::setw(2) << static_cast<uint32_t>(instruction.rt)
-                  << " Rd=0x" << std::setw(2) << static_cast<uint32_t>(instruction.rd)
-                  << " Shamt=0x" << std::setw(2) << static_cast<uint32_t>(instruction.shamt)
-                  << " Func=0x" << std::setw(2) << static_cast<uint32_t>(instruction.funct)
-                  << std::endl << "         "
-                  << " addr16=0x" << std::setw(4) << static_cast<uint32_t>(instruction.addr_i)
-                  << " addr26=0x" << std::setw(7) << static_cast<uint32_t>(instruction.addr_j)
-                  << std::endl;
+        write_instruction_register(word_read);
     }
 
     if (control_unit->test(microinstruction, SIG_REGWRITE))

@@ -13,6 +13,12 @@ class CpuMulti : public Cpu
     virtual ~CpuMulti();
 
     virtual void next_cycle( void );
+
+  private:
+    uint32_t A_REG;
+    uint32_t B_REG;
+    uint32_t ALU_OUT_REG;
+    uint32_t MEM_DATA_REG;
 };
 
 } /* namespace */
