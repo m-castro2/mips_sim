@@ -32,6 +32,26 @@ typedef struct
   int jump4;
 } ctrl_dir_t;
 
+#define SIGNAL_COUNT 14
+
+typedef enum
+{
+  SIG_PCWRITE   = 0,
+  SIG_PCSRC     = 1,
+  SIG_IOD       = 2,
+  SIG_MEMREAD   = 3,
+  SIG_MEMWRITE  = 4,
+  SIG_IRWRITE   = 5,
+  SIG_MEM2REG   = 6,
+  SIG_REGDST    = 7,
+  SIG_REGWRITE  = 8,
+  SIG_SELALUA   = 9,
+  SIG_SELALUB   = 10,
+  SIG_ALUSRC    = 11,
+  SIG_ALUOP     = 12,
+  SIG_BRANCH    = 13
+} signal_t;
+
 const int microcode_multi[12][SIGNAL_COUNT + 1] =
 // B   A   A   A   R   R   M   I   M   M   I   P   P
 // r   O   L   L   w   d   2   R   w   r   o   C   C
@@ -89,6 +109,36 @@ const ctrl_dir_t uc_ctrl_dir_multi[OP_COUNT] =
 const uint32_t uc_signals_multi[SIGNAL_COUNT] =
   { 1, 2, 1,  1, 1, 1, 1,  1, 1, 1, 2, 0, 2, 1 };
 
+const uint32_t uc_signals_pipelined[SIGNAL_COUNT] =
+  { 0, 1, 0,  1, 1, 0, 1,  1, 1, 0, 0, 1, 2, 1 };
+
+  // SIG_BRANCH    = 13
+  // SIG_ALUOP     = 12,
+  // SIG_ALUSRC    = 11,
+  // SIG_REGWRITE  = 8,
+  // SIG_REGDST    = 7,
+  // SIG_MEM2REG   = 6,
+  // SIG_MEMWRITE  = 4,
+  // SIG_MEMREAD   = 3,
+  // SIG_PCSRC     = 1,
+
+  const uint32_t uc_microcode_pipelined[MAX_MICROINSTRUCTIONS] =
+    {
+      // 0x00000034, //   0 0  0 1 1 1  0 10 0 Rtype
+      // 0x00000201, //   1 0  0 0 0 0  0 00 1 J
+      // 0x00000203, //   1 0  0 0 0 0  0 01 1 BNE/BEQ
+      // 0x00000118, //   0 1  0 0 0 1  1 00 0 LW
+      // 0x000000D8, //   0 0  1 1 0 1  1 00 0 SW
+      // 0x0000005C  //   0 0  0 1 0 1  1 10 0 Itype
+
+      0x00000138, //   0 10 0 1 1  1 0 0 0  Rtype
+      0x00000201, //   1 00 0 0 0  0 0 0 1  J
+      0x00000281, //   1 01 0 0 0  0 0 0 1 BNE/BEQ
+      0x00000062, //   0 00 1 1 0  0 0 1 0 LW
+      0x00000044, //   0 00 1 0 0  0 1 0 0 SW
+      0x00000168  //   0 10 1 1 0  1 0 0 0 Itype
+    };
+
 // CtrlDir(4) -(12)
 // Branch(1), AluOp(2),
 // AluB(2), AluA(1), RegWrite(1)
@@ -109,8 +159,7 @@ const uint32_t uc_microcode_multi[MAX_MICROINSTRUCTIONS] =
     0x00000200,
   };
 
-const uint32_t uc_signals_pipelined[SIGNAL_COUNT] =
-  { 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 2, 2, 1 };
+
 
 class ControlUnit
 {
@@ -129,6 +178,8 @@ public:
   void print_microcode( void ) const;
 
   void print_microinstruction( int index ) const;
+
+  uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
 
 private:
   uint32_t uc_signals[SIGNAL_COUNT];

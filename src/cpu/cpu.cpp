@@ -26,13 +26,21 @@ Cpu::Cpu(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
   /* set registers to 0 */
   memset(gpr, 0, 32 * sizeof(int));
   memset(fpr, 0, 32 * sizeof(int));
+
+  ready = true;
 }
 
 Cpu::~Cpu() {}
 
+bool Cpu::is_ready( void ) const
+{
+  return ready;
+}
+
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
 {
   uint32_t alu_output = 0xFFFFFFFF;
+  cout << "---[ALU] SUBOP " << hex << alu_op << endl;
   switch(alu_op)
   {
     case SUBOP_SYSCALL:
@@ -119,20 +127,28 @@ uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_
   switch(alu_op)
   {
     case OP_ADDI:
+      cout << "---[ALU] ADDI" << endl;
       alu_output = static_cast<uint32_t>(static_cast<int>(alu_input_a) + static_cast<int>(alu_input_b)); break;
     case OP_ADDIU:
+      cout << "---[ALU] ADDIU" << endl;
       alu_output = alu_input_a + alu_input_b; break;
     case OP_SLTI:
+      cout << "---[ALU] SLTI" << endl;
       alu_output = (static_cast<int>(alu_input_a) < static_cast<int>(alu_input_b))?1:0; break;
     case OP_SLTIU:
+      cout << "---[ALU] SLTIU" << endl;
       alu_output = (alu_input_a < alu_input_b)?1:0; break;
     case OP_ANDI:
+      cout << "---[ALU] ANDI" << endl;
       alu_output = alu_input_a & alu_input_b; break;
     case OP_ORI:
+      cout << "---[ALU] ORI" << endl;
       alu_output = alu_input_a | alu_input_b; break;
     case OP_XORI:
+      cout << "---[ALU] XORI" << endl;
       alu_output = alu_input_a ^ alu_input_b; break;
     case OP_LUI:
+      cout << "---[ALU] LUI" << endl;
       alu_output = alu_input_b<<16; break;
     default:
       assert(0);
@@ -177,8 +193,9 @@ void Cpu::syscall( uint32_t value )
       break;
     case 10:
       //TODO: Send stop signal or something
-      cout << "Program done: exiting" << endl;
-      exit(0);
+      cout << "[SYSCALL] Program done." << endl;
+      ready = false;
+      break;
     case 41:
       //TODO: random_integer $a0(seed) $a0
       break;
@@ -193,55 +210,41 @@ void Cpu::syscall( uint32_t value )
       break;
     default:
       //TODO: Exception
-      cout << "Undefined syscall" << endl;
+      cout << "Undefined syscall 0x" << hex << value << endl;
       assert(0);
   }
 }
 
 void Cpu::write_instruction_register( uint32_t instruction_code )
 {
-  instruction.code = instruction_code;
-  instruction.opcode = instruction.code >> 26;
-
-  instruction.fp_op = (instruction.opcode == OP_FTYPE);
-  if (instruction.fp_op)
-  {
-    /* F format fields */
-    instruction.cop = (instruction.code >> 21) & 0x1F;
-    instruction.rs  = (instruction.code >> 16) & 0x1F;
-    instruction.rt  = (instruction.code >> 11) & 0x1F;
-    instruction.rd  = (instruction.code >> 6) & 0x1F;
-  }
-  else
-  {
-    /* R format fields */
-    instruction.rs = (instruction.code >> 21) & 0x1F;
-    instruction.rt = (instruction.code >> 16) & 0x1F;
-    instruction.rd = (instruction.code >> 11) & 0x1F;
-    instruction.shamt = (instruction.code >> 6) & 0x1F;
-  }
-  instruction.funct = instruction.code & 0x3F;
-  /* I format fields */
-  instruction.addr_i = instruction.code & 0xFFFF;
-  /* J format fields */
-  instruction.addr_j = instruction.code & 0x3FFFFFF;
+  instruction = Utils::fill_instruction(instruction_code);
 
   //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
   //TMP: TEST ENCODER
-  cout << "Instruction: " << " " << setw(8) << instruction.code << " " << setw(8) << Utils::encode_instruction(instruction) << " " << Utils::decode_instruction(instruction) << endl;
-  cout << "Instruction asm: " << " " << setw(8) << Utils::assemble_instruction(Utils::decode_instruction(instruction)) << endl;
-  cout << "Binary: 0x" << setw(8) <<  setfill('0') << hex << instruction.code << endl;
-  cout << "IR write:" << hex << setfill('0')
+  cout << "  -Instruction: " << " " << setw(8) << hex << instruction.code << "   ***   " << Utils::decode_instruction(instruction) << endl;
+  cout << "  -Binary: 0x" << setw(8) <<  setfill('0') << hex << instruction.code << endl;
+  cout << "  -IR write:" << hex << setfill('0')
             << " OP=0x" << setw(4)<< static_cast<uint32_t>(instruction.opcode)
             << " Rs=0x" << setw(2)<< static_cast<uint32_t>(instruction.rs)
             << " Rt=0x" << setw(2) << static_cast<uint32_t>(instruction.rt)
             << " Rd=0x" << setw(2) << static_cast<uint32_t>(instruction.rd)
             << " Shamt=0x" << setw(2) << static_cast<uint32_t>(instruction.shamt)
             << " Func=0x" << setw(2) << static_cast<uint32_t>(instruction.funct)
-            << endl << "         "
+            << endl << "            "
             << " addr16=0x" << setw(4) << static_cast<uint32_t>(instruction.addr_i)
             << " addr26=0x" << setw(7) << static_cast<uint32_t>(instruction.addr_j)
             << endl;
 }
 
+void Cpu::print_registers( void ) const
+{
+  cout << endl;
+  for (size_t i=0; i<8; ++i)
+  {
+    cout << setw(3) << setfill(' ') << registers_def[i].regname_int << " [" << setw(8) << hex << gpr[i] << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+8].regname_int << " [" << setw(8) << hex << gpr[i+8] << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+16].regname_int << " [" << setw(8) << hex << gpr[i+16] << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+24].regname_int << " [" << setw(8) << hex << gpr[i+24] << "]" << endl;
+  }
+}
 } /* namespace */

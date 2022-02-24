@@ -21,7 +21,7 @@ namespace mips_sim
 
   }
 
-  void CpuMulti::next_cycle( void )
+  bool CpuMulti::next_cycle( void )
   {
     /* temporary data */
     uint32_t alu_input_a, alu_input_b, alu_output = 0;
@@ -34,7 +34,7 @@ namespace mips_sim
     {
       execution_stall--;
       std::cout << "--stall" << std::endl;
-      return;
+      return ready;
     }
 
     uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
@@ -225,6 +225,8 @@ namespace mips_sim
     mi_index = control_unit->get_next_microinstruction(mi_index, instruction.opcode);
     if (mi_index < 0)
        exit(ERROR_UNSUPPORTED_OPERATION);
+
+    return ready;
   }
 
 } /* namespace */

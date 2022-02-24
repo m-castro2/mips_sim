@@ -11,6 +11,7 @@ OBJFILES = src/assembler/assembler.o \
            src/cpu/control_unit.o \
 	         src/cpu/cpu.o \
 					 src/cpu/cpu_multi.o \
+					 src/cpu/cpu_pipelined.o \
 	         src/mem.o \
 		       src/utils.o \
 	         src/mips_sim.o

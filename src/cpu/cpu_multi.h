@@ -12,7 +12,7 @@ class CpuMulti : public Cpu
     CpuMulti(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
     virtual ~CpuMulti();
 
-    virtual void next_cycle( void );
+    virtual bool next_cycle( void );
 
   private:
     uint32_t A_REG;

@@ -299,71 +299,74 @@ uint32_t Assembler::build_instruction(uint32_t &addr,
     return UNDEF32;
   }
 
-  size_t instruction_index = Utils::find_instruction_by_name(symbols[symbol_counter]);
-  if (instruction_index == UNDEF32)
+  if (symbols[symbol_counter] != "nop")
   {
-    /* ignore labels as they were already recorded  */
-    symbol_counter++;
-    temp = build_instruction(addr, symbols_count, symbol_counter,
-                             label_counter, line_counter);
-    return temp;
-  }
-  else
-  {
-    instruction_format_t instruction_def = instructions_def[instruction_index];
-
-    instruction.opcode = static_cast<uint8_t>(instruction_def.opcode);
-    if (instruction_def.format == FORMAT_R)
+    size_t instruction_index = Utils::find_instruction_by_name(symbols[symbol_counter]);
+    if (instruction_index == UNDEF32)
     {
-      instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
-      if (instruction_def.subopcode != SUBOP_SYSCALL)
+      /* ignore labels as they were already recorded  */
+      symbol_counter++;
+      temp = build_instruction(addr, symbols_count, symbol_counter,
+                               label_counter, line_counter);
+      return temp;
+    }
+    else
+    {
+      instruction_format_t instruction_def = instructions_def[instruction_index];
+
+      instruction.opcode = static_cast<uint8_t>(instruction_def.opcode);
+      if (instruction_def.format == FORMAT_R)
       {
-        if (instruction_def.subopcode == SUBOP_SLL || instruction_def.subopcode == SUBOP_SRL)
+        instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
+        if (instruction_def.subopcode != SUBOP_SYSCALL)
         {
-          instruction.rd = pop_register(symbols_count, symbol_counter, line_counter);
-          instruction.rs = 0;
+          if (instruction_def.subopcode == SUBOP_SLL || instruction_def.subopcode == SUBOP_SRL)
+          {
+            instruction.rd = pop_register(symbols_count, symbol_counter, line_counter);
+            instruction.rs = 0;
+            instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
+            instruction.shamt = pop_shift(symbols_count, symbol_counter);
+          }
+          else
+          {
+            instruction.rd = pop_register(symbols_count, symbol_counter, line_counter);
+            instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+            instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
+          }
+        }
+      }
+      else if (instruction_def.format == FORMAT_I)
+      {
+        if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
+            instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+        {
           instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
-          instruction.shamt = pop_shift(symbols_count, symbol_counter);
+          instruction.addr_i = pop_mem_offset(symbols_count, symbol_counter);
+          instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+        }
+        else if (instruction.opcode == OP_BEQ || instruction.opcode == OP_BNE)
+        {
+          instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+          instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
+          instruction.addr_i = pop_branch_offset(symbols_count, symbol_counter, label_counter, line_counter);
+        }
+        else if (instruction.opcode == OP_LUI)
+        {
+          instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
+          instruction.rs = 0;
+          instruction.addr_i = pop_immediate(symbols_count, symbol_counter);
         }
         else
         {
-          instruction.rd = pop_register(symbols_count, symbol_counter, line_counter);
-          instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
           instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
+          instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+          instruction.addr_i = pop_immediate(symbols_count, symbol_counter);
         }
       }
-    }
-    else if (instruction_def.format == FORMAT_I)
-    {
-      if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
-          instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+      else if (instruction_def.format == FORMAT_J)
       {
-        instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.addr_i = pop_mem_offset(symbols_count, symbol_counter);
-        instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+        instruction.addr_j = pop_jump_address(symbols_count, symbol_counter, label_counter);
       }
-      else if (instruction.opcode == OP_BEQ || instruction.opcode == OP_BNE)
-      {
-        instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.addr_i = pop_branch_offset(symbols_count, symbol_counter, label_counter, line_counter);
-      }
-      else if (instruction.opcode == OP_LUI)
-      {
-        instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.rs = 0;
-        instruction.addr_i = pop_immediate(symbols_count, symbol_counter);
-      }
-      else
-      {
-        instruction.rt = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
-        instruction.addr_i = pop_immediate(symbols_count, symbol_counter);
-      }
-    }
-    else if (instruction_def.format == FORMAT_J)
-    {
-      instruction.addr_j = pop_jump_address(symbols_count, symbol_counter, label_counter);
     }
   }
 

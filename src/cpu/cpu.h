@@ -23,8 +23,11 @@ public:
   Cpu(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
   virtual ~Cpu();
 
-  virtual void next_cycle( void ) = 0;
+  virtual bool next_cycle( void ) = 0;
   void write_instruction_register( uint32_t instruction_code );
+  void print_registers( void ) const;
+
+  bool is_ready( void ) const;
 
   uint32_t PC;
 
@@ -47,6 +50,8 @@ protected:
 
   int execution_stall;
   void syscall( uint32_t value );
+
+  bool ready;
 };
 
 } /* namespace */

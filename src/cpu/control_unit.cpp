@@ -38,13 +38,14 @@ ControlUnit::ControlUnit(const uint32_t * _uc_signal_bits, const uint32_t * _uc_
   for (size_t i = 0; i < MAX_MICROINSTRUCTIONS; ++i)
     uc_microcode[i] = _uc_microcode[i];
 
-  // for (size_t i = 0; i < SIGNAL_COUNT; ++i)
-  // {
-  //   std::bitset<16> x(uc_signals[i]);
-  //   std::cout << "Signal " << std::setfill('0') << std::setw(2) << i << ": "
-  //             << std::setfill(' ') << std::setw(10) << signal_names[i] << " "
-  //             << x << std::endl;
-  // }
+  for (size_t i = 0; i < SIGNAL_COUNT; ++i)
+  {
+    std::bitset<16> x(uc_signals[i]);
+    if (uc_signals[i] > 0)
+    std::cout << "Signal " << std::setfill('0') << std::setw(2) << i << ": "
+              << std::setfill(' ') << std::setw(10) << signal_names[i] << " "
+              << x << std::endl;
+  }
 
   for (size_t i = 0; i < OP_COUNT; ++i)
     uc_ctrl_dir[i] = _uc_ctrl_dir[i];
@@ -157,6 +158,19 @@ int ControlUnit::get_next_microinstruction(int index, int opcode) const
       break;
   }
   return mi_index;
+}
+
+uint32_t ControlUnit::get_signal_bitmask( signal_t const signals[], size_t count ) const
+{
+  uint32_t bitmask = 0;
+
+  for (size_t i=0; i<count; ++i)
+  {
+    signal_t signal = signals[i];
+    bitmask |= uc_signals[signal];
+  }
+
+  return bitmask;
 }
 
 } /* namespace */

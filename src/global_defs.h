@@ -131,6 +131,7 @@ const register_format_t registers_def[]
 
 const instruction_format_t instructions_def[]
 {
+  {        0,         0,     "nop",     1, FORMAT_R },
   { OP_RTYPE, SUBOP_ADD,     "add",     4, FORMAT_R },
   { OP_RTYPE, SUBOP_SLL ,    "sll",     4, FORMAT_R },
   { OP_RTYPE, SUBOP_SRL ,    "srl",     4, FORMAT_R },
@@ -186,26 +187,6 @@ const instruction_format_t instructions_def[]
   { OP_SH,    0,            "sh",       4, FORMAT_I },
   { OP_SW,    0,            "sw",       4, FORMAT_I }
 };
-
-#define SIGNAL_COUNT 14
-
-typedef enum
-{
-  SIG_PCWRITE   = 0,
-  SIG_PCSRC     = 1,
-  SIG_IOD       = 2,
-  SIG_MEMREAD   = 3,
-  SIG_MEMWRITE  = 4,
-  SIG_IRWRITE   = 5,
-  SIG_MEM2REG   = 6,
-  SIG_REGDST    = 7,
-  SIG_REGWRITE  = 8,
-  SIG_SELALUA   = 9,
-  SIG_SELALUB   = 10,
-  SIG_ALUSRC    = 11,
-  SIG_ALUOP     = 12,
-  SIG_BRANCH    = 13
-} signal_t;
 
 const std::string signal_names[] = {
  "PCWrite",  "PCSrc",  "IoD", "MemRead", "MemWrite", "IRWrite",

@@ -220,8 +220,12 @@ uint8_t Utils::find_register_by_name(string regname)
 string Utils::decode_instruction(instruction_t instruction)
 {
   stringstream ss;
+  size_t instruction_index;
 
-  size_t instruction_index = find_instruction(instruction);
+  if (instruction.code == 0)
+    return "nop";
+
+  instruction_index = find_instruction(instruction);
 
   ss << instructions_def[instruction_index].opname << " ";
   if (instructions_def[instruction_index].format == FORMAT_R)
@@ -251,16 +255,20 @@ string Utils::decode_instruction(instruction_t instruction)
   }
   else
   {
-    ss << registers_def[instruction.rs].regname_int << ", ";
+    ss << registers_def[instruction.rt].regname_int << ", ";
     if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
         instruction.opcode == OP_LB || instruction.opcode == OP_SB)
     {
       ss << "0x" << hex << instruction.addr_i << "(";
-      ss << registers_def[instruction.rt].regname_int << ")";
+      ss << registers_def[instruction.rs].regname_int << ")";
+    }
+    else if (instruction.opcode == OP_LUI)
+    {
+      ss << "0x" << hex << instruction.addr_i;
     }
     else
     {
-      ss << registers_def[instruction.rt].regname_int << ", ";
+      ss << registers_def[instruction.rs].regname_int << ", ";
       ss << "0x" << hex << instruction.addr_i;
     }
   }
@@ -291,6 +299,39 @@ uint32_t Utils::encode_instruction(instruction_t instruction)
     }
   }
   return instcode;
+}
+
+instruction_t Utils::fill_instruction(uint32_t instruction_code)
+{
+  instruction_t instruction;
+
+  instruction.code = instruction_code;
+  instruction.opcode = instruction.code >> 26;
+
+  instruction.fp_op = (instruction.opcode == OP_FTYPE);
+  if (instruction.fp_op)
+  {
+    /* F format fields */
+    instruction.cop = (instruction.code >> 21) & 0x1F;
+    instruction.rs  = (instruction.code >> 16) & 0x1F;
+    instruction.rt  = (instruction.code >> 11) & 0x1F;
+    instruction.rd  = (instruction.code >> 6) & 0x1F;
+  }
+  else
+  {
+    /* R format fields */
+    instruction.rs = (instruction.code >> 21) & 0x1F;
+    instruction.rt = (instruction.code >> 16) & 0x1F;
+    instruction.rd = (instruction.code >> 11) & 0x1F;
+    instruction.shamt = (instruction.code >> 6) & 0x1F;
+  }
+  instruction.funct = instruction.code & 0x3F;
+  /* I format fields */
+  instruction.addr_i = instruction.code & 0xFFFF;
+  /* J format fields */
+  instruction.addr_j = instruction.code & 0x3FFFFFF;
+
+  return instruction;
 }
 
 uint32_t Utils::assemble_instruction(string instruction_str)

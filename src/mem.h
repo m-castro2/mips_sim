@@ -35,7 +35,8 @@ class Memory
     ~Memory();
 
     void mem_write_32(uint32_t address, uint32_t value);
-    uint32_t mem_read_32(uint32_t address);
+    uint32_t mem_read_32(uint32_t address) const;
+    void print_memory( uint32_t start, uint32_t length ) const;
 
   private:
     mem_region_t MEM_REGIONS[5] = {

@@ -1,9 +1,13 @@
 #include "mem.h"
 #include <stdio.h>
 #include <cassert>
+#include <iostream>
+#include <iomanip>
 
 namespace mips_sim
 {
+
+using namespace std;
 
 Memory::Memory( void )
 {
@@ -31,7 +35,7 @@ Memory::~Memory()
   }
 }
 
-uint32_t Memory::mem_read_32(uint32_t address)
+uint32_t Memory::mem_read_32(uint32_t address) const
 {
     for (size_t i = 0; i < MEM_NREGIONS; i++)
     {
@@ -73,6 +77,30 @@ void Memory::mem_write_32(uint32_t address, uint32_t value)
     }
 
     assert(0);
+}
+
+void Memory::print_memory( uint32_t start, uint32_t length ) const
+{
+  for (size_t i = 0; i < MEM_NREGIONS; i++)
+  if (start >= MEM_REGIONS[i].start &&
+      start+length < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
+  {
+    cout << endl;
+    for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
+    {
+      uint32_t word = mem_read_32(mem_addr);
+      cout << setw(8) << setfill(' ') << hex << mem_addr << " [" << setw(8) << hex << word << "]";
+      word = mem_read_32(mem_addr + 4);
+      cout << " [" << setw(8) << hex << word << "]";
+      word = mem_read_32(mem_addr + 8);
+      cout << " [" << setw(8) << hex << word << "]";
+      word = mem_read_32(mem_addr + 12);
+      cout << " [" << setw(8) << hex << word << "]" << endl;
+    }
+    return;
+  }
+
+  assert(0);
 }
 
 } /* namespace */

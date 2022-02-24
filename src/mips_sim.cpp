@@ -2,6 +2,7 @@
 #include "cpu/control_unit.h"
 #include "cpu/control_unit.h"
 #include "cpu/cpu_multi.h"
+#include "cpu/cpu_pipelined.h"
 #include "mem.h"
 #include "utils.h"
 
@@ -91,7 +92,6 @@ int main(int argc, char * argv[])
 
         return retval;
       }
-      break;
     default:
       /* this should never happen */
       assert(0);
@@ -101,12 +101,15 @@ int main(int argc, char * argv[])
   if (retval != 0)
     return retval;
 
-  control_unit = std::shared_ptr<ControlUnit>(new ControlUnit(uc_signals_multi, uc_microcode_multi, uc_ctrl_dir_multi));
+  //control_unit = std::shared_ptr<ControlUnit>(new ControlUnit(uc_signals_multi, uc_microcode_multi, uc_ctrl_dir_multi));
+  control_unit = std::shared_ptr<ControlUnit>(new ControlUnit(uc_signals_pipelined, uc_microcode_pipelined, uc_ctrl_dir_multi));
   control_unit->print_microcode();
 
-  cpu = std::unique_ptr<Cpu>(new CpuMulti(control_unit, mem));
+  //cpu = std::unique_ptr<Cpu>(new CpuMulti(control_unit, mem));
+  cpu = std::unique_ptr<Cpu>(new CpuPipelined(control_unit, mem));
 
-  for (size_t i = 0;; i++)
+  for (size_t i = 0; cpu->is_ready() ; i++)
+  //for (size_t i = 0; i < 24 ; i++)
   {
     std::cout << "------------------------------------------ cycle " << std::dec << i << std::endl;
     cpu->next_cycle();
@@ -114,6 +117,9 @@ int main(int argc, char * argv[])
     if (cpu->PC < 0x00400000)
       break;
   }
+
+  cpu->print_registers();
+  mem->print_memory(0x10010000, 128);
 
   return EXIT_SUCCESS;
 }

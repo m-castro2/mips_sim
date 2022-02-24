@@ -28,6 +28,8 @@ public:
   static std::string decode_instruction(instruction_t instruction);
   static uint32_t encode_instruction(instruction_t instruction);
   static uint32_t assemble_instruction(std::string instruction_str);
+
+  static instruction_t fill_instruction(uint32_t instruction_code);
 };
 
 } /* namespace */
