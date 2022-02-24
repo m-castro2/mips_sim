@@ -40,7 +40,7 @@ bool Cpu::is_ready( void ) const
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
 {
   uint32_t alu_output = 0xFFFFFFFF;
-  cout << "---[ALU] SUBOP " << hex << alu_op << endl;
+  //cout << "---[ALU] SUBOP " << hex << alu_op << endl;
   switch(alu_op)
   {
     case SUBOP_SYSCALL:
@@ -76,7 +76,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
                                          static_cast<int32_t>(alu_input_b));
       break;
     case SUBOP_SUBU:
-      alu_output = alu_input_a + alu_input_b; break;
+      alu_output = alu_input_a - alu_input_b; break;
     case SUBOP_MULT:
     {
       uint64_t v = static_cast<uint64_t>(static_cast<int32_t>(alu_input_a) *
@@ -127,29 +127,37 @@ uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_
   switch(alu_op)
   {
     case OP_ADDI:
-      cout << "---[ALU] ADDI" << endl;
-      alu_output = static_cast<uint32_t>(static_cast<int>(alu_input_a) + static_cast<int>(alu_input_b)); break;
+      //cout << "---[ALU] ADDI" << endl;
+      alu_output = static_cast<uint32_t>(static_cast<int>(alu_input_a) + static_cast<int>(alu_input_b));
+      break;
     case OP_ADDIU:
-      cout << "---[ALU] ADDIU" << endl;
-      alu_output = alu_input_a + alu_input_b; break;
+      //cout << "---[ALU] ADDIU" << endl;
+      alu_output = alu_input_a + alu_input_b;
+      break;
     case OP_SLTI:
-      cout << "---[ALU] SLTI" << endl;
-      alu_output = (static_cast<int>(alu_input_a) < static_cast<int>(alu_input_b))?1:0; break;
+      //cout << "---[ALU] SLTI" << endl;
+      alu_output = (static_cast<int>(alu_input_a) < static_cast<int>(alu_input_b))?1:0;
+      break;
     case OP_SLTIU:
-      cout << "---[ALU] SLTIU" << endl;
-      alu_output = (alu_input_a < alu_input_b)?1:0; break;
+      //cout << "---[ALU] SLTIU" << endl;
+      alu_output = (alu_input_a < alu_input_b)?1:0;
+      break;
     case OP_ANDI:
-      cout << "---[ALU] ANDI" << endl;
-      alu_output = alu_input_a & alu_input_b; break;
+      //cout << "---[ALU] ANDI" << endl;
+      alu_output = alu_input_a & alu_input_b;
+      break;
     case OP_ORI:
-      cout << "---[ALU] ORI" << endl;
-      alu_output = alu_input_a | alu_input_b; break;
+      //cout << "---[ALU] ORI" << endl;
+      alu_output = alu_input_a | alu_input_b;
+      break;
     case OP_XORI:
-      cout << "---[ALU] XORI" << endl;
-      alu_output = alu_input_a ^ alu_input_b; break;
+      //cout << "---[ALU] XORI" << endl;
+      alu_output = alu_input_a ^ alu_input_b;
+      break;
     case OP_LUI:
-      cout << "---[ALU] LUI" << endl;
-      alu_output = alu_input_b<<16; break;
+      //cout << "---[ALU] LUI" << endl;
+      alu_output = alu_input_b<<16;
+      break;
     default:
       assert(0);
   }

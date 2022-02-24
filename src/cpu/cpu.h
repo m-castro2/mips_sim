@@ -7,15 +7,15 @@
 
 #include <memory>
 
+#define ERROR_UNSUPPORTED_OPERATION    101
+#define ERROR_UNSUPPORTED_SUBOPERATION 102
+
 //TODO: Change into config file
 #define MULT_STALL 4
-#define DIV_STALL 6
+#define DIV_STALL  6
 
 namespace mips_sim
 {
-
-#define ERROR_UNSUPPORTED_OPERATION 101
-#define ERROR_UNSUPPORTED_SUBOPERATION 102
 
 class Cpu
 {

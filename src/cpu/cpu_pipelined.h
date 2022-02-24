@@ -1,9 +1,6 @@
 #ifndef MIPS_SIM_CPU_PIPELINED_H
 #define MIPS_SIM_CPU_PIPELINED_H
 
-#define HAS_FORWARDING_UNIT       true
-#define HAS_HAZARD_DETECTION_UNIT true
-
 #define STAGE_IF  0
 #define STAGE_ID  1
 #define STAGE_EX  2
@@ -33,10 +30,19 @@
 #define SR_WORDREAD    14
 #define SR_INSTRUCTION 31
 
+#define BRANCH_FLUSH     0 /* flush pipeline */
+#define BRANCH_NON_TAKEN 1 /* fixed non taken */
+#define BRANCH_DELAYED   2 /* delayed branch */
+
 #include "cpu.h"
 
 namespace mips_sim
 {
+
+const int  BRANCH_TYPE               = BRANCH_NON_TAKEN;
+const int  BRANCH_STAGE              = STAGE_ID;
+const bool HAS_FORWARDING_UNIT       = true;
+const bool HAS_HAZARD_DETECTION_UNIT = true;
 
 /* segmentation register */
 struct seg_reg_t {
@@ -59,13 +65,17 @@ class CpuPipelined : public Cpu
     void stage_wb( void );
 
     bool pc_write; /* if false, blocks pipeline */
+    uint32_t next_pc;
+    int flush_pipeline;
 
     uint32_t forward_register( uint32_t reg, uint32_t reg_value ) const;
-    bool detect_hazard( uint32_t reg ) const;
+    bool detect_hazard( uint32_t read_reg, bool can_forward ) const;
+    bool process_branch(uint32_t instruction_code,
+                        uint32_t rs_value, uint32_t rt_value,
+                        uint32_t pc_value);
 
     seg_reg_t seg_regs[STAGE_COUNT-1] = {};
     seg_reg_t next_seg_regs[STAGE_COUNT-1] = {};
-    std::string instruction_name[STAGE_COUNT] = { "nop", "nop", "nop", "nop", "nop" };
 
     uint32_t sigmask[STAGE_COUNT-1] = {};
 };

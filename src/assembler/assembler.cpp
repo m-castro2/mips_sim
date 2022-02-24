@@ -115,6 +115,10 @@ uint32_t Assembler::load_code(shared_ptr<Memory> memory)
 {
   uint32_t i = 0, words_read = 0;
 
+  memory->allocate_space(MEM_TEXT_START,
+                         static_cast<uint32_t>((instructions.size()+4) * 4));
+  memory->lock();
+
   /* Read in the program. */
   for (uint32_t word : instructions)
   {
@@ -263,6 +267,8 @@ uint32_t Assembler::pop_jump_address(uint32_t &symbols_count, uint32_t &symbol_c
       break;
     }
   }
+
+  jump_address = ((MEM_TEXT_START & 0x0FFFFFFF)>>2) + jump_address;
 
   return jump_address;
 }
