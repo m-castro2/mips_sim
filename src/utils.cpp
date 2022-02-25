@@ -225,7 +225,11 @@ string Utils::decode_instruction(instruction_t instruction)
   ss << instructions_def[instruction_index].opname << " ";
   if (instructions_def[instruction_index].format == FORMAT_R)
   {
-    if (instruction.funct == SUBOP_SLL || instruction.funct == SUBOP_SRL)
+    if (instruction.funct == SUBOP_JR || instruction.funct == SUBOP_JALR)
+    {
+      ss << registers_def[instruction.rs].regname_int;
+    }
+    else if (instruction.funct == SUBOP_SLL || instruction.funct == SUBOP_SRL)
     {
       ss << registers_def[instruction.rd].regname_int << ", ";
       ss << registers_def[instruction.rt].regname_int << ", ";

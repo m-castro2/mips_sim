@@ -326,7 +326,11 @@ uint32_t Assembler::build_instruction(uint32_t &addr,
         instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
         if (instruction_def.subopcode != SUBOP_SYSCALL)
         {
-          if (instruction_def.subopcode == SUBOP_SLL || instruction_def.subopcode == SUBOP_SRL)
+          if (instruction_def.subopcode == SUBOP_JR || instruction_def.subopcode == SUBOP_JALR)
+          {
+            instruction.rs = pop_register(symbols_count, symbol_counter, line_counter);
+          }
+          else if (instruction_def.subopcode == SUBOP_SLL || instruction_def.subopcode == SUBOP_SRL)
           {
             instruction.rd = pop_register(symbols_count, symbol_counter, line_counter);
             instruction.rs = 0;

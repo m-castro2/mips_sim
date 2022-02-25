@@ -59,6 +59,9 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       alu_output = alu_input_a ^ alu_input_b; break;
     case SUBOP_NOR:
       alu_output = ~(alu_input_a | alu_input_b); break;
+    case SUBOP_JR:
+    case SUBOP_JALR:
+      alu_output = alu_input_a; break;
     case SUBOP_SLT:
       alu_output = (static_cast<int32_t>(alu_input_a) < static_cast<int32_t>(alu_input_b))
                    ?1:0;

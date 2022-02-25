@@ -147,7 +147,12 @@ namespace mips_sim
     else
     {
       if (instruction.opcode == OP_RTYPE)
-        mi_index = 0;
+      {
+        if (instruction.funct == SUBOP_JR || instruction.funct == SUBOP_JALR)
+          mi_index = 1;
+        else
+          mi_index = 0;
+      }
       else if (instruction.opcode == OP_J || instruction.opcode == OP_JAL)
         mi_index = 1;
       else if (instruction.opcode == OP_BNE || instruction.opcode == OP_BEQ)
@@ -170,7 +175,8 @@ namespace mips_sim
                 seg_regs[EX_MEM].data[SR_INSTRUCTION] == 0);
     }
 
-    if (instruction.opcode == OP_JAL)
+    if (instruction.opcode == OP_JAL
+      || (instruction.opcode == OP_RTYPE && instruction.funct == SUBOP_JALR))
     {
       /* hack the processor! */
       rs_value = seg_regs[IF_ID].data[SR_PC];
