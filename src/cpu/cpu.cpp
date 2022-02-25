@@ -175,11 +175,11 @@ void Cpu::syscall( uint32_t value )
       break;
     case 2:
       //TODO: print_float $f12
-      cout << "[SYSCALL] " << Utils::word_to_float<float>(&fpr[12]) << endl;
+      cout << "[SYSCALL] " << Utils::word_to_float(&fpr[12]) << endl;
       break;
     case 3:
       //TODO: print_double $f12
-      cout << "[SYSCALL] " << Utils::word_to_float<double>(&fpr[12]) << endl;
+      cout << "[SYSCALL] " << Utils::word_to_double(&fpr[12]) << endl;
       break;
     case 4:
       //TODO: print_string $a0

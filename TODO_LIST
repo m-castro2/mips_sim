@@ -1,5 +1,5 @@
+* Implement and check every instruction
 * Update <assembler> for parsing data blocks
-* Handle invalid accesses in <memory>
 * Cache system simulation in <memory>
-* Pipelined <cpu>
+* Single/double precision FP co-processors
 * Better interface

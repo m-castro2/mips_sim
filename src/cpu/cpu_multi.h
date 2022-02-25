@@ -10,9 +10,9 @@ class CpuMulti : public Cpu
 {
   public:
     CpuMulti(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
-    virtual ~CpuMulti();
+    virtual ~CpuMulti() override;
 
-    virtual bool next_cycle( void );
+    virtual bool next_cycle( void ) override;
 
   private:
     uint32_t A_REG;

@@ -214,10 +214,10 @@ namespace mips_sim
 
     A_REG = gpr[instruction.rs];
     B_REG = gpr[instruction.rt];
-    cop0_input_a = Utils::word_to_float<float>(&fpr[instruction.rs]);
-    cop0_input_b = Utils::word_to_float<float>(&fpr[instruction.rt]);
-    cop1_input_a = Utils::word_to_float<double>(&fpr[instruction.rs]);
-    cop1_input_b = Utils::word_to_float<double>(&fpr[instruction.rt]);
+    cop0_input_a = Utils::word_to_float(&fpr[instruction.rs]);
+    cop0_input_b = Utils::word_to_float(&fpr[instruction.rt]);
+    cop1_input_a = Utils::word_to_double(&fpr[instruction.rs]);
+    cop1_input_b = Utils::word_to_double(&fpr[instruction.rt]);
     ALU_OUT_REG = alu_output;
     MEM_DATA_REG = word_read;
 

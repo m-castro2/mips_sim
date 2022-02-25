@@ -11,35 +11,30 @@ using namespace std;
 namespace mips_sim
 {
 
-  static void _float_to_word(double f,
-                             uint32_t te, uint32_t tm,
-                             uint32_t word[]);
-  static double _word_to_double(uint32_t w32[],
-                                uint32_t tm, uint32_t te);
+static void _float_to_word(double f,
+                           uint32_t te, uint32_t tm,
+                           uint32_t word[]);
+static double _word_to_float(uint32_t w32[],
+                            uint32_t tm, uint32_t te);
 
-
-  template  <>
-  void Utils::float_to_word(double f, uint32_t word[])
-  {
-    _float_to_word(f, 11, 52, word);
-  }
-
-  template  <>
-  void Utils::float_to_word(float f, uint32_t word[])
-  {
-    _float_to_word(static_cast<double>(f), 8, 23, word);
-  }
-
-template  <>
-float Utils::word_to_float(uint32_t w[])
+void Utils::double_to_word(double f, uint32_t word[])
 {
-  return static_cast<float>(_word_to_double(w, 8, 23));
+  _float_to_word(f, 11, 52, word);
 }
 
-template  <>
-double Utils::word_to_float(uint32_t w[])
+void Utils::float_to_word(float f, uint32_t word[])
 {
-  return _word_to_double(w, 11, 52);
+  _float_to_word(static_cast<double>(f), 8, 23, word);
+}
+
+float Utils::word_to_float(uint32_t w[])
+{
+  return static_cast<float>(_word_to_float(w, 8, 23));
+}
+
+double Utils::word_to_double(uint32_t w[])
+{
+  return _word_to_float(w, 11, 52);
 }
 
 /******************************************************************************/
@@ -117,7 +112,7 @@ static void _float_to_word(double f,
   }
 }
 
-static double _word_to_double(uint32_t w32[], uint32_t te, uint32_t tm)
+static double _word_to_float(uint32_t w32[], uint32_t te, uint32_t tm)
 {
   double v;
   double addv;
@@ -279,7 +274,7 @@ string Utils::decode_instruction(instruction_t instruction)
 uint32_t Utils::encode_instruction(instruction_t instruction)
 {
   uint32_t instcode = static_cast<uint32_t>(instruction.opcode << 26);
-  if (instruction.opcode == OP_J)
+  if (instruction.opcode == OP_J || instruction.opcode == OP_JAL)
   {
     instcode |= instruction.addr_j;
   }

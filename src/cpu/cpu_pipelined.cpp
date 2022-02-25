@@ -62,7 +62,6 @@ namespace mips_sim
       }
       else if (opcode == OP_J || opcode == OP_JAL)
       {
-        cout << "J " << hex << pc_value << " + " << instruction.addr_j << endl;
         branch_addr = (pc_value & 0xF0000000) | (instruction.addr_j << 2);
       }
       else if (funct == SUBOP_JR || funct == SUBOP_JALR)
@@ -127,13 +126,18 @@ namespace mips_sim
     int mi_index = -1;
     uint32_t microinstruction;
     bool stall = false;
+    uint32_t rs_value, rt_value;
 
     /* get data from previous stage */
     uint32_t instruction_code = seg_regs[IF_ID].data[SR_INSTRUCTION];
+    uint32_t pc_value = seg_regs[IF_ID].data[SR_PC];
 
     cout << "   *** " << Utils::decode_instruction(Utils::fill_instruction(instruction_code)) << endl;
 
     write_instruction_register(instruction_code);
+
+    rs_value = gpr[instruction.rs];
+    rt_value = gpr[instruction.rt];
 
     if (instruction.code == 0)
     {
@@ -144,7 +148,7 @@ namespace mips_sim
     {
       if (instruction.opcode == OP_RTYPE)
         mi_index = 0;
-      else if (instruction.opcode == OP_J)
+      else if (instruction.opcode == OP_J || instruction.opcode == OP_JAL)
         mi_index = 1;
       else if (instruction.opcode == OP_BNE || instruction.opcode == OP_BEQ)
         mi_index = 2;
@@ -164,6 +168,17 @@ namespace mips_sim
       /* stalls until previous instructions finished */
       stall = !(seg_regs[ID_EX].data[SR_INSTRUCTION] == 0 &&
                 seg_regs[EX_MEM].data[SR_INSTRUCTION] == 0);
+    }
+
+    if (instruction.opcode == OP_JAL)
+    {
+      /* hack the processor! */
+      rs_value = seg_regs[IF_ID].data[SR_PC];
+      rt_value = 0;
+      instruction.rd = 31; // $ra
+      control_unit->set(microinstruction, SIG_MEM2REG, 1);
+      control_unit->set(microinstruction, SIG_REGWRITE, 1);
+      control_unit->set(microinstruction, SIG_REGDST, 1);
     }
 
     if (HAS_HAZARD_DETECTION_UNIT)
@@ -197,10 +212,6 @@ namespace mips_sim
       if (control_unit->test(microinstruction, SIG_BRANCH))
       {
         /* unconditional branches are resolved here */
-        uint32_t rs_value = gpr[instruction.rs];
-        uint32_t rt_value = gpr[instruction.rt];
-        uint32_t pc_value = seg_regs[IF_ID].data[SR_PC];
-
         bool branch_taken = process_branch(instruction_code,
                                            rs_value, rt_value, pc_value);
 
@@ -214,9 +225,9 @@ namespace mips_sim
       /* send data to next stage */
       next_seg_regs[ID_EX].data[SR_INSTRUCTION] = instruction_code;
       next_seg_regs[ID_EX].data[SR_SIGNALS] = microinstruction & sigmask[ID_EX];
-      next_seg_regs[ID_EX].data[SR_PC]      = seg_regs[IF_ID].data[SR_PC]; // bypass PC
-      next_seg_regs[ID_EX].data[SR_RSVALUE] = gpr[instruction.rs];
-      next_seg_regs[ID_EX].data[SR_RTVALUE] = gpr[instruction.rt];
+      next_seg_regs[ID_EX].data[SR_PC]      = pc_value; // bypass PC
+      next_seg_regs[ID_EX].data[SR_RSVALUE] = rs_value;
+      next_seg_regs[ID_EX].data[SR_RTVALUE] = rt_value;
       next_seg_regs[ID_EX].data[SR_ADDR_I]  = instruction.addr_i;
       next_seg_regs[ID_EX].data[SR_RT]      = instruction.rt;
       next_seg_regs[ID_EX].data[SR_RD]      = instruction.rd;

@@ -53,9 +53,9 @@ class CpuPipelined : public Cpu
 {
   public:
     CpuPipelined(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
-    virtual ~CpuPipelined();
+    virtual ~CpuPipelined() override;
 
-    virtual bool next_cycle( void );
+    virtual bool next_cycle( void ) override;
 
   private:
     void stage_if( void );

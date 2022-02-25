@@ -107,7 +107,7 @@ int ControlUnit::get_next_microinstruction(int index, int opcode) const
 {
   int jump_type = (uc_microcode[index] >> 28) & 0xF;
   int mi_index = index;
-  ctrl_dir_t ctrl_dir_entry;
+  ctrl_dir_t ctrl_dir_entry = {};
 
   //TODO: Hashtable
   for (size_t i=0; i<OP_COUNT; ++i)
