@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -16,6 +17,14 @@ static void _float_to_word(const double f,
                            uint32_t word[]);
 static double _word_to_float(const uint32_t w32[],
                             uint32_t tm, uint32_t te);
+
+string Utils::hex32(const uint32_t value, const int length)
+{
+  stringstream ss;
+  ss << hex << setw(length) << setfill('0') << value;
+
+  return ss.str();
+}
 
 void Utils::double_to_word(const double f, uint32_t word[])
 {
@@ -210,6 +219,16 @@ uint8_t Utils::find_register_by_name(const string regname)
   }
 
   return register_index;
+}
+
+string Utils::get_register_name(const size_t reg_index)
+{
+  return registers_def[reg_index].regname_int;
+}
+
+string Utils::get_fp_register_name(const size_t reg_index)
+{
+  return registers_def[reg_index].regname_fp;
 }
 
 string Utils::decode_instruction(const instruction_t instruction)
