@@ -2,8 +2,10 @@ Pipelined processors
 
 Signals:
   SIG_PCWRITE   Not used
-  SIG_PCSRC     0: PC=PC+4
-                1: PC comes from branch
+  SIG_PCSRC     0: PC = PC + 4
+                1: PC = PC + 4 + (IAddr << 2)
+                2: PC = Rs register value
+                3: PC = PC[4] * (JAddr[26] << 2)
   SIG_IOD       Not used
   SIG_MEMREAD   0: -
                 1: Read data memory
@@ -12,9 +14,10 @@ Signals:
   SIG_IRWRITE   Not used
   SIG_MEM2REG   0: Write ALU output
                 1: Write memory output
+                2: PC value (for jal/jalr)
   SIG_REGDST    0: Rt register
                 1: Rd register
-                2: $ra register [TODO]
+                2: $ra register (for jal/jalr)
   SIG_REGWRITE  0: -
   SIG_SELALUA   Not used
   SIG_SELALUB   Not used
