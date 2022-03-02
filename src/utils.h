@@ -10,20 +10,20 @@ namespace mips_sim
 class Utils
 {
 public:
-  static void float_to_word(float f, uint32_t word[]);
-  static void double_to_word(double f, uint32_t word[]);
+  static void float_to_word(const float f, OUT uint32_t word[]);
+  static void double_to_word(const double f, OUT uint32_t word[]);
+  static float word_to_float(const uint32_t word[]);
+  static double word_to_double(const uint32_t word[]);
 
-  static float word_to_float(uint32_t word[]);
-  static double word_to_double(uint32_t word[]);
+  static uint32_t find_instruction_by_name(const std::string opname);
+  static uint8_t find_register_by_name(const std::string regname);
 
-  static uint32_t find_instruction_by_name(std::string opname);
-  static uint8_t find_register_by_name(std::string regname);
+  static std::string decode_instruction(const instruction_t instruction);
+  static std::string decode_instruction(const uint32_t instruction);
+  static uint32_t encode_instruction(const instruction_t instruction);
+  static uint32_t assemble_instruction(const std::string instruction_str);
 
-  static std::string decode_instruction(instruction_t instruction);
-  static uint32_t encode_instruction(instruction_t instruction);
-  static uint32_t assemble_instruction(std::string instruction_str);
-
-  static instruction_t fill_instruction(uint32_t instruction_code);
+  static instruction_t fill_instruction(const uint32_t instruction_code);
 };
 
 } /* namespace */

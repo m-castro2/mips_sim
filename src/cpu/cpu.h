@@ -23,28 +23,41 @@ public:
   Cpu(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
   virtual ~Cpu();
 
-  virtual bool next_cycle( void ) = 0;
-  void write_instruction_register( uint32_t instruction_code );
-  void print_registers( void ) const;
-
   bool is_ready( void ) const;
+
+  void print_registers( void ) const;
+  uint32_t read_register( size_t reg_index) const;
+  float read_register_f( size_t reg_index) const;
+  double read_register_d( size_t reg_index) const;
+
+  void reset( bool reset_memory = true );
+  virtual bool next_cycle( bool verbose = true );
+  bool run_to_cycle( uint32_t cycle );
 
   uint32_t PC;
 
 protected:
-  uint32_t alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op);
-  uint32_t alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_subop);
+  
+  uint32_t alu_compute_op(uint32_t alu_input_a,
+                          uint32_t alu_input_b,
+                          uint32_t alu_op) const;
+
+  uint32_t alu_compute_subop(uint32_t alu_input_a,
+                             uint32_t alu_input_b,
+                             uint32_t alu_subop);
+
+  void write_instruction_register( uint32_t instruction_code );
+  void write_register( size_t reg_index, uint32_t value);
+  void write_register_f( size_t reg_index, float value);
+  void write_register_d( size_t reg_index, double value);
 
   std::shared_ptr<ControlUnit> control_unit;
   std::shared_ptr<Memory> memory;
 
-  size_t cycle;
-  int mi_index;
+  uint32_t cycle;
+  size_t mi_index;
 
   uint32_t HI, LO;
-
-  uint32_t gpr[32];
-  uint32_t fpr[32];
 
   instruction_t instruction;
 
@@ -52,6 +65,11 @@ protected:
   void syscall( uint32_t value );
 
   bool ready;
+
+private:
+
+  uint32_t gpr[32];
+  uint32_t fpr[32];
 };
 
 } /* namespace */

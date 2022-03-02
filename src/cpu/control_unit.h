@@ -3,6 +3,8 @@
 
 #include "../global_defs.h"
 
+#include <vector>
+
 #define X -1
 #define MAX_MICROINSTRUCTIONS 32
 
@@ -27,12 +29,12 @@ namespace mips_sim
 typedef struct
 {
   int opcode;
-  int jump1;
-  int jump2;
-  int jump4;
+  size_t jump1;
+  size_t jump2;
+  size_t jump4;
 } ctrl_dir_t;
 
-#define SIGNAL_COUNT 14
+#define SIGNAL_COUNT 15
 
 typedef enum
 {
@@ -49,142 +51,41 @@ typedef enum
   SIG_SELALUB   = 10,
   SIG_ALUSRC    = 11,
   SIG_ALUOP     = 12,
-  SIG_BRANCH    = 13
+  SIG_BRANCH    = 13,
+  SIG_CTRLDIR   = 14
 } signal_t;
-
-const int microcode_multi[12][SIGNAL_COUNT + 1] =
-// B   A   A   A   R   R   M   I   M   M   I   P   P
-// r   O   L   L   w   d   2   R   w   r   o   C   C
-// n   p   b   a   r   s   R   w   r   d   D   s   w
-// -   2   2   1   1   1   1   1   1   1   1   2   1
- {{X,  0,  1,  0,  X,  X,  X,  1,  X,  1,  0,  0,  1,     3 }, //0  0000 1000 0101 0001
-  {X,  0,  3,  0,  X,  X,  X,  X,  X,  X,  X,  X,  X,     1 }, //1  0001 1000 0000 0000
-// Mem
-  {X,  0,  2,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,     2 }, //2  0001 0100 0000 0000
-// Lw2
-  {X,  X,  X,  X,  X,  X,  X,  X,  X,  1,  1,  X,  X,     3 }, //3  0000 0000 0001 1000
-  {X,  X,  X,  X,  1,  0,  1,  X,  X,  X,  X,  X,  X,     0 }, //4  0000 0010 1000 0000
-// Sw2
-  {X,  X,  X,  X,  X,  X,  X,  X,  1,  X,  1,  X,  X,     0 }, //5  0000 0000 0010 1000
-// Rformat2
-  {X,  2,  0,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,     4 }, //6  0100 0100 0000 0000
-// Arit3
-  {X,  X,  X,  X,  1,  1,  0,  X,  X,  X,  X,  X,  X,     0 }, //7  0000 0011 0000 0000
-// Beq
-  {1,  1,  0,  1,  X,  X,  X,  X,  X,  X,  X,  1,  1,     0 }, //8  1010 0100 0000 0011
-// Jump1
-  {X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  2,  1,     0 }, //9  0000 0000 0000 0101
-// I-type2
-  {X,  2,  2,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,     3 }, //10 0101 0100 0000 0000
-  {X,  X,  X,  X,  1,  0,  0,  X,  X,  X,  X,  X,  X,     0 }  //11 0000 0010 0000 0000
-};
-
-const ctrl_dir_t uc_ctrl_dir_multi[OP_COUNT] =
-{
-  {OP_RTYPE,  6, -1,  7},
-  {OP_J,      9, -1, -1},
-  {OP_JAL,   -1, -1, -1},
-  {OP_BEQ,    8, -1, -1},
-  {OP_BNE,    8, -1, -1},
-  {OP_BLEZ,  -1, -1, -1},
-  {OP_BGTZ,  -1, -1, -1},
-  {OP_ADDI,  10, -1,  7},
-  {OP_ADDIU, 10, -1,  7},
-  {OP_SLTI,  10, -1,  7},
-  {OP_SLTIU, 10, -1,  7},
-  {OP_ANDI,  10, -1,  7},
-  {OP_ORI,   10, -1,  7},
-  {OP_XORI,  10, -1,  7},
-  {OP_LUI,   10, -1,  7},
-  {OP_LB,    -1, -1, -1},
-  {OP_LH,    -1, -1, -1},
-  {OP_LW,     2,  3, -1},
-  {OP_LBU,   -1, -1, -1},
-  {OP_LHU,   -1, -1, -1},
-  {OP_SB,    -1, -1, -1},
-  {OP_SH,    -1, -1, -1},
-  {OP_SW,     2,  5, -1}
-};
-
-const uint32_t uc_signals_multi[SIGNAL_COUNT] =
-  { 1, 2, 1,  1, 1, 1, 1,  1, 1, 1, 2, 0, 2, 1 };
-
-const uint32_t uc_signals_pipelined[SIGNAL_COUNT] =
-  { 0, 1, 0,  1, 1, 0, 1,  1, 1, 0, 0, 1, 2, 1 };
-
-  // SIG_BRANCH    = 13
-  // SIG_ALUOP     = 12,
-  // SIG_ALUSRC    = 11,
-  // SIG_REGWRITE  = 8,
-  // SIG_REGDST    = 7,
-  // SIG_MEM2REG   = 6,
-  // SIG_MEMWRITE  = 4,
-  // SIG_MEMREAD   = 3,
-  // SIG_PCSRC     = 1,
-
-  const uint32_t uc_microcode_pipelined[MAX_MICROINSTRUCTIONS] =
-    {
-      // 0x00000034, //   0 0  0 1 1 1  0 10 0 Rtype
-      // 0x00000201, //   1 0  0 0 0 0  0 00 1 J
-      // 0x00000203, //   1 0  0 0 0 0  0 01 1 BNE/BEQ
-      // 0x00000118, //   0 1  0 0 0 1  1 00 0 LW
-      // 0x000000D8, //   0 0  1 1 0 1  1 00 0 SW
-      // 0x0000005C  //   0 0  0 1 0 1  1 10 0 Itype
-
-      0x00000138, //   0 10 0 1 1  1 0 0 0 Rtype
-      0x00000201, //   1 00 0 0 0  0 0 0 1 J
-      0x00000281, //   1 01 0 0 0  0 0 0 1 BNE/BEQ
-      0x00000062, //   0 00 1 1 0  0 0 1 0 LW
-      0x00000044, //   0 00 1 0 0  0 1 0 0 SW
-      0x00000168  //   0 10 1 1 0  1 0 0 0 Itype
-    };
-
-// CtrlDir(4) -(12)
-// Branch(1), AluOp(2),
-// AluB(2), AluA(1), RegWrite(1)
-// RegDest(1), Mem2Reg(1), IRWrite(1), MemWrite(1)
-// MemRead(1), IoD(1), PCSrc(2), PCWrite(1)
-const uint32_t uc_microcode_multi[MAX_MICROINSTRUCTIONS] =
-  { 0x30000851,
-    0x10001800,
-    0x20001400, // Mem1
-    0x30000018, // Lw2
-    0x00000280,
-    0x00000028, // Sw2
-    0x40004400, // Rformat
-    0x00000300, // Arit3
-    0x0000A403, // Beq1
-    0x00000005, // Jump1
-    0x30005400, // Iformat
-    0x00000200,
-  };
-
-
 
 class ControlUnit
 {
 public:
 
-  ControlUnit(const uint32_t * uc_signal_bits, const uint32_t * uc_microcode, const ctrl_dir_t * uc_ctrl_dir);
+  ControlUnit(const uint32_t uc_signal_bits[SIGNAL_COUNT],
+              const int uc_microcode_matrix[][SIGNAL_COUNT],
+              const ctrl_dir_t * uc_ctrl_dir);
+
+  static std::vector<uint32_t> build_microcode(const int [][SIGNAL_COUNT],
+                                               const uint32_t signals[SIGNAL_COUNT]);
 
   uint32_t test(uint32_t state, signal_t signal) const;
 
   void set(uint32_t & state, signal_t signal, int value = -1) const;
 
-  uint32_t get_microinstruction(int index) const;
+  uint32_t get_microinstruction(size_t index) const;
 
-  int get_next_microinstruction(int index, int opcode) const;
+  size_t get_next_microinstruction(size_t index, int opcode) const;
 
   void print_microcode( void ) const;
 
-  void print_microinstruction( int index ) const;
+  void print_microinstruction( size_t index ) const;
 
   uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
 
 private:
   uint32_t uc_signals[SIGNAL_COUNT];
-  uint32_t uc_microcode[MAX_MICROINSTRUCTIONS];
+  std::vector<uint32_t> uc_microcode;
   ctrl_dir_t uc_ctrl_dir[OP_COUNT];
+
+  bool ctrl_dir_set;
 };
 
 } /* namespace */

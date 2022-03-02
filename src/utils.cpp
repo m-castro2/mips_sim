@@ -11,28 +11,28 @@ using namespace std;
 namespace mips_sim
 {
 
-static void _float_to_word(double f,
+static void _float_to_word(const double f,
                            uint32_t te, uint32_t tm,
                            uint32_t word[]);
-static double _word_to_float(uint32_t w32[],
+static double _word_to_float(const uint32_t w32[],
                             uint32_t tm, uint32_t te);
 
-void Utils::double_to_word(double f, uint32_t word[])
+void Utils::double_to_word(const double f, uint32_t word[])
 {
   _float_to_word(f, 11, 52, word);
 }
 
-void Utils::float_to_word(float f, uint32_t word[])
+void Utils::float_to_word(const float f, uint32_t word[])
 {
   _float_to_word(static_cast<double>(f), 8, 23, word);
 }
 
-float Utils::word_to_float(uint32_t w[])
+float Utils::word_to_float(const uint32_t w[])
 {
   return static_cast<float>(_word_to_float(w, 8, 23));
 }
 
-double Utils::word_to_double(uint32_t w[])
+double Utils::word_to_double(const uint32_t w[])
 {
   return _word_to_float(w, 11, 52);
 }
@@ -112,7 +112,7 @@ static void _float_to_word(double f,
   }
 }
 
-static double _word_to_float(uint32_t w32[], uint32_t te, uint32_t tm)
+static double _word_to_float(const uint32_t w32[], uint32_t te, uint32_t tm)
 {
   double v;
   double addv;
@@ -180,7 +180,7 @@ static size_t find_instruction(instruction_t instruction)
   return instruction_index;
 }
 
-uint32_t Utils::find_instruction_by_name(string opname)
+uint32_t Utils::find_instruction_by_name(const string opname)
 {
   uint32_t instruction_index = UNDEF32;
   for (uint32_t i=0; i<(sizeof(instructions_def)/sizeof(instruction_format_t)); ++i)
@@ -195,7 +195,7 @@ uint32_t Utils::find_instruction_by_name(string opname)
   return instruction_index;
 }
 
-uint8_t Utils::find_register_by_name(string regname)
+uint8_t Utils::find_register_by_name(const string regname)
 {
   uint8_t register_index = UNDEF8;
   for (uint8_t i=0; i<(sizeof(registers_def)/sizeof(register_format_t)); ++i)
@@ -212,7 +212,7 @@ uint8_t Utils::find_register_by_name(string regname)
   return register_index;
 }
 
-string Utils::decode_instruction(instruction_t instruction)
+string Utils::decode_instruction(const instruction_t instruction)
 {
   stringstream ss;
   size_t instruction_index;
@@ -254,28 +254,42 @@ string Utils::decode_instruction(instruction_t instruction)
   }
   else
   {
-    ss << registers_def[instruction.rt].regname_int << ", ";
-    if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
-        instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+    if (instruction.opcode == OP_BNE || instruction.opcode == OP_BEQ)
     {
-      ss << "0x" << hex << instruction.addr_i << "(";
-      ss << registers_def[instruction.rs].regname_int << ")";
-    }
-    else if (instruction.opcode == OP_LUI)
-    {
+      ss << registers_def[instruction.rs].regname_int << ", ";
+      ss << registers_def[instruction.rt].regname_int << ", ";
       ss << "0x" << hex << instruction.addr_i;
     }
     else
     {
-      ss << registers_def[instruction.rs].regname_int << ", ";
-      ss << "0x" << hex << instruction.addr_i;
+      ss << registers_def[instruction.rt].regname_int << ", ";
+      if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
+          instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+      {
+        ss << "0x" << hex << instruction.addr_i << "(";
+        ss << registers_def[instruction.rs].regname_int << ")";
+      }
+      else if (instruction.opcode == OP_LUI)
+      {
+        ss << "0x" << hex << instruction.addr_i;
+      }
+      else
+      {
+        ss << registers_def[instruction.rs].regname_int << ", ";
+        ss << "0x" << hex << instruction.addr_i;
+      }
     }
   }
 
   return ss.str();
 }
 
-uint32_t Utils::encode_instruction(instruction_t instruction)
+string Utils::decode_instruction(const uint32_t instruction)
+{
+  return decode_instruction(fill_instruction(instruction));
+}
+
+uint32_t Utils::encode_instruction(const instruction_t instruction)
 {
   uint32_t instcode = static_cast<uint32_t>(instruction.opcode << 26);
   if (instruction.opcode == OP_J || instruction.opcode == OP_JAL)
@@ -300,7 +314,7 @@ uint32_t Utils::encode_instruction(instruction_t instruction)
   return instcode;
 }
 
-instruction_t Utils::fill_instruction(uint32_t instruction_code)
+instruction_t Utils::fill_instruction(const uint32_t instruction_code)
 {
   instruction_t instruction;
 
@@ -333,7 +347,7 @@ instruction_t Utils::fill_instruction(uint32_t instruction_code)
   return instruction;
 }
 
-uint32_t Utils::assemble_instruction(string instruction_str)
+uint32_t Utils::assemble_instruction(const string instruction_str)
 {
   uint32_t instcode = 0;
   char instruction_cstr[100];

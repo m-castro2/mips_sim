@@ -12,22 +12,10 @@ namespace mips_sim
 Cpu::Cpu(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
   : control_unit(_control_unit), memory(_memory)
 {
-  PC = MEM_TEXT_START;
+  memory->snapshot(MEM_TEXT_REGION);
 
-  instruction.opcode = 0;
-  instruction.funct = 0;
-  instruction.fp_op = false;
-
-  cycle = 0;
-  mi_index = 0;
-
-  execution_stall = 0;
-
-  /* set registers to 0 */
-  memset(gpr, 0, 32 * sizeof(int));
-  memset(fpr, 0, 32 * sizeof(int));
-
-  ready = true;
+  /* reset CPU but no memory */
+  reset(false);
 }
 
 Cpu::~Cpu() {}
@@ -35,6 +23,25 @@ Cpu::~Cpu() {}
 bool Cpu::is_ready( void ) const
 {
   return ready;
+}
+
+void Cpu::reset( bool reset_memory )
+{
+  PC = MEM_TEXT_START;
+
+  instruction = {};
+
+  cycle = 0;
+  mi_index = 0;
+  execution_stall = 0;
+  ready = true;
+
+  /* set registers to 0 */
+  memset(gpr, 0, 32 * sizeof(int));
+  memset(fpr, 0, 32 * sizeof(int));
+
+  if (reset_memory)
+    memory->reset(MEM_TEXT_REGION);
 }
 
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
@@ -124,7 +131,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
   return alu_output;
 }
 
-uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
+uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op) const
 {
   uint32_t alu_output = 0xFFFFFFFF;
   switch(alu_op)
@@ -258,4 +265,74 @@ void Cpu::print_registers( void ) const
     cout << setw(3) << setfill(' ') <<registers_def[i+24].regname_int << " [" << setw(8) << hex << gpr[i+24] << "]" << endl;
   }
 }
+
+uint32_t Cpu::read_register( size_t reg_index) const
+{
+  assert(reg_index < 32);
+
+  return gpr[reg_index];
+}
+
+void Cpu::write_register( size_t reg_index, uint32_t value)
+{
+  assert(reg_index != 0); // cannot write $0
+  assert(reg_index < 32);
+
+  gpr[reg_index] = value;
+}
+
+float Cpu::read_register_f( size_t reg_index ) const
+{
+  assert(reg_index < 32);
+
+  return Utils::word_to_float(&fpr[reg_index]);
+}
+
+void Cpu::write_register_f( size_t reg_index, float value )
+{
+  assert(reg_index < 32);
+
+  Utils::float_to_word(value, &fpr[reg_index]);
+}
+
+double Cpu::read_register_d( size_t reg_index ) const
+{
+  assert(reg_index < 32);
+
+  return Utils::word_to_double(&fpr[reg_index]);
+}
+
+void Cpu::write_register_d( size_t reg_index, double value )
+{
+  assert(reg_index < 32);
+  assert(reg_index % 2 == 0);
+
+  Utils::double_to_word(value, &fpr[reg_index]);
+}
+
+bool Cpu::next_cycle( bool verbose )
+{
+  cycle++;
+
+  if (verbose)
+    cout << "------------------------------------------ cycle "
+         << dec << cycle << endl;
+  return true;
+}
+
+bool Cpu::run_to_cycle( uint32_t target_cycle )
+{
+  assert(target_cycle > 0);
+
+  /* reset CPU and memory text region */
+  reset( true );
+  while(cycle < target_cycle)
+  {
+    if (!next_cycle())
+      return false;
+  }
+
+  return true;
+}
+
 } /* namespace */

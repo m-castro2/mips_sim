@@ -25,11 +25,19 @@ uint32_t load_program(std::string program_filename, Memory & memory);
 int main(int argc, char * argv[])
 {
   std::shared_ptr<Memory> mem = std::shared_ptr<Memory>(new Memory());
-  std::shared_ptr<ControlUnit> control_unit;
   std::unique_ptr<Cpu> cpu;
 
   std::string input_file, output_file;
   int run_mode = 0, retval = 0;
+
+  // TEST ZONE
+  // std::vector<uint32_t> mc = ControlUnit::build_microcode(CpuMulti::uc_microcode_matrix,
+  //                                                    CpuMulti::uc_signal_bits);
+  // for (uint32_t mi : mc)
+  //   std::cout << "MICROINSTRUCTION " << std::hex << mi << std::endl;
+  //
+  // exit(0);
+  // ---------
 
   if (argc != 3)
   {
@@ -101,17 +109,12 @@ int main(int argc, char * argv[])
   if (retval != 0)
     return retval;
 
-  //control_unit = std::shared_ptr<ControlUnit>(new ControlUnit(uc_signals_multi, uc_microcode_multi, uc_ctrl_dir_multi));
-  control_unit = std::shared_ptr<ControlUnit>(new ControlUnit(uc_signals_pipelined, uc_microcode_pipelined, uc_ctrl_dir_multi));
-  control_unit->print_microcode();
-
-  //cpu = std::unique_ptr<Cpu>(new CpuMulti(control_unit, mem));
-  cpu = std::unique_ptr<Cpu>(new CpuPipelined(control_unit, mem));
+  cpu = std::unique_ptr<Cpu>(new CpuPipelined(mem));
+  //cpu = std::unique_ptr<Cpu>(new CpuMulti(mem));
 
   for (size_t i = 0; cpu->is_ready() ; i++)
   //for (size_t i = 0; i < 24 ; i++)
   {
-    std::cout << "------------------------------------------ cycle " << std::dec << i << std::endl;
     cpu->next_cycle();
 
     if (cpu->PC < 0x00400000)

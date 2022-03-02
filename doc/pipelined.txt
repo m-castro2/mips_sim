@@ -1,0 +1,30 @@
+Pipelined processors
+
+Signals:
+  SIG_PCWRITE   Not used
+  SIG_PCSRC     0: PC=PC+4
+                1: PC comes from branch
+  SIG_IOD       Not used
+  SIG_MEMREAD   0: -
+                1: Read data memory
+  SIG_MEMWRITE  0: -
+                1: Write data memory
+  SIG_IRWRITE   Not used
+  SIG_MEM2REG   0: Write ALU output
+                1: Write memory output
+  SIG_REGDST    0: Rt register
+                1: Rd register
+                2: $ra register [TODO]
+  SIG_REGWRITE  0: -
+  SIG_SELALUA   Not used
+  SIG_SELALUB   Not used
+                1: Write register
+  SIG_ALUSRC    0: Rt value
+                1: Imm field
+  SIG_ALUOP     0: Sum
+                1: Sub
+                2: AluOp signal
+  SIG_BRANCH    0: -
+                1: Conditional branch
+                2: J branch [TODO]
+  CTRL_DIR      Not used

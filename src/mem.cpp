@@ -28,6 +28,21 @@ Memory::Memory( void )
   }
 }
 
+void Memory::snapshot(int r)
+{
+  if (MEM_SNAPSHOT[r].mem == nullptr)
+    MEM_SNAPSHOT[r].mem = static_cast<uint8_t *>(malloc(MEM_SNAPSHOT[r].size));
+
+  memcpy(MEM_SNAPSHOT[r].mem, MEM_REGIONS[r].mem, MEM_SNAPSHOT[r].size);
+}
+
+void Memory::reset(int r)
+{
+  assert(MEM_SNAPSHOT[r].mem != nullptr);
+
+  memcpy(MEM_REGIONS[r].mem, MEM_SNAPSHOT[r].mem, MEM_SNAPSHOT[r].size);
+}
+
 Memory::~Memory()
 {
   /* initialize memory */
@@ -36,6 +51,12 @@ Memory::~Memory()
     {
       free(MEM_REGIONS[i].mem);
       MEM_REGIONS[i].mem = nullptr;
+    }
+
+    if (MEM_SNAPSHOT[i].mem)
+    {
+      free(MEM_SNAPSHOT[i].mem);
+      MEM_SNAPSHOT[i].mem = nullptr;
     }
   }
 }

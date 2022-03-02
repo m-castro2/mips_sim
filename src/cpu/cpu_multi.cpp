@@ -4,10 +4,29 @@
 #include <iomanip>
 #include "../utils.h"
 
+using namespace std;
+
 namespace mips_sim
 {
 
-  CpuMulti::CpuMulti(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
+  constexpr int CpuMulti::uc_microcode_matrix[][SIGNAL_COUNT];
+  constexpr uint32_t CpuMulti::uc_signal_bits[SIGNAL_COUNT];
+  constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[OP_COUNT];
+
+  CpuMulti::CpuMulti(shared_ptr<Memory> _memory)
+    : Cpu(shared_ptr<ControlUnit>(
+            new ControlUnit(CpuMulti::uc_signal_bits,
+                            CpuMulti::uc_microcode_matrix,
+                            CpuMulti::uc_ctrl_dir)),
+            _memory)
+  {
+    A_REG = UNDEF32;
+    B_REG = UNDEF32;
+    ALU_OUT_REG = UNDEF32;
+    MEM_DATA_REG = UNDEF32;
+  }
+
+  CpuMulti::CpuMulti(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
     : Cpu(_control_unit, _memory)
   {
     A_REG = UNDEF32;
@@ -21,8 +40,10 @@ namespace mips_sim
 
   }
 
-  bool CpuMulti::next_cycle( void )
+  bool CpuMulti::next_cycle( bool verbose )
   {
+    Cpu::next_cycle( verbose );
+
     /* temporary data */
     uint32_t alu_input_a, alu_input_b, alu_output = 0;
     float cop0_input_a = 0.0, cop0_input_b = 0.0, cop0_output = 0.0;
@@ -33,17 +54,19 @@ namespace mips_sim
     if (execution_stall > 0)
     {
       execution_stall--;
-      std::cout << "--stall" << std::endl;
+      cout << "--stall" << endl;
       return ready;
     }
 
     uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
-    std::cout << "Next microinstruction [" << mi_index << "]: 0x"
-              << std::setw(8) << std::setfill('0') << std::hex
-              << microinstruction << std::endl;
-    std::cout << "PC: 0x" << std::setw(8) << std::setfill('0') << PC
+    cout << "Next microinstruction [" << mi_index << "]: 0x"
+              << setw(8) << setfill('0') << hex
+              << microinstruction << endl;
+    cout << "PC: 0x" << setw(8) << setfill('0') << PC
               << " A_REG: 0x" << A_REG
-              << " B_REG: 0x" << B_REG << std::endl;
+              << " B_REG: 0x" << B_REG
+              << " ALU_OUT 0x" << ALU_OUT_REG
+              << " MEM_DATA 0x" << MEM_DATA_REG << endl;
 
     //control_unit->print_microinstruction(mi_index);
 
@@ -120,7 +143,7 @@ namespace mips_sim
             cop1_output = cop1_input_a / cop1_input_b;
           break;
         default:
-          std::cerr << "Undefined FP operation: " << instruction.code << std::endl;
+          cerr << "Undefined FP operation: " << instruction.code << endl;
           assert(0);
       }
     }
@@ -143,13 +166,13 @@ namespace mips_sim
       }
       else
       {
-        std::cerr << "Undefined ALU operation" << std::endl;
+        cerr << "Undefined ALU operation" << endl;
         assert(0);
       }
     }
 
-    std::cout << "ALU: 0x" << std::hex << alu_input_a << " op 0x" << alu_input_b
-              << " = 0x" << alu_output << std::endl;
+    cout << "ALU: 0x" << hex << alu_input_a << " op 0x" << alu_input_b
+              << " = 0x" << alu_output << endl;
 
     if (control_unit->test(microinstruction, SIG_PCWRITE))
     {
@@ -175,8 +198,8 @@ namespace mips_sim
         default:
           assert(0);
         }
-        std::cout << "PC write: 0x" << std::hex << std::setfill('0') << std::setw(8)
-                  << PC << std::endl;
+        cout << "PC write: 0x" << hex << setfill('0') << setw(8)
+                  << PC << endl;
       }
     }
 
@@ -205,25 +228,28 @@ namespace mips_sim
         else
           assert(0);
 
-        gpr[writereg] = writedata;
+        write_register(writereg, writedata);
 
-        std::cout << "Register write: Reg=0x"
-                  << std::hex << std::setfill('0') << std::setw(2) << writereg
-                  << ", Data=0x" << std::setw(8) << writedata << std::endl;
+        cout << "Register write: Reg=0x"
+                  << hex << setfill('0') << setw(2) << writereg
+                  << ", Data=0x" << setw(8) << writedata << endl;
     }
 
-    A_REG = gpr[instruction.rs];
-    B_REG = gpr[instruction.rt];
-    cop0_input_a = Utils::word_to_float(&fpr[instruction.rs]);
-    cop0_input_b = Utils::word_to_float(&fpr[instruction.rt]);
-    cop1_input_a = Utils::word_to_double(&fpr[instruction.rs]);
-    cop1_input_b = Utils::word_to_double(&fpr[instruction.rt]);
+
+    A_REG = read_register(instruction.rs);
+    B_REG = read_register(instruction.rt);
+    cout << "Set A [" << dec << static_cast<uint32_t>(instruction.rs) << "]  = 0x" << hex << A_REG << endl;
+    cout << "Set B [" << dec << static_cast<uint32_t>(instruction.rt) << "]  = 0x" << hex << B_REG << endl;
+    cop0_input_a = read_register_f(instruction.rs);
+    cop0_input_b = read_register_f(instruction.rt);
+    cop1_input_a = read_register_d(instruction.rs);
+    cop1_input_b = read_register_d(instruction.rt);
     ALU_OUT_REG = alu_output;
     MEM_DATA_REG = word_read;
 
     /* update MI index */
     mi_index = control_unit->get_next_microinstruction(mi_index, instruction.opcode);
-    if (mi_index < 0)
+    if (mi_index == UNDEF32)
        exit(ERROR_UNSUPPORTED_OPERATION);
 
     return ready;

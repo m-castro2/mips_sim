@@ -52,17 +52,36 @@ struct seg_reg_t {
 class CpuPipelined : public Cpu
 {
   public:
+
+    static constexpr uint32_t uc_signal_bits[SIGNAL_COUNT] =
+     { 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 2, 1, 0 };
+
+    static constexpr int uc_microcode_matrix[][SIGNAL_COUNT] =
+    // P  P  I  M  M  I  M  R  R  S  S  A  A  B  C
+    // C  C  o  R  W  W  2  D  W  A  A  S  O  r  t
+    // w  s  D  d  r  r  R  s  r  A  B  r  p  a  d
+    // -  1  -  1  1  -  1  1  1  -  -  1  2  1  -
+     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, // R type
+      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // J
+      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, // BNE/BEQ
+      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, // LW
+      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, // SW
+      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, // I type
+      {0} // end
+    };
+
+    CpuPipelined(std::shared_ptr<Memory>);
     CpuPipelined(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
     virtual ~CpuPipelined() override;
 
-    virtual bool next_cycle( void ) override;
+    virtual bool next_cycle( bool verbose = true ) override;
 
   private:
-    void stage_if( void );
-    void stage_id( void );
-    void stage_ex( void );
-    void stage_mem( void );
-    void stage_wb( void );
+    void stage_if( bool verbose = true );
+    void stage_id( bool verbose = true );
+    void stage_ex( bool verbose = true );
+    void stage_mem( bool verbose = true );
+    void stage_wb( bool verbose = true );
 
     bool pc_write; /* if false, blocks pipeline */
     uint32_t next_pc;
@@ -74,7 +93,13 @@ class CpuPipelined : public Cpu
                         uint32_t rs_value, uint32_t rt_value,
                         uint32_t pc_value);
 
+    /* return false in case of structural hazard */
+    /* registers can be written once per cycle */
+    bool write_segmentation_register(size_t index, seg_reg_t values);
+
     seg_reg_t seg_regs[STAGE_COUNT-1] = {};
+    uint32_t seg_regs_wrflag = 0;
+
     seg_reg_t next_seg_regs[STAGE_COUNT-1] = {};
 
     uint32_t sigmask[STAGE_COUNT-1] = {};

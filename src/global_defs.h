@@ -12,6 +12,8 @@
 #define UNDEF16 0xFFFF
 #define UNDEF8  0xFF
 
+#define OUT
+
 typedef enum
 {
   SUBOP_SLL     = 0x0,

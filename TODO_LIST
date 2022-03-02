@@ -3,3 +3,12 @@
 * Cache system simulation in <memory>
 * Single/double precision FP co-processors
 * Better interface
+
+ |    |    | F1 | F2 | F3 | .. | Ff |       |         |
+ |    |    |========================|       |         |
+ |    |    | D1 | D2 | D3 | .. | Dd |       |  WBfp   |
+ |    |    |========================|  MEM  |         |
+ |    |    | M1 | M2 | M3 | .. | Mm |       |=========|
+ | IF | ID |========================|       |         |
+ |    |    |          ALU           |       |  WBint  |
+ |    |    |                        |       |         |
