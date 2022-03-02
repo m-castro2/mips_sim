@@ -68,6 +68,7 @@ uint32_t ControlUnit::test(uint32_t state, signal_t signal) const
 
 void ControlUnit::set(uint32_t & state, signal_t signal, int value) const
 {
+  state &= ~uc_signals[signal];
   state |= static_cast<uint32_t>(value << ctz(uc_signals[signal]));
 }
 

@@ -47,7 +47,7 @@ void Cpu::reset( bool reset_memory )
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
 {
   uint32_t alu_output = 0xFFFFFFFF;
-  //cout << "---[ALU] SUBOP " << hex << alu_op << endl;
+
   switch(alu_op)
   {
     case SUBOP_SYSCALL:
@@ -228,7 +228,7 @@ void Cpu::syscall( uint32_t value )
       break;
     default:
       //TODO: Exception
-      cout << "Undefined syscall 0x" << hex << value << endl;
+      cout << "Undefined syscall " << value << endl;
       assert(0);
   }
 }
@@ -239,18 +239,17 @@ void Cpu::write_instruction_register( uint32_t instruction_code )
 
   //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
   //TMP: TEST ENCODER
-  cout << "  -Instruction: " << " " << setw(8) << hex << instruction.code << "   ***   " << Utils::decode_instruction(instruction) << endl;
-  cout << "  -Binary: 0x" << setw(8) <<  setfill('0') << hex << instruction.code << endl;
-  cout << "  -IR write:" << hex << setfill('0')
-            << " OP=0x" << setw(4)<< static_cast<uint32_t>(instruction.opcode)
-            << " Rs=0x" << setw(2)<< static_cast<uint32_t>(instruction.rs)
-            << " Rt=0x" << setw(2) << static_cast<uint32_t>(instruction.rt)
-            << " Rd=0x" << setw(2) << static_cast<uint32_t>(instruction.rd)
-            << " Shamt=0x" << setw(2) << static_cast<uint32_t>(instruction.shamt)
-            << " Func=0x" << setw(2) << static_cast<uint32_t>(instruction.funct)
+  cout << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
+  cout << "  -IR write:"
+            << " OP=" << static_cast<uint32_t>(instruction.opcode)
+            << " Rs=" << Utils::get_register_name(instruction.rs)
+            << " Rt=" << Utils::get_register_name(instruction.rt)
+            << " Rd=" << Utils::get_register_name(instruction.rd)
+            << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+            << " Func=" << static_cast<uint32_t>(instruction.funct)
             << endl << "            "
-            << " addr16=0x" << setw(4) << static_cast<uint32_t>(instruction.addr_i)
-            << " addr26=0x" << setw(7) << static_cast<uint32_t>(instruction.addr_j)
+            << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
+            << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
             << endl;
 }
 
@@ -259,10 +258,10 @@ void Cpu::print_registers( void ) const
   cout << endl;
   for (size_t i=0; i<8; ++i)
   {
-    cout << setw(3) << setfill(' ') << registers_def[i].regname_int << " [" << setw(8) << hex << gpr[i] << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+8].regname_int << " [" << setw(8) << hex << gpr[i+8] << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+16].regname_int << " [" << setw(8) << hex << gpr[i+16] << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+24].regname_int << " [" << setw(8) << hex << gpr[i+24] << "]" << endl;
+    cout << setw(3) << setfill(' ') << registers_def[i].regname_int << " [" << Utils::hex32(gpr[i]) << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+8].regname_int << " [" << Utils::hex32(gpr[i+8]) << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+16].regname_int << " [" << Utils::hex32(gpr[i+16]) << "]      ";
+    cout << setw(3) << setfill(' ') <<registers_def[i+24].regname_int << " [" << Utils::hex32(gpr[i+24]) << "]" << endl;
   }
 }
 

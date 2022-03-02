@@ -145,7 +145,7 @@ uint32_t load_program(std::string program_filename, Memory & memory)
 
   i = 0;
   while (prog >> std::hex >> word) { //fscanf(prog, "%x\n", &word) != EOF) {
-    std::cout << "Write " << std::hex << word << " to " << i << std::endl;
+    std::cout << "Write " << Utils::hex32(word) << " to " << i << std::endl;
     memory.mem_write_32(static_cast<uint32_t>(MEM_TEXT_START + i), word);
     i += 4;
     words_read++;

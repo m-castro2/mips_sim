@@ -49,25 +49,48 @@ struct seg_reg_t {
   uint32_t data[32];
 };
 
+struct op_microcode_t {
+  uint8_t opcode;
+  uint8_t subopcode;
+  uint32_t microinstruction_index;
+};
+
 class CpuPipelined : public Cpu
 {
   public:
 
     static constexpr uint32_t uc_signal_bits[SIGNAL_COUNT] =
-     { 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 2, 1, 0 };
+     { 0, 2, 0, 1, 1, 0, 2, 2, 1, 0, 0, 1, 2, 1, 0 };
 
     static constexpr int uc_microcode_matrix[][SIGNAL_COUNT] =
     // P  P  I  M  M  I  M  R  R  S  S  A  A  B  C
     // C  C  o  R  W  W  2  D  W  A  A  S  O  r  t
     // w  s  D  d  r  r  R  s  r  A  B  r  p  a  d
     // -  1  -  1  1  -  1  1  1  -  -  1  2  1  -
-     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, // R type
-      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // J
-      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, // BNE/BEQ
-      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, // LW
-      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, // SW
-      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, // I type
+     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, // 0 R type
+      {X, 3, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // 1 J
+      {X, 2, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // 2 JR
+      {X, 3, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, // 3 JAL
+      {X, 2, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, // 4 JALR
+      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, // 5 BNE/BEQ
+      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, // 6 LW
+      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, // 7 SW
+      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, // 8 I type
       {0} // end
+    };
+
+    static constexpr op_microcode_t op_select[] =
+    {
+      {OP_RTYPE, SUBOP_JR,   2},
+      {OP_RTYPE, SUBOP_JALR, 4},
+      {OP_RTYPE, UNDEF8,     0},
+      {OP_J,     UNDEF8,     1},
+      {OP_JAL,   UNDEF8,     3},
+      {OP_BNE,   UNDEF8,     5},
+      {OP_BEQ,   UNDEF8,     5},
+      {OP_LW,    UNDEF8,     6},
+      {OP_SW,    UNDEF8,     7},
+      {UNDEF8,   UNDEF8,     8}
     };
 
     CpuPipelined(std::shared_ptr<Memory>);
@@ -103,6 +126,10 @@ class CpuPipelined : public Cpu
     seg_reg_t next_seg_regs[STAGE_COUNT-1] = {};
 
     uint32_t sigmask[STAGE_COUNT-1] = {};
+
+    uint32_t pc_conditional_branch;
+    uint32_t pc_instruction_jump;
+    uint32_t pc_register_jump;
 };
 
 } /* namespace */

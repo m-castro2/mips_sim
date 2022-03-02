@@ -60,13 +60,12 @@ namespace mips_sim
 
     uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
     cout << "Next microinstruction [" << mi_index << "]: 0x"
-              << setw(8) << setfill('0') << hex
-              << microinstruction << endl;
-    cout << "PC: 0x" << setw(8) << setfill('0') << PC
-              << " A_REG: 0x" << A_REG
-              << " B_REG: 0x" << B_REG
-              << " ALU_OUT 0x" << ALU_OUT_REG
-              << " MEM_DATA 0x" << MEM_DATA_REG << endl;
+              << Utils::hex32(microinstruction) << endl;
+    cout << "PC: 0x" << Utils::hex32(PC)
+              << " A_REG: 0x" << Utils::hex32(A_REG)
+              << " B_REG: 0x" << Utils::hex32(B_REG)
+              << " ALU_OUT 0x" << Utils::hex32(ALU_OUT_REG)
+              << " MEM_DATA 0x" << Utils::hex32(MEM_DATA_REG) << endl;
 
     //control_unit->print_microinstruction(mi_index);
 
@@ -171,8 +170,9 @@ namespace mips_sim
       }
     }
 
-    cout << "ALU: 0x" << hex << alu_input_a << " op 0x" << alu_input_b
-              << " = 0x" << alu_output << endl;
+    if (verbose) cout << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
+                      << Utils::hex32(alu_input_b) << " = 0x"
+                      << Utils::hex32(alu_output) << endl;
 
     if (control_unit->test(microinstruction, SIG_PCWRITE))
     {
@@ -198,8 +198,7 @@ namespace mips_sim
         default:
           assert(0);
         }
-        cout << "PC write: 0x" << hex << setfill('0') << setw(8)
-                  << PC << endl;
+        cout << "PC write: 0x" << Utils::hex32(PC) << endl;
       }
     }
 
@@ -230,16 +229,15 @@ namespace mips_sim
 
         write_register(writereg, writedata);
 
-        cout << "Register write: Reg=0x"
-                  << hex << setfill('0') << setw(2) << writereg
-                  << ", Data=0x" << setw(8) << writedata << endl;
+        cout << "Register write: Reg=" << Utils::get_register_name(writereg)
+                  << ", Data=0x" << Utils::hex32(writedata) << endl;
     }
 
 
     A_REG = read_register(instruction.rs);
     B_REG = read_register(instruction.rt);
-    cout << "Set A [" << dec << static_cast<uint32_t>(instruction.rs) << "]  = 0x" << hex << A_REG << endl;
-    cout << "Set B [" << dec << static_cast<uint32_t>(instruction.rt) << "]  = 0x" << hex << B_REG << endl;
+    cout << "Set A [" << dec << static_cast<uint32_t>(instruction.rs) << "]  = 0x" << Utils::hex32(A_REG) << endl;
+    cout << "Set B [" << dec << static_cast<uint32_t>(instruction.rt) << "]  = 0x" << Utils::hex32(B_REG) << endl;
     cop0_input_a = read_register_f(instruction.rs);
     cop0_input_b = read_register_f(instruction.rt);
     cop1_input_a = read_register_d(instruction.rs);

@@ -1,4 +1,6 @@
 #include "mem.h"
+#include "utils.h"
+
 #include <stdio.h>
 #include <cassert>
 #include <iostream>
@@ -80,7 +82,7 @@ void Memory::allocate_space(uint32_t address, uint32_t size)
         {
           //TODO: Space goes beyond the limit
           cerr << "Memory allocation beyond the region limit / Address: 0x"
-               << hex << address << " Size: " << dec << size << endl;
+               << Utils::hex32(address) << " Size: " << size << " Bytes" << endl;
           assert(0);
         }
         return;
@@ -88,7 +90,7 @@ void Memory::allocate_space(uint32_t address, uint32_t size)
     }
 
     //TODO INVALID MEMORY SPACE
-    cerr << "Invalid memory space: 0x" << hex << address << endl;
+    cerr << "Invalid memory space: 0x" << Utils::hex32(address) << endl;
     assert(0);
     return;
 }
@@ -133,14 +135,14 @@ uint32_t Memory::mem_read_32(uint32_t address) const
   else
   {
     //TODO INVALID MEMORY EXCEPTION
-    cerr << "Invalid memory exception [Read]: 0x" << hex << address << endl;
+    cerr << "Invalid memory exception [Read]: 0x" << Utils::hex32(address) << endl;
 
     assert(0);
     return 0;
   }
 
   //TODO INVALID MEMORY ADDRESS
-  cerr << "Read access to invalid memory address: 0x" << hex << address << endl;
+  cerr << "Read access to invalid memory address: 0x" << Utils::hex32(address) << endl;
   assert(0);
   return 0;
 }
@@ -184,12 +186,12 @@ void Memory::mem_write_32(uint32_t address, uint32_t value)
   else
   {
     //TODO INVALID MEMORY EXCEPTION
-    cerr << "Invalid memory exception [Write]: 0x" << hex << address << endl;
+    cerr << "Invalid memory exception [Write]: 0x" << Utils::hex32(address) << endl;
     assert(0);
   }
 
   //TODO INVALID MEMORY ADDRESS
-  cerr << "Write access to invalid memory address: 0x" << hex << address << endl;
+  cerr << "Write access to invalid memory address: 0x" << Utils::hex32(address) << endl;
   assert(0);
 }
 
@@ -203,13 +205,13 @@ void Memory::print_memory( uint32_t start, uint32_t length ) const
     for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
     {
       uint32_t word = mem_read_32(mem_addr);
-      cout << setw(8) << setfill(' ') << hex << mem_addr << " [" << setw(8) << hex << word << "]";
+      cout << setw(8) << setfill(' ') << Utils::hex32(mem_addr) << " [" << Utils::hex32(word) << "]";
       word = mem_read_32(mem_addr + 4);
-      cout << " [" << setw(8) << hex << word << "]";
+      cout << " [" << Utils::hex32(word) << "]";
       word = mem_read_32(mem_addr + 8);
-      cout << " [" << setw(8) << hex << word << "]";
+      cout << " [" << Utils::hex32(word) << "]";
       word = mem_read_32(mem_addr + 12);
-      cout << " [" << setw(8) << hex << word << "]" << endl;
+      cout << " [" << Utils::hex32(word) << "]" << endl;
     }
     return;
   }
