@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 #define MEM_DATA_REGION  0
@@ -48,7 +49,8 @@ class Memory
 
     void mem_write_32(uint32_t address, uint32_t value);
     uint32_t mem_read_32(uint32_t address) const;
-    void print_memory( uint32_t start, uint32_t length ) const;
+    void print_memory( uint32_t start, uint32_t length,
+                       std::ostream &out = std::cout ) const;
 
     /* these 2 functions allow to recover a specific state */
     void snapshot(int region);

@@ -11,6 +11,7 @@ namespace mips_sim
 {
   constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
   constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
+  constexpr op_microcode_t CpuPipelined::op_select[];
 
   CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory)
     : Cpu(std::shared_ptr<ControlUnit>(

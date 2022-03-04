@@ -1,9 +1,10 @@
 #include "mem.h"
 #include "utils.h"
+#include "exception.h"
 
 #include <stdio.h>
 #include <cassert>
-#include <iostream>
+#include <sstream>
 #include <iomanip>
 
 namespace mips_sim
@@ -21,13 +22,13 @@ Memory::Memory( void )
     memset(MEM_REGIONS[i].mem, 0, MEM_REGIONS[i].size);
   }
 
-  //Arbitrarily initialize memory
-  //TODO: Parse from asm code
-  uint32_t datamemwords = 100;
-  allocated_regions.push_back({MEM_DATA_START, datamemwords*4, nullptr});
-  for (size_t i = 0; i < datamemwords; i++) {
-    mem_write_32(static_cast<uint32_t>(MEM_DATA_START + i*4), static_cast<uint32_t>(i+1));
-  }
+  // //Arbitrarily initialize memory
+  // //TODO: Parse from asm code
+  // uint32_t datamemwords = 100;
+  // allocated_regions.push_back({MEM_DATA_START, datamemwords*4, nullptr});
+  // for (size_t i = 0; i < datamemwords; i++) {
+  //   mem_write_32(static_cast<uint32_t>(MEM_DATA_START + i*4), static_cast<uint32_t>(i+1));
+  // }
 }
 
 void Memory::snapshot(int r)
@@ -80,19 +81,17 @@ void Memory::allocate_space(uint32_t address, uint32_t size)
         }
         else
         {
-          //TODO: Space goes beyond the limit
-          cerr << "Memory allocation beyond the region limit / Address: 0x"
-               << Utils::hex32(address) << " Size: " << size << " Bytes" << endl;
-          assert(0);
+          stringstream ss;
+          ss << "Memory allocation beyond the region limit: Address "
+             << Utils::hex32(address) << " / size " << size << " Bytes";
+          throw Exception::e(MEMORY_ALLOC_EXCEPTION, ss.str());
         }
         return;
       }
     }
-
-    //TODO INVALID MEMORY SPACE
-    cerr << "Invalid memory space: 0x" << Utils::hex32(address) << endl;
-    assert(0);
-    return;
+    throw Exception::e(MEMORY_ALLOC_EXCEPTION,
+                       "Invalid memory space allocation",
+                        address);
 }
 
 uint32_t Memory::mem_read_32(uint32_t address) const
@@ -134,17 +133,14 @@ uint32_t Memory::mem_read_32(uint32_t address) const
   }
   else
   {
-    //TODO INVALID MEMORY EXCEPTION
-    cerr << "Invalid memory exception [Read]: 0x" << Utils::hex32(address) << endl;
-
-    assert(0);
-    return 0;
+    throw Exception::e(MEMORY_READ_EXCEPTION,
+                       "Invalid read memory address",
+                        address);
   }
 
-  //TODO INVALID MEMORY ADDRESS
-  cerr << "Read access to invalid memory address: 0x" << Utils::hex32(address) << endl;
-  assert(0);
-  return 0;
+  throw Exception::e(MEMORY_READ_EXCEPTION,
+                     "Read to invalid memory space",
+                      address);
 }
 
 void Memory::mem_write_32(uint32_t address, uint32_t value)
@@ -185,38 +181,49 @@ void Memory::mem_write_32(uint32_t address, uint32_t value)
   }
   else
   {
-    //TODO INVALID MEMORY EXCEPTION
-    cerr << "Invalid memory exception [Write]: 0x" << Utils::hex32(address) << endl;
-    assert(0);
+    throw Exception::e(MEMORY_WRITE_EXCEPTION,
+                       "Invalid write memory addresss",
+                        address);
   }
 
-  //TODO INVALID MEMORY ADDRESS
-  cerr << "Write access to invalid memory address: 0x" << Utils::hex32(address) << endl;
-  assert(0);
+  throw Exception::e(MEMORY_WRITE_EXCEPTION,
+                     "Write to invalid memory space",
+                      address);
 }
 
-void Memory::print_memory( uint32_t start, uint32_t length ) const
+void Memory::print_memory( uint32_t start, uint32_t length, ostream &out ) const
 {
   for (size_t i = 0; i < MEM_NREGIONS; i++)
   if (start >= MEM_REGIONS[i].start &&
       start+length < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
   {
-    cout << endl;
-    for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
+    out << endl;
+    try
     {
-      uint32_t word = mem_read_32(mem_addr);
-      cout << setw(8) << setfill(' ') << Utils::hex32(mem_addr) << " [" << Utils::hex32(word) << "]";
-      word = mem_read_32(mem_addr + 4);
-      cout << " [" << Utils::hex32(word) << "]";
-      word = mem_read_32(mem_addr + 8);
-      cout << " [" << Utils::hex32(word) << "]";
-      word = mem_read_32(mem_addr + 12);
-      cout << " [" << Utils::hex32(word) << "]" << endl;
+      for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
+      {
+        uint32_t word = mem_read_32(mem_addr);
+        out << setw(8) << setfill(' ') << Utils::hex32(mem_addr) << " [" << Utils::hex32(word) << "]";
+        word = mem_read_32(mem_addr + 4);
+        out << " [" << Utils::hex32(word) << "]";
+        word = mem_read_32(mem_addr + 8);
+        out << " [" << Utils::hex32(word) << "]";
+        word = mem_read_32(mem_addr + 12);
+        out << " [" << Utils::hex32(word) << "]" << endl;
+      }
+    }
+    catch (int)
+    {
+      out << endl;
+      /* ignore */
     }
     return;
   }
 
-  assert(0);
+  stringstream ss;
+  ss << "Read access to invalid memory space: Start "
+     << Utils::hex32(start) << " / size " << length << " Bytes";
+  throw Exception::e(MEMORY_ALLOC_EXCEPTION, ss.str());
 }
 
 } /* namespace */

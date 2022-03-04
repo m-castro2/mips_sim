@@ -1,7 +1,7 @@
 %{
   #include "../utils.h"
   #include "../mem.h"
-  #include "assembler.h"
+  #include "mips_assembler.h"
 
   #include <iostream>
   #include <sstream>
@@ -87,7 +87,7 @@
 %token <tval> DATATAG
 %token <tval> LABELTAG
 %token <tval> LABELJUMP
-%token <tval> REGISTER
+%token <ival> REGISTER
 %token <tval> IOPCODE
 %token <tval> JOPCODE
 %token <tval> ROPCODE
@@ -120,54 +120,47 @@ instruction:
 		ROPCODE REGISTER COMMA REGISTER COMMA REGISTER
 		{
       stringstream ss;
-      ss << $1 << " " << $2 << ", " << $4 << ", " << $6;
+      ss << $1 << " $" << $2 << ", $" << $4 << ", $" << $6;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Rop " << ss.str() << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
-      free($1); free($2); free($4); free($6);
+      free($1);
 		}
 	|	IOPCODE REGISTER COMMA REGISTER COMMA INTVALUE
 		{
       stringstream ss;
-      ss << $1 << " " << $2 << ", " << $4 << ", " << $6;
+      ss << $1 << " $" << $2 << ", $" << $4 << ", " << $6;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Iop " << ss.str() << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
-      free($1); free($2); free($4);
+      free($1);
 		}
   |	IOPCODE REGISTER COMMA REGISTER COMMA LABELJUMP
 		{
       stringstream ss;
-      ss << $1 << " " << $2 << ", " << $4 << ", " << $6;
+      ss << $1 << " $" << $2 << ", $" << $4 << ", " << $6;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Bra " << ss.str() << endl;
       instructions.push_back({instcode, line, true, true, 0, $6});
-      free($1); free($2); free($4); free($6);
+      free($1); free($6);
 		}
   |	LUIOPCODE REGISTER COMMA INTVALUE
 		{
       stringstream ss;
-      ss << "lui " << $2 << ", " << $4;
+      ss << "lui $" << $2 << ", " << $4;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Lui " << ss.str() << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
-      free($2);
 		}
 	|	IMOPCODE REGISTER COMMA INTVALUE OBRACKET REGISTER CBRACKET
 		{
       stringstream ss;
-      ss << $1 << " " << $2 << ", " << $4 << "(" << $6 << ")";
+      ss << $1 << " $" << $2 << ", " << $4 << "($" << $6 << ")";
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Mem " << ss.str() << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
-      free($1); free($2); free($6);
+      free($1);
 		}
 	|	JOPCODE LABELJUMP
 		{
       stringstream ss;
       ss << $1 << " " << $2;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Jlb " << ss.str() << endl;
       instructions.push_back({instcode, line, true, false, 0, $2});
       free($1); free($2);
 		}
@@ -175,30 +168,26 @@ instruction:
 		{
       /* decompose in lui & ori */
       stringstream ss1, ss2;
-      ss1 << "lui " << $2 << ", 0";
-      ss2 << "ori " << $2 << ", " << $2 << ", 0";
+      ss1 << "lui $" << $2 << ", 0";
+      ss2 << "ori $" << $2 << ", " << $2 << ", 0";
       uint32_t instcode = Utils::assemble_instruction(ss1.str());
-      cout << Utils::hex32(instcode) << " La1 " << ss1.str() << endl;
       instructions.push_back({instcode, line, false, false, 1, $4});
       line++;
       instcode = Utils::assemble_instruction(ss2.str());
-      cout << Utils::hex32(instcode) << " La2 " << ss2.str() << endl;
       instructions.push_back({instcode, line, false, false, 2, $4});
-      free($2);
+      free($4);
 		}
   |	JOPCODE REGISTER
 		{
       stringstream ss;
-      ss << $1 << " " << $2;
+      ss << $1 << " $" << $2;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
-      cout << Utils::hex32(instcode) << " Jrg " << ss.str() << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
-      free($1); free($2);
+      free($1);
 		}
   | SYSCALL
     {
       uint32_t instcode = Utils::assemble_instruction("syscall");
-      cout << Utils::hex32(instcode) << " Syscall" << endl;
       instructions.push_back({instcode, line, false, false, 0, ""});
     }
   | LABELTAG
@@ -220,58 +209,28 @@ instruction:
         if (!strcmp($2, "word"))
         {
           type = 1;
-          cout << "Int array " << $1;
-          for (string v : values)
-          {
-            cout << " " << v;
-          }
-          cout << endl;
           mem_pos += values.size() * 4;
         }
         else if (!strcmp($2, "float"))
         {
           type = 2;
-          cout << "Float array " << $1;
-          for (string v : values)
-          {
-            cout << " " << v;
-          }
-          cout << endl;
           mem_pos += values.size() * 4;
         }
         else if (!strcmp($2, "double"))
         {
           type = 3;
-          cout << "Double array " << $1;
-          for (string v : values)
-          {
-            cout << " " << v;
-          }
-          cout << endl;
           mem_pos += values.size() * 8;
         }
         else if (!strcmp($2, "asciiz"))
         {
           type = 4;
           assert(values.size() == 1);
-          cout << "ASCII " << $1;
-          for (string v : values)
-          {
-            cout << " " << v;
-          }
-          cout << endl;
           mem_pos += values[0].length();
         }
         else if (!strcmp($2, "space"))
         {
           type = 5;
           assert(values.size() == 1);
-          cout << "Space allocation " << $1;
-          for (string v : values)
-          {
-            cout << " " << v;
-          }
-          cout << endl;
           mem_pos += stoi(values[0]);
         }
         memsections.push_back({$1, type, last_pos, mem_pos-last_pos, values});
@@ -305,60 +264,18 @@ instruction:
 namespace mips_sim
 {
 
-int assemble_file(const char filename[], shared_ptr<Memory> memory)
+/******************************************************************************/
+
+static void setup_memory(shared_ptr<Memory> memory)
 {
   uint32_t next_address;
   uint32_t words_to_mem[2];
-
-  yyin = fopen(filename, "r");
-  yyparse();
-  fclose(yyin);
-
-  /* rebuild instructions */
-  for (Instruction & instruction : instructions)
-  {
-    if (instruction.has_branch_label)
-    {
-      for (Label label : labels)
-      {
-        if (!instruction.label.compare(label.name))
-        {
-          if (instruction.relative)
-          {
-            int rel_branch = label.line - instruction.line - 1;
-            instruction.instcode |= (static_cast<uint32_t>(rel_branch) & 0xFFFF);
-          }
-          else
-          {
-            uint32_t abs_branch = MEM_TEXT_START/4 + static_cast<uint32_t>(label.line);
-            instruction.instcode |= (abs_branch & 0x3FFFFFF);
-          }
-        }
-      }
-    }
-    else if (instruction.has_data_label > 0)
-    {
-      assert(instruction.has_data_label <= 2);
-      for (Memsection mem_section : memsections)
-      {
-        if (!instruction.label.compare(mem_section.label))
-        {
-          uint32_t address = MEM_DATA_START + mem_section.position;
-          if (instruction.has_data_label == 1)
-            instruction.instcode |= (address >> 16 & 0xFFFF);
-          else
-            instruction.instcode |= (address & 0xFFFF);
-        }
-      }
-    }
-  }
 
   memory->lock();
   /* process data memory sections */
   next_address = MEM_DATA_START;
   for (Memsection memsection : memsections)
   {
-    cout << "ALLOCATE " << memsection.length << " Bytes" << endl;
     memory->allocate_space(next_address,
                            memsection.length);
     /* copy data */
@@ -412,8 +329,64 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
 
     cout << Utils::hex32(instruction.instcode) << endl;
   }
+}
+
+int assemble_file(const char filename[], shared_ptr<Memory> memory)
+{
+  yyin = fopen(filename, "r");
+  yyparse();
+  fclose(yyin);
+
+  /* rebuild instructions */
+  for (Instruction & instruction : instructions)
+  {
+    if (instruction.has_branch_label)
+    {
+      for (Label label : labels)
+      {
+        if (!instruction.label.compare(label.name))
+        {
+          if (instruction.relative)
+          {
+            int rel_branch = label.line - instruction.line - 1;
+            instruction.instcode |= (static_cast<uint32_t>(rel_branch) & 0xFFFF);
+          }
+          else
+          {
+            uint32_t abs_branch = MEM_TEXT_START/4 + static_cast<uint32_t>(label.line);
+            instruction.instcode |= (abs_branch & 0x3FFFFFF);
+          }
+        }
+      }
+    }
+    else if (instruction.has_data_label > 0)
+    {
+      assert(instruction.has_data_label <= 2);
+      for (Memsection mem_section : memsections)
+      {
+        if (!instruction.label.compare(mem_section.label))
+        {
+          uint32_t address = MEM_DATA_START + mem_section.position;
+          if (instruction.has_data_label == 1)
+            instruction.instcode |= (address >> 16 & 0xFFFF);
+          else
+            instruction.instcode |= (address & 0xFFFF);
+        }
+      }
+    }
+  }
+
+  setup_memory(memory);
 
   return 0;
+}
+
+void print_file(std::string output_file)
+{
+  for (Instruction & instruction : instructions)
+  {
+    cout << Utils::hex32(instruction.instcode) << endl;
+  }
 }
 
 } /* namespace */

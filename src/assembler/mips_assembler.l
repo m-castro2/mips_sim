@@ -2,10 +2,13 @@
 %option noyywrap
 
 %{
-#include <iostream>
+#include "../utils.h"
 #include "mips_parser.hpp"
 
+#include <iostream>
+
 using namespace std;
+using namespace mips_sim;
 
 extern "C"
 {
@@ -19,18 +22,19 @@ TEXTVALUE (\".*\")
 FLOATVALUE ([0-9]+[\.]?[0-9]*)
 LABELJUMP ([a-zA-Z][0-9A-zA-Z]+)
 LABELTAG ([a-zA-Z][0-9A-zA-Z]+:)
+
 DATA_TAG (".word"|".float"|".double"|".space"|".asciiz")
-
 R_INSTRUCTION("add"|"sub"|"mul"|"div"|"and"|"or"|"xor"|"nor"|"slt"|"sll"|"srl"|"sra")
-
-/* Immediate instructions */
 LUI_INSTRUCTION ("lui")
 I_INSTRUCTION ("addi"|"subi"|"andi"|"ori"|"xori"|"beq"|"bneq")
-I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb")
-
- /* Jump instructions */
+I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb"|"lwc1"|"swc1")
 J_INSTRUCTION ("j"|"jal"|"jr"|"jalr")
 LA_INSTRUCTION ("la")
+
+/* TODO */
+FP_INSTRUCTION ("add.s"|"sub.s"|"mul.s"|"div.s"|"add.d"|"sub.d"|"mul.d"|"div.d")
+FP_TWOREG ("mov.s"|"c.lt.s"|"c.le.s"|"c.eq.s"|"c.ne.s"|"c.ge.s"|"c.gt.s"|"c.lt.d"|"c.le.d"|"c.eq.d"|"c.ne.d"|"c.ge.d"|"c.gt.d")
+FP_BRANCH ("bc1t"|"bc1f")
 
 SYSCALL_INSTRUCTION ("syscall")
 
@@ -46,7 +50,9 @@ SYSCALL_INSTRUCTION ("syscall")
 {LUI_INSTRUCTION}		  { return LUIOPCODE; }
 {SYSCALL_INSTRUCTION} { return SYSCALL; }
 
-{REGISTER}	{ yylval.tval = strdup(yytext); return REGISTER; }
+{REGISTER}	{ //yylval.tval = strdup(yytext);
+              yylval.ival = Utils::find_register_by_name(yytext);
+              return REGISTER; }
 {INTVALUE}	{
               if (yytext[0] == '0' && yytext[1] == 'x')
               {
@@ -68,5 +74,5 @@ SYSCALL_INSTRUCTION ("syscall")
 \(					{ return OBRACKET; }
 \)					{ return CBRACKET; }
 ,           { return COMMA; }
-.					  { cout <<"??" << yytext << endl; /* manage errors bitch */ }
+.					  { cerr << "[parser] undefined symbol " << yytext << endl; }
 %%

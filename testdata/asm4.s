@@ -1,6 +1,7 @@
 .text
+
     addi $t4, $0, 0
-    lui $a0, 0x1001
+    lui $a0, 0x1001 #this is a comment
     addi $t0, $0, 4
     lui $t1, 0x0040
     addi $t1, $t1, 0x0010

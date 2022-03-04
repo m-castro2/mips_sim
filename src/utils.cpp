@@ -393,12 +393,21 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
     else
     {
       instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
-      tok = strtok(nullptr, ", ");
-      instruction.rd = find_register_by_name(tok);
-      tok = strtok(nullptr, ", ");
-      instruction.rs = find_register_by_name(tok);
-      tok = strtok(nullptr, ", ");
-      instruction.rt = find_register_by_name(tok);
+
+      if (instruction.funct == SUBOP_JR)
+      {
+        tok = strtok(nullptr, ", ");
+        instruction.rs = find_register_by_name(tok);
+      }
+      else
+      {
+        tok = strtok(nullptr, ", ");
+        instruction.rd = find_register_by_name(tok);
+        tok = strtok(nullptr, ", ");
+        instruction.rs = find_register_by_name(tok);
+        tok = strtok(nullptr, ", ");
+        instruction.rt = find_register_by_name(tok);
+      }
     }
   }
   else if (instruction_def.format == FORMAT_I)
@@ -416,6 +425,13 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
       tok = strtok(nullptr, ",() ");
       instruction.rs = find_register_by_name(tok);
     }
+    else if (instruction.opcode == OP_LUI)
+    {
+      if (tok[1] == 'x')
+        instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
+      else
+        instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+    }
     else
     {
       instruction.rs = find_register_by_name(tok);
@@ -424,6 +440,14 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
         instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
       else
         instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+    }
+
+    if (instruction.opcode == OP_BEQ || instruction.opcode == OP_BNE)
+    {
+      /* swap Rs & Rt */
+      uint8_t aux = instruction.rs;
+      instruction.rs = instruction.rt;
+      instruction.rt = aux;
     }
   }
   else if (instruction_def.format == FORMAT_J)

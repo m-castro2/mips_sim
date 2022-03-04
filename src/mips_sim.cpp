@@ -1,14 +1,17 @@
-#include "assembler/assembler.h"
+#include "assembler/mips_assembler.h"
+#include "assembler/mips_parser.hpp"
 #include "cpu/control_unit.h"
 #include "cpu/control_unit.h"
 #include "cpu/cpu_multi.h"
 #include "cpu/cpu_pipelined.h"
 #include "mem.h"
 #include "utils.h"
+#include "exception.h"
 
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <cstdio>
 #include <iomanip>
 #include <bitset>
 #include <memory>
@@ -19,29 +22,37 @@
 #define MODE_ASSEMBLE 3
 
 using namespace mips_sim;
+using namespace std;
 
-uint32_t load_program(std::string program_filename, Memory & memory);
+namespace mips_sim
+{
+uint32_t err_v;
+int err_no;
+string err_msg;
+}
+
+uint32_t load_program(string program_filename, Memory & memory);
 
 int main(int argc, char * argv[])
 {
-  std::shared_ptr<Memory> mem = std::shared_ptr<Memory>(new Memory());
-  std::unique_ptr<Cpu> cpu;
+  shared_ptr<Memory> mem = shared_ptr<Memory>(new Memory());
+  unique_ptr<Cpu> cpu;
 
-  std::string input_file, output_file;
+  string input_file, output_file;
   int run_mode = 0, retval = 0;
 
   // TEST ZONE
-  // std::vector<uint32_t> mc = ControlUnit::build_microcode(CpuMulti::uc_microcode_matrix,
+  // vector<uint32_t> mc = ControlUnit::build_microcode(CpuMulti::uc_microcode_matrix,
   //                                                    CpuMulti::uc_signal_bits);
   // for (uint32_t mi : mc)
-  //   std::cout << "MICROINSTRUCTION " << std::hex << mi << std::endl;
+  //   cout << "MICROINSTRUCTION " << hex << mi << endl;
   //
   // exit(0);
   // ---------
 
   if (argc != 3)
   {
-    std::cout << "Call " << argv[0] << "{run|runhex|asm} filename" << std::endl;
+    cout << "Call " << argv[0] << "{run|runhex|asm} filename" << endl;
     return 0;
   }
 
@@ -53,7 +64,7 @@ int main(int argc, char * argv[])
     run_mode = MODE_RUN_HEX;
   else
   {
-    std::cerr << "Undefined run mode: " << argv[1] << std::endl;
+    cerr << "Undefined run mode: " << argv[1] << endl;
     return EXIT_FAILURE;
   }
 
@@ -64,16 +75,16 @@ int main(int argc, char * argv[])
   {
     case MODE_RUN_ASM:
       {
-        Assembler assm;
-        uint32_t words_read;
-
-        if (!(retval = assm.open_file(input_file)))
+        try
         {
-          assm.setup_symbols();
-          assm.setup_code();
-          words_read = assm.load_code(mem);
-          if (!words_read)
-            return EXIT_FAILURE;
+          assemble_file(input_file.c_str(), mem);
+        }
+        catch(int e)
+        {
+          cerr << "Error " << e << ": " << err_msg;
+          if (err_v)
+            cerr << " [0x" << Utils::hex32(err_v) << "]";
+          cerr << endl;
         }
       }
       break;
@@ -82,23 +93,27 @@ int main(int argc, char * argv[])
         uint32_t words_read = load_program(input_file, *mem);
         if (!words_read)
         {
-          std::cerr << "No valid instructions in file " << argv[2] << std::endl;
+          cerr << "No valid instructions in file " << argv[2] << endl;
           return EXIT_FAILURE;
         }
       }
       break;
     case MODE_ASSEMBLE:
       {
-        Assembler assm;
-
-        if (!(retval = assm.open_file(input_file)))
+        try
         {
-          assm.setup_symbols();
-          assm.setup_code();
-          assm.print_file(output_file);
+          assemble_file(input_file.c_str(), mem);
+          print_file(output_file);
+          return EXIT_SUCCESS;
         }
-
-        return retval;
+        catch(int e)
+        {
+          cerr << "Error " << e << ": " << err_msg;
+          if (err_v)
+            cerr << " [0x" << Utils::hex32(err_v) << "]";
+          cerr << endl;
+          return EXIT_FAILURE;
+        }
       }
     default:
       /* this should never happen */
@@ -109,43 +124,53 @@ int main(int argc, char * argv[])
   if (retval != 0)
     return retval;
 
-  cpu = std::unique_ptr<Cpu>(new CpuPipelined(mem));
-  //cpu = std::unique_ptr<Cpu>(new CpuMulti(mem));
+  cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
+  //cpu = unique_ptr<Cpu>(new CpuMulti(mem));
 
-  for (size_t i = 0; cpu->is_ready() ; i++)
-  //for (size_t i = 0; i < 24 ; i++)
+  try
   {
-    cpu->next_cycle();
+    for (size_t i = 0; cpu->is_ready() ; i++)
+    //for (size_t i = 0; i < 24 ; i++)
+    {
+      cpu->next_cycle();
 
-    if (cpu->PC < 0x00400000)
-      break;
+      if (cpu->PC < 0x00400000)
+        break;
+    }
+  }
+  catch(int e)
+  {
+    cerr << "EXCEPTION " << e << ": " << err_msg;
+    if (err_v)
+      cerr << " [0x" << Utils::hex32(err_v) << "]";
+    cerr << endl;
   }
 
   cpu->print_registers();
-  mem->print_memory(0x10010000, 128);
+  mem->print_memory(MEM_DATA_START, 128);
 
   return EXIT_SUCCESS;
 }
 
 /* load program in memory from file */
-uint32_t load_program(std::string program_filename, Memory & memory)
+uint32_t load_program(string program_filename, Memory & memory)
 {
-  std::ifstream prog(program_filename);
+  ifstream prog(program_filename);
   size_t i = 0;
   uint32_t word;
   uint32_t words_read = 0;
 
   /* Open program file. */
   if (!prog) {
-    std::cerr << "Error: Can't open program file " << program_filename << std::endl;
+    cerr << "Error: Can't open program file " << program_filename << endl;
     exit(-1);
   }
 
   /* Read in the program. */
 
   i = 0;
-  while (prog >> std::hex >> word) { //fscanf(prog, "%x\n", &word) != EOF) {
-    std::cout << "Write " << Utils::hex32(word) << " to " << i << std::endl;
+  while (prog >> hex >> word) { //fscanf(prog, "%x\n", &word) != EOF) {
+    cout << "Write " << Utils::hex32(word) << " to " << i << endl;
     memory.mem_write_32(static_cast<uint32_t>(MEM_TEXT_START + i), word);
     i += 4;
     words_read++;
