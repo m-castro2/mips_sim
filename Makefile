@@ -35,7 +35,7 @@ src/%.o: src/%.cpp $(DEPS)
 
 clean:
 	find src -name "*.o" | xargs rm -f
-	sm src/assembler/mips_scanner.cpp src/assembler/mips_parser.cpp
+	rm src/assembler/mips_scanner.cpp src/assembler/mips_parser.cpp
 
 parser:
 	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
