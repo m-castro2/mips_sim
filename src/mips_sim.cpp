@@ -77,7 +77,11 @@ int main(int argc, char * argv[])
       {
         try
         {
-          assemble_file(input_file.c_str(), mem);
+          if (assemble_file(input_file.c_str(), mem) != 0)
+          {
+            cerr << "Error parsing the input file" << endl;
+            exit(EXIT_FAILURE);
+          }
         }
         catch(int e)
         {
@@ -133,9 +137,6 @@ int main(int argc, char * argv[])
     //for (size_t i = 0; i < 24 ; i++)
     {
       cpu->next_cycle();
-
-      if (cpu->PC < 0x00400000)
-        break;
     }
   }
   catch(int e)

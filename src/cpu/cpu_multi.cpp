@@ -24,6 +24,7 @@ namespace mips_sim
     B_REG = UNDEF32;
     ALU_OUT_REG = UNDEF32;
     MEM_DATA_REG = UNDEF32;
+    instruction = {};
   }
 
   CpuMulti::CpuMulti(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
@@ -33,11 +34,32 @@ namespace mips_sim
     B_REG = UNDEF32;
     ALU_OUT_REG = UNDEF32;
     MEM_DATA_REG = UNDEF32;
+    instruction = {};
   }
 
   CpuMulti::~CpuMulti()
   {
 
+  }
+
+  void CpuMulti::write_instruction_register( uint32_t instruction_code )
+  {
+    instruction = Utils::fill_instruction(instruction_code);
+
+    //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
+    //TMP: TEST ENCODER
+    cout << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
+    cout << "  -IR write:"
+              << " OP=" << static_cast<uint32_t>(instruction.opcode)
+              << " Rs=" << Utils::get_register_name(instruction.rs)
+              << " Rt=" << Utils::get_register_name(instruction.rt)
+              << " Rd=" << Utils::get_register_name(instruction.rd)
+              << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+              << " Func=" << static_cast<uint32_t>(instruction.funct)
+              << endl << "            "
+              << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
+              << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
+              << endl;
   }
 
   bool CpuMulti::next_cycle( bool verbose )
@@ -149,14 +171,17 @@ namespace mips_sim
     else
     {
       if (control_unit->test(microinstruction, SIG_ALUOP) == 0)
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_ADDU);
+        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                       instruction.shamt, SUBOP_ADDU);
       else if (control_unit->test(microinstruction, SIG_ALUOP) == 1)
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_SUBU);
+        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                       instruction.shamt, SUBOP_SUBU);
       else if (control_unit->test(microinstruction, SIG_ALUOP) == 2)
       {
         if (instruction.opcode == OP_RTYPE)
         {
-          alu_output = alu_compute_subop(alu_input_a, alu_input_b, instruction.funct);
+          alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                         instruction.shamt, instruction.funct);
         }
         else
         {

@@ -67,10 +67,15 @@ class CpuMulti : public Cpu
     virtual bool next_cycle( bool verbose = true ) override;
 
   private:
+    
+    void write_instruction_register( uint32_t instruction_code );
+
+    /* datapath registers */
     uint32_t A_REG;
     uint32_t B_REG;
     uint32_t ALU_OUT_REG;
     uint32_t MEM_DATA_REG;
+    instruction_t instruction;
 };
 
 } /* namespace */

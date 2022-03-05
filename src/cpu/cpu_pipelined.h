@@ -1,12 +1,12 @@
 #ifndef MIPS_SIM_CPU_PIPELINED_H
 #define MIPS_SIM_CPU_PIPELINED_H
 
-#define STAGE_IF  0
-#define STAGE_ID  1
-#define STAGE_EX  2
-#define STAGE_MEM 3
-#define STAGE_WB  4
-#define STAGE_COUNT 5
+#define STAGE_IF      0
+#define STAGE_ID      1
+#define STAGE_EX      2
+#define STAGE_MEM     3
+#define STAGE_WB      4
+#define STAGE_COUNT   5
 
 #define IF_ID  0
 #define ID_EX  1
@@ -28,6 +28,7 @@
 #define SR_RELBRANCH   12
 #define SR_REGDEST     13
 #define SR_WORDREAD    14
+#define SR_SHAMT       15
 #define SR_INSTRUCTION 31
 
 #define BRANCH_FLUSH     0 /* flush pipeline */
@@ -115,6 +116,12 @@ class CpuPipelined : public Cpu
     void stage_ex( bool verbose = true );
     void stage_mem( bool verbose = true );
     void stage_wb( bool verbose = true );
+
+    // void stage_ex_cop ( bool verbose = true);
+    // void stage_mem_cop ( bool verbose = true);
+    // void stage_wb_cop ( bool verbose = true);
+    //
+    // seg_reg_t cop_seg_regs[DIV_DELAY + 2] = {};
 
     bool pc_write; /* if false, blocks pipeline */
     uint32_t next_pc;

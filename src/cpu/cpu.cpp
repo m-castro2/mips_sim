@@ -29,8 +29,6 @@ void Cpu::reset( bool reset_memory )
 {
   PC = MEM_TEXT_START;
 
-  instruction = {};
-
   cycle = 0;
   mi_index = 0;
   execution_stall = 0;
@@ -44,7 +42,8 @@ void Cpu::reset( bool reset_memory )
     memory->reset(MEM_TEXT_REGION);
 }
 
-uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t alu_op)
+uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
+                                uint8_t shift_amount, uint32_t alu_op)
 {
   uint32_t alu_output = 0xFFFFFFFF;
 
@@ -55,9 +54,9 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       syscall(gpr[2]); // call with reg $v0
       break;
     case SUBOP_SLL:
-      alu_output = alu_input_b << instruction.shamt; break;
+      alu_output = alu_input_b << shift_amount; break;
     case SUBOP_SRL:
-      alu_output = alu_input_b >> instruction.shamt; break;
+      alu_output = alu_input_b >> shift_amount; break;
     case SUBOP_AND:
       alu_output = alu_input_a & alu_input_b; break;
     case SUBOP_OR:
@@ -94,7 +93,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       //TODO: Update HI/LO after stall
       HI = (v >> 32) & 0xFFFFFFFF;
       LO = v & 0xFFFFFFFF;
-      execution_stall = MULT_STALL;
+      execution_stall = MULT_DELAY;
     }
       break;
     case SUBOP_MULTU:
@@ -103,7 +102,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       //TODO: Update HI/LO after stall
       HI = (v >> 32) & 0xFFFFFFFF;
       LO = v & 0xFFFFFFFF;
-      execution_stall = MULT_STALL;
+      execution_stall = MULT_DELAY;
     }
       break;
     case SUBOP_DIV:
@@ -112,7 +111,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       /* HI = div, LO = mod */
       HI = static_cast<uint32_t>(static_cast<int32_t>(alu_input_a) / static_cast<int32_t>(alu_input_b));
       LO = static_cast<uint32_t>(static_cast<int32_t>(alu_input_a) % static_cast<int32_t>(alu_input_b));
-      execution_stall = DIV_STALL;
+      execution_stall = DIV_DELAY;
     }
       break;
     case SUBOP_DIVU:
@@ -121,7 +120,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b, uint
       /* HI = div, LO = mod */
       HI = alu_input_a / alu_input_b;
       LO = alu_input_a % alu_input_b;
-      execution_stall = DIV_STALL;
+      execution_stall = DIV_DELAY;
     }
       break;
     default:
@@ -231,26 +230,6 @@ void Cpu::syscall( uint32_t value )
       cout << "Undefined syscall " << value << endl;
       assert(0);
   }
-}
-
-void Cpu::write_instruction_register( uint32_t instruction_code )
-{
-  instruction = Utils::fill_instruction(instruction_code);
-
-  //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
-  //TMP: TEST ENCODER
-  cout << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
-  cout << "  -IR write:"
-            << " OP=" << static_cast<uint32_t>(instruction.opcode)
-            << " Rs=" << Utils::get_register_name(instruction.rs)
-            << " Rt=" << Utils::get_register_name(instruction.rt)
-            << " Rd=" << Utils::get_register_name(instruction.rd)
-            << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
-            << " Func=" << static_cast<uint32_t>(instruction.funct)
-            << endl << "            "
-            << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
-            << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
-            << endl;
 }
 
 void Cpu::print_registers( void ) const

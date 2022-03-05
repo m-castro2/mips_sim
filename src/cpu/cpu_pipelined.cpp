@@ -183,7 +183,7 @@ namespace mips_sim
                       << Utils::decode_instruction(instruction_code)
                       << endl;
 
-    write_instruction_register(instruction_code);
+    instruction_t instruction = Utils::fill_instruction(instruction_code);
 
     rs_value = read_register(instruction.rs);
     rt_value = read_register(instruction.rt);
@@ -292,6 +292,7 @@ namespace mips_sim
       next_seg_reg.data[SR_FUNCT]   = instruction.funct;
       next_seg_reg.data[SR_OPCODE]  = instruction.opcode;
       next_seg_reg.data[SR_RS]      = instruction.rs;
+      next_seg_reg.data[SR_SHAMT]   = instruction.shamt;
     }
 
     if (!write_segmentation_register(ID_EX, next_seg_reg))
@@ -353,6 +354,7 @@ namespace mips_sim
     uint32_t rd       = seg_regs[ID_EX].data[SR_RD];
     uint32_t opcode   = seg_regs[ID_EX].data[SR_OPCODE];
     uint32_t funct    = seg_regs[ID_EX].data[SR_FUNCT];
+    uint32_t shamt    = seg_regs[ID_EX].data[SR_SHAMT];
 
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(addr_i) << 16 >> 16);
 
@@ -376,14 +378,17 @@ namespace mips_sim
     switch (control_unit->test(microinstruction, SIG_ALUOP))
     {
       case 0:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_ADDU);
+        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                       static_cast<uint8_t>(shamt), SUBOP_ADDU);
         break;
       case 1:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b, SUBOP_SUBU);
+        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                       static_cast<uint8_t>(shamt), SUBOP_SUBU);
         break;
       case 2:
         if (opcode == OP_RTYPE)
-          alu_output = alu_compute_subop(alu_input_a, alu_input_b, funct);
+          alu_output = alu_compute_subop(alu_input_a, alu_input_b,
+                                         static_cast<uint8_t>(shamt), funct);
         else
           alu_output = alu_compute_op(alu_input_a, alu_input_b, opcode);
         break;
