@@ -50,7 +50,11 @@ typedef enum
   SUBOP_FPADD = 0x0,
   SUBOP_FPSUB = 0x1,
   SUBOP_FPMUL = 0x2,
-  SUBOP_FPDIV = 0x3
+  SUBOP_FPDIV = 0x3,
+  SUBOP_FPMOV = 0x6,
+  SUBOP_FPCEQ = 0x32,
+  SUBOP_FPCLT = 0x3C,
+  SUBOP_FPCLE = 0x3E
 } fpsubopcode_t;
 
 /* primary opcodes */
@@ -176,10 +180,6 @@ const instruction_format_t instructions_def[]
   { OP_ORI,   0,            "ori",      4, FORMAT_I },
   { OP_XORI,  0,            "xori",     4, FORMAT_I },
   { OP_LUI,   0,            "lui",      3, FORMAT_I },
-  { OP_FTYPE, SUBOP_FPADD,  "add.",     4, FORMAT_F },
-  { OP_FTYPE, SUBOP_FPSUB,  "sub.",     4, FORMAT_F },
-  { OP_FTYPE, SUBOP_FPMUL,  "mul.",     4, FORMAT_F },
-  { OP_FTYPE, SUBOP_FPDIV,  "div.",     4, FORMAT_F },
   { OP_LB,    0,            "lb",       4, FORMAT_I },
   { OP_LH,    0,            "lh",       4, FORMAT_I },
   { OP_LW,    0,            "lw",       4, FORMAT_I },
@@ -187,7 +187,17 @@ const instruction_format_t instructions_def[]
   { OP_LHU,   0,            "lhu",      4, FORMAT_I },
   { OP_SB,    0,            "sb",       4, FORMAT_I },
   { OP_SH,    0,            "sh",       4, FORMAT_I },
-  { OP_SW,    0,            "sw",       4, FORMAT_I }
+  { OP_SW,    0,            "sw",       4, FORMAT_I },
+  { OP_FTYPE, SUBOP_FPADD,  "add.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPSUB,  "sub.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPMUL,  "mul.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPDIV,  "div.",     4, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPMOV,  "mov.",     3, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPCLE,  "c.le.",    3, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPCLT,  "c.lt.",    3, FORMAT_F },
+  { OP_FTYPE, SUBOP_FPCEQ,  "c.eq.",    3, FORMAT_F },
+  { OP_FTYPE, 0,            "bc1t",     2, FORMAT_F }, // Special case
+  { OP_FTYPE, 0,            "bc1f",     2, FORMAT_F }, // Special case
 };
 
 const std::string signal_names[] = {

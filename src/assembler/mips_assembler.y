@@ -88,9 +88,13 @@
 %token <tval> LABELTAG
 %token <tval> LABELJUMP
 %token <ival> REGISTER
+%token <ival> FREGISTER
 %token <tval> IOPCODE
 %token <tval> JOPCODE
 %token <tval> ROPCODE
+%token <tval> FOPCODE
+%token <tval> F2ROPCODE
+%token <tval> FBROPCODE
 %token <tval> IMOPCODE
 %token <ival> INTVALUE
 %token <tval> FLOATVALUE
@@ -125,6 +129,30 @@ instruction:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free($1);
 		}
+  | FOPCODE FREGISTER COMMA FREGISTER COMMA FREGISTER
+    {
+      stringstream ss;
+      ss << $1 << " $" << $2 << ", $" << $4 << ", $" << $6;
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, false, false, 0, ""});
+      free($1);
+    }
+  | F2ROPCODE FREGISTER COMMA FREGISTER
+    {
+      stringstream ss;
+      ss << $1 << " $" << $2 << ", $" << $4;
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, false, false, 0, ""});
+      free($1);
+    }
+  | FBROPCODE LABELJUMP
+    {
+      stringstream ss;
+      ss << $1 << " " << $2;
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, true, true, 0, $2});
+      free($1); free($2);
+    }
 	|	IOPCODE REGISTER COMMA REGISTER COMMA INTVALUE
 		{
       stringstream ss;
@@ -169,7 +197,7 @@ instruction:
       /* decompose in lui & ori */
       stringstream ss1, ss2;
       ss1 << "lui $" << $2 << ", 0";
-      ss2 << "ori $" << $2 << ", " << $2 << ", 0";
+      ss2 << "ori $" << $2 << ", $" << $2 << ", 0";
       uint32_t instcode = Utils::assemble_instruction(ss1.str());
       instructions.push_back({instcode, line, false, false, 1, $4});
       line++;
@@ -326,17 +354,20 @@ static void setup_memory(shared_ptr<Memory> memory)
     memory->mem_write_32(next_address, instruction.instcode);
     next_address += 4;
     //words_read++;
-
-    cout << Utils::hex32(instruction.instcode) << endl;
   }
 }
 
 int assemble_file(const char filename[], shared_ptr<Memory> memory)
 {
+  int retval;
   yyin = fopen(filename, "r");
-  yyparse();
+  retval = yyparse();
   fclose(yyin);
 
+  if (retval)
+  {
+    return 1;
+  }
   /* rebuild instructions */
   for (Instruction & instruction : instructions)
   {
@@ -385,7 +416,9 @@ void print_file(std::string output_file)
 {
   for (Instruction & instruction : instructions)
   {
-    cout << Utils::hex32(instruction.instcode) << endl;
+    cout << Utils::hex32(instruction.instcode)
+         << " # " << Utils::decode_instruction(instruction.instcode)
+         << endl;
   }
 }
 

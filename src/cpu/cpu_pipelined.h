@@ -67,30 +67,40 @@ class CpuPipelined : public Cpu
     // C  C  o  R  W  W  2  D  W  A  A  S  O  r  t
     // w  s  D  d  r  r  R  s  r  A  B  r  p  a  d
     // -  1  -  1  1  -  1  1  1  -  -  1  2  1  -
-     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, // 0 R type
-      {X, 3, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // 1 J
-      {X, 2, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, // 2 JR
-      {X, 3, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, // 3 JAL
-      {X, 2, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, // 4 JALR
-      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, // 5 BNE/BEQ
-      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, // 6 LW
-      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, // 7 SW
-      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, // 8 I type
+     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, //  0 R type
+      {X, 3, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, //  1 J
+      {X, 2, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, //  2 JR
+      {X, 3, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, //  3 JAL
+      {X, 2, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, //  4 JALR
+      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, //  5 BNE/BEQ
+      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, //  6 LW
+      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, //  7 SW
+      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, //  8 I type
+      {X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, //  9 FType add/sub/mul/div
       {0} // end
     };
 
     static constexpr op_microcode_t op_select[] =
     {
-      {OP_RTYPE, SUBOP_JR,   2},
-      {OP_RTYPE, SUBOP_JALR, 4},
-      {OP_RTYPE, UNDEF8,     0},
-      {OP_J,     UNDEF8,     1},
-      {OP_JAL,   UNDEF8,     3},
-      {OP_BNE,   UNDEF8,     5},
-      {OP_BEQ,   UNDEF8,     5},
-      {OP_LW,    UNDEF8,     6},
-      {OP_SW,    UNDEF8,     7},
-      {UNDEF8,   UNDEF8,     8}
+      {OP_RTYPE, SUBOP_JR,    2},
+      {OP_RTYPE, SUBOP_JALR,  4},
+      {OP_RTYPE, UNDEF8,      0},
+      {OP_J,     UNDEF8,      1},
+      {OP_JAL,   UNDEF8,      3},
+      {OP_BNE,   UNDEF8,      5},
+      {OP_BEQ,   UNDEF8,      5},
+      {OP_LW,    UNDEF8,      6},
+      {OP_SW,    UNDEF8,      7},
+      {OP_FTYPE, SUBOP_FPADD, 0},
+      {OP_FTYPE, SUBOP_FPSUB, 0},
+      {OP_FTYPE, SUBOP_FPMUL, 0},
+      {OP_FTYPE, SUBOP_FPDIV, 0},
+      {OP_FTYPE, SUBOP_FPCEQ, 8},
+      {OP_FTYPE, SUBOP_FPCLE, 8},
+      {OP_FTYPE, SUBOP_FPCLT, 8},
+      {OP_FTYPE, UNDEF8     , 5}, // bc1t / bc1f
+      {UNDEF8,   UNDEF8,      8}   // I type
+
     };
 
     CpuPipelined(std::shared_ptr<Memory>);

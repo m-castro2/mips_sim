@@ -363,7 +363,9 @@ namespace mips_sim
     if (HAS_FORWARDING_UNIT)
     {
       rs_value = forward_register(rs, rs_value);
-      rt_value = forward_register(rt, rt_value);
+      if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
+          control_unit->test(microinstruction, SIG_REGWRITE) == 0)
+        rt_value = forward_register(rt, rt_value);
     }
 
     alu_input_a = rs_value;

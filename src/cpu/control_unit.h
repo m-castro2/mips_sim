@@ -11,19 +11,6 @@
 namespace mips_sim
 {
 
-// SIMULA:
-// https://www.sciencedirect.com/topics/computer-science/floating-point-register
-// FTYPE
-// OP(6) COP(5) FT(5) FS(5) FD(5) FUNCT(6)
-// add.s Opcode = 0x11 (17) r0 rs rt rd func(0)
-// add.d Opcode = 0x11 (17) r1 rs rt rd func(0)
-// sub.s Opcode = 0x11 (17) r0 rs rt rd func(1)
-// sub.d Opcode = 0x11 (17) r1 rs rt rd func(1)
-// mul.s Opcode = 0x11 (17) r0 rs rt rd func(2)
-// mul.d Opcode = 0x11 (17) r1 rs rt rd func(2)
-// div.s Opcode = 0x11 (17) r0 rs rt rd func(3)
-// div.d Opcode = 0x11 (17) r1 rs rt rd func(3)
-
 /* special sub-opcodes (opcode=0) */
 
 typedef struct

@@ -12,3 +12,26 @@
  | IF | ID |========================|       |         |
  |    |    |          ALU           |       |  WBint  |
  |    |    |                        |       |         |
+
+FP instructions
+
+SIMULA:
+https://www.sciencedirect.com/topics/computer-science/floating-point-register
+FTYPE
+           OP(6)  COP(5) FT(5) FS(5) FD(5) FUNCT(6)
+  add.s  0x11 (17)  r0    rs    rt    rd    func(0)
+  add.d  0x11 (17)  r1    rs    rt    rd    func(0)
+  sub.s  0x11 (17)  r0    rs    rt    rd    func(1)
+  sub.d  0x11 (17)  r1    rs    rt    rd    func(1)
+  mul.s  0x11 (17)  r0    rs    rt    rd    func(2)
+  mul.d  0x11 (17)  r1    rs    rt    rd    func(2)
+  div.s  0x11 (17)  r0    rs    rt    rd    func(3)
+  div.d  0x11 (17)  r1    rs    rt    rd    func(3)
+  c.lt.s 0x11 (17)  r0    rs    rt    --    func = 0x3C
+  c.le.s 0x11 (17)  r0    rs    rt    --    func = 0x3E
+  c.eq.s 0x11 (17)  r0    rs    rt    --    func = 0x32
+  mov.s  0x11 (17)  r0    --    rt    rd    func = 6
+  bc1t   0x11 (17)   8     1   Offset(16)
+  bc1f   0x11 (17)   8     0   Offset(16)
+  0x44000306
+  0100 0100 0000 0000 1111 1011 011 00 000110

@@ -26,15 +26,16 @@ LABELTAG ([a-zA-Z][0-9A-zA-Z]+:)
 DATA_TAG (".word"|".float"|".double"|".space"|".asciiz")
 R_INSTRUCTION("add"|"sub"|"mul"|"div"|"and"|"or"|"xor"|"nor"|"slt"|"sll"|"srl"|"sra")
 LUI_INSTRUCTION ("lui")
-I_INSTRUCTION ("addi"|"subi"|"andi"|"ori"|"xori"|"beq"|"bneq")
+I_INSTRUCTION ("addi"|"subi"|"andi"|"ori"|"xori"|"bne"|"beq")
 I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb"|"lwc1"|"swc1")
 J_INSTRUCTION ("j"|"jal"|"jr"|"jalr")
 LA_INSTRUCTION ("la")
 
 /* TODO */
-FP_INSTRUCTION ("add.s"|"sub.s"|"mul.s"|"div.s"|"add.d"|"sub.d"|"mul.d"|"div.d")
-FP_TWOREG ("mov.s"|"c.lt.s"|"c.le.s"|"c.eq.s"|"c.ne.s"|"c.ge.s"|"c.gt.s"|"c.lt.d"|"c.le.d"|"c.eq.d"|"c.ne.d"|"c.ge.d"|"c.gt.d")
-FP_BRANCH ("bc1t"|"bc1f")
+F_REGISTER (\$f([0-9]|[1-2][0-9]|3[0-2]))
+F_INSTRUCTION ("add.s"|"sub.s"|"mul.s"|"div.s"|"add.d"|"sub.d"|"mul.d"|"div.d")
+F_TWOREG ("mov.s"|"c.lt.s"|"c.le.s"|"c.eq.s"|"c.ne.s"|"c.ge.s"|"c.gt.s"|"c.lt.d"|"c.le.d"|"c.eq.d"|"c.ne.d"|"c.ge.d"|"c.gt.d")
+F_BRANCH ("bc1t"|"bc1f")
 
 SYSCALL_INSTRUCTION ("syscall")
 
@@ -42,6 +43,9 @@ SYSCALL_INSTRUCTION ("syscall")
 ".text"               { return TEXT_SECTION; }
 ".data"               { return DATA_SECTION; }
 {DATA_TAG}            { yylval.tval = strdup(yytext+1); return DATATAG; }
+{F_INSTRUCTION}	 	    { yylval.tval = strdup(yytext); return FOPCODE; }
+{F_TWOREG}	    	    { yylval.tval = strdup(yytext); return F2ROPCODE; }
+{F_BRANCH}	    	    { yylval.tval = strdup(yytext); return FBROPCODE; }
 {R_INSTRUCTION}	 	    { yylval.tval = strdup(yytext); return ROPCODE; }
 {J_INSTRUCTION}		    { yylval.tval = strdup(yytext); return JOPCODE; }
 {LA_INSTRUCTION}	    { return LAOPCODE; }
@@ -50,9 +54,10 @@ SYSCALL_INSTRUCTION ("syscall")
 {LUI_INSTRUCTION}		  { return LUIOPCODE; }
 {SYSCALL_INSTRUCTION} { return SYSCALL; }
 
-{REGISTER}	{ //yylval.tval = strdup(yytext);
-              yylval.ival = Utils::find_register_by_name(yytext);
+{REGISTER}	{ yylval.ival = Utils::find_register_by_name(yytext);
               return REGISTER; }
+{F_REGISTER} { yylval.ival = Utils::find_register_by_name(yytext);
+               return FREGISTER; }
 {INTVALUE}	{
               if (yytext[0] == '0' && yytext[1] == 'x')
               {

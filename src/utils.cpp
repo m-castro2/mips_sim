@@ -1,4 +1,6 @@
 #include "utils.h"
+#include "exception.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -170,7 +172,18 @@ static size_t find_instruction(instruction_t instruction)
     {
       if (instruction.opcode == OP_RTYPE || instruction.opcode == OP_FTYPE)
       {
-        if (instruction.funct == instructions_def[i].subopcode)
+        /* BC1T & BC1F are special cases */
+        if (instruction.opcode == OP_FTYPE && instruction.cop == 8)
+        {
+          if (instruction.rt == 0)
+            instruction_index = Utils::find_instruction_by_name("bc1f");
+          else if (instruction.rt == 1)
+            instruction_index = Utils::find_instruction_by_name("bc1t");
+          else
+            assert(0);
+          break;
+        }
+        else if (instruction.funct == instructions_def[i].subopcode)
         {
           instruction_index = i;
           break;
@@ -192,13 +205,25 @@ static size_t find_instruction(instruction_t instruction)
 uint32_t Utils::find_instruction_by_name(const string opname)
 {
   uint32_t instruction_index = UNDEF32;
+  string instruction_name = opname;
+
+  if (opname.find_first_of('.') != string::npos)
+  {
+    instruction_name = opname.substr(0, opname.length()-1);
+  }
+
   for (uint32_t i=0; i<(sizeof(instructions_def)/sizeof(instruction_format_t)); ++i)
   {
-    if (opname == instructions_def[i].opname)
+    if (instruction_name == instructions_def[i].opname)
     {
       instruction_index = i;
       break;
     }
+  }
+
+  if (instruction_index == UNDEF32)
+  {
+    throw Exception::e(PARSER_UNDEF_EXCEPTION, "Undefined instruction " + opname);
   }
 
   return instruction_index;
@@ -216,6 +241,11 @@ uint8_t Utils::find_register_by_name(const string regname)
       register_index = i;
       break;
     }
+  }
+
+  if (register_index > 32)
+  {
+    throw Exception::e(PARSER_UNDEF_EXCEPTION, "Undefined register " + regname);
   }
 
   return register_index;
@@ -241,7 +271,18 @@ string Utils::decode_instruction(const instruction_t instruction)
 
   instruction_index = find_instruction(instruction);
 
-  ss << instructions_def[instruction_index].opname << " ";
+  ss << instructions_def[instruction_index].opname;
+  if (instructions_def[instruction_index].opname.find_last_of('.') != string::npos)
+  {
+    if (instruction.cop == 0)
+      ss << "s";
+    else if (instruction.cop == 1)
+      ss << "d";
+    else
+      assert(0);
+  }
+
+  ss << " ";
   if (instructions_def[instruction_index].format == FORMAT_R)
   {
     if (instruction.funct == SUBOP_JR || instruction.funct == SUBOP_JALR)
@@ -263,9 +304,25 @@ string Utils::decode_instruction(const instruction_t instruction)
   }
   else if (instructions_def[instruction_index].format == FORMAT_F)
   {
-    ss << registers_def[instruction.rd].regname_fp << ", ";
-    ss << registers_def[instruction.rs].regname_fp << ", ";
-    ss << registers_def[instruction.rt].regname_fp;
+    /* not bc1t / bc1f */
+    if (instruction.cop != 8)
+    {
+      if (instructions_def[instruction_index].symbols_count == 3)
+      {
+        ss << registers_def[instruction.rs].regname_fp << ", ";
+        ss << registers_def[instruction.rt].regname_fp;
+      }
+      else
+      {
+        ss << registers_def[instruction.rd].regname_fp << ", ";
+        ss << registers_def[instruction.rs].regname_fp << ", ";
+        ss << registers_def[instruction.rt].regname_fp;
+      }
+    }
+    else
+    {
+      ss << "0x" << hex << instruction.addr_i;
+    }
   }
   else if (instructions_def[instruction_index].format == FORMAT_J)
   {
@@ -315,11 +372,26 @@ uint32_t Utils::encode_instruction(const instruction_t instruction)
   {
     instcode |= instruction.addr_j;
   }
+  else if (instruction.opcode == OP_FTYPE)
+  {
+    instcode |= static_cast<uint32_t>(instruction.cop << 21);
+    instcode |= static_cast<uint32_t>(instruction.rs << 16);
+    if (instruction.cop == 8)
+    {
+      instcode |= instruction.addr_i;
+    }
+    else
+    {
+      instcode |= static_cast<uint32_t>(instruction.rt << 11);
+      instcode |= static_cast<uint32_t>(instruction.rd << 6);
+      instcode |= instruction.funct;
+    }
+  }
   else
   {
     instcode |= static_cast<uint32_t>(instruction.rs << 21);
     instcode |= static_cast<uint32_t>(instruction.rt << 16);
-    if (instruction.opcode != OP_RTYPE && instruction.opcode != OP_FTYPE)
+    if (instruction.opcode != OP_RTYPE)
     {
       instcode |= instruction.addr_i;
     }
@@ -378,8 +450,6 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
   if (tok == nullptr)
     return 0;
   size_t instruction_index = find_instruction_by_name(tok);
-  if (instruction_index == UNDEF32)
-    return 0;
 
   instruction_format_t instruction_def = instructions_def[instruction_index];
 
@@ -457,6 +527,71 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
       instruction.addr_j = static_cast<uint32_t>(strtol(tok, nullptr, 16));
     else
       instruction.addr_j = static_cast<uint32_t>(atoi(tok));
+  }
+  else if (instruction_def.format == FORMAT_F)
+  {
+       if (instruction_str.find_last_of('.') == strlen(tok)-2)
+      {
+        char precision = tok[strlen(tok)-1];
+        if (precision == 's')
+        {
+          instruction.cop = 0;
+        }
+        else if (precision == 'd')
+        {
+          instruction.cop = 1;
+        }
+        else
+        {
+          throw Exception::e(PARSER_UNDEF_EXCEPTION, string("Unknown instruction ") + tok);
+        }
+      }
+
+      switch (instruction_def.symbols_count)
+      {
+        case 4:
+        {
+          tok = strtok(nullptr, ", ");
+          instruction.rd = find_register_by_name(tok);
+          tok = strtok(nullptr, ", ");
+          instruction.rs = find_register_by_name(tok);
+          tok = strtok(nullptr, ", ");
+          instruction.rt = find_register_by_name(tok);
+          instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
+        }
+        break;
+        case 3:
+        {
+          if (instruction_def.subopcode == SUBOP_FPMOV)
+          {
+            tok = strtok(nullptr, ", ");
+            instruction.rd = find_register_by_name(tok);
+            tok = strtok(nullptr, ", ");
+            instruction.rt = find_register_by_name(tok);
+          }
+          else
+          {
+            tok = strtok(nullptr, ", ");
+            instruction.rt = find_register_by_name(tok);
+            tok = strtok(nullptr, ", ");
+            instruction.rs = find_register_by_name(tok);
+          }
+          instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
+        }
+        break;
+        case 2:
+        {
+          instruction.cop = 8;
+          tok = strtok(nullptr, ", ");
+          if (tok[1] == 'x')
+            instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
+          else
+            instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+        }
+        break;
+        default:
+          assert(0);
+      }
   }
 
   instcode = Utils::encode_instruction(instruction);
