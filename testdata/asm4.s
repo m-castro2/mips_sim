@@ -1,7 +1,7 @@
 .text
 
+    la $a0, Mem
     addi $t4, $0, 0
-    lui $a0, 0x1001 #this is a comment
     addi $t0, $0, 4
     lui $t1, 0x0040
     addi $t1, $t1, 0x0010
@@ -21,3 +21,7 @@ Skip:
 Subroutine:
     addi $t4, $t4, 1
     jr $ra
+
+.data
+
+Mem: .space 32

@@ -1,4 +1,5 @@
 .text
+
     lui $a0, 0x1001
     addi $8, $0, 25
 Loop:
@@ -11,3 +12,7 @@ Loop:
 
     addi $v0, $0, 10
     syscall
+    
+.data
+
+Mem: .space 20

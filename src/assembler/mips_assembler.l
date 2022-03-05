@@ -16,7 +16,7 @@ extern "C"
 }
 %}
 
-REGISTER (\$(zero|0|at|gp|sp|fp|ra|[kv][0-1]|a[0-3]|t[0-9]|s[0-7]))
+REGISTER (\$(zero|0|at|gp|sp|fp|ra|[kv][0-1]|a[0-3]|t[0-9]|s[0-7]|[0-9]|[1-2][0-9]|3[0-2]))
 INTVALUE (?:0x[0-9a-fA-F]+|0|[-|+]?[|1-9][0-9]*)
 TEXTVALUE (\".*\")
 FLOATVALUE ([0-9]+[\.]?[0-9]*)

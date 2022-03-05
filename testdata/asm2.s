@@ -22,3 +22,7 @@
     
     addi $v0, $0, 10
     syscall
+
+.data
+
+Mem: .space 20
