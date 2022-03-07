@@ -27,13 +27,14 @@ DATA_TAG (".word"|".float"|".double"|".space"|".asciiz")
 R_INSTRUCTION("add"|"sub"|"mul"|"div"|"and"|"or"|"xor"|"nor"|"slt"|"sll"|"srl"|"sra")
 LUI_INSTRUCTION ("lui")
 I_INSTRUCTION ("addi"|"subi"|"andi"|"ori"|"xori"|"bne"|"beq")
-I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb"|"lwc1"|"swc1")
+I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb")
 J_INSTRUCTION ("j"|"jal"|"jr"|"jalr")
 LA_INSTRUCTION ("la")
 
 /* TODO */
 F_REGISTER (\$f([0-9]|[1-2][0-9]|3[0-2]))
 F_INSTRUCTION ("add.s"|"sub.s"|"mul.s"|"div.s"|"add.d"|"sub.d"|"mul.d"|"div.d")
+F_MEM_INSTRUCTION ("lwc1"|"swc1")
 F_TWOREG ("mov.s"|"c.lt.s"|"c.le.s"|"c.eq.s"|"c.ne.s"|"c.ge.s"|"c.gt.s"|"c.lt.d"|"c.le.d"|"c.eq.d"|"c.ne.d"|"c.ge.d"|"c.gt.d")
 F_BRANCH ("bc1t"|"bc1f")
 
@@ -51,6 +52,7 @@ SYSCALL_INSTRUCTION ("syscall")
 {LA_INSTRUCTION}	    { return LAOPCODE; }
 {I_INSTRUCTION}		    { yylval.tval = strdup(yytext); return IOPCODE; }
 {I_MEM_INSTRUCTION}	  { yylval.tval = strdup(yytext); return IMOPCODE; }
+{F_MEM_INSTRUCTION}	  { yylval.tval = strdup(yytext); return FMOPCODE; }
 {LUI_INSTRUCTION}		  { return LUIOPCODE; }
 {SYSCALL_INSTRUCTION} { return SYSCALL; }
 

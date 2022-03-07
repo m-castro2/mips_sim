@@ -134,7 +134,7 @@ int main(int argc, char * argv[])
   try
   {
     for (size_t i = 0; cpu->is_ready() ; i++)
-    //for (size_t i = 0; i < 24 ; i++)
+    //for (size_t i = 0; i < 13 ; i++)
     {
       cpu->next_cycle();
     }
@@ -148,6 +148,7 @@ int main(int argc, char * argv[])
   }
 
   cpu->print_registers();
+  cpu->print_fp_registers();
   mem->print_memory(MEM_DATA_START, 128);
 
   return EXIT_SUCCESS;

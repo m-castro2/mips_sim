@@ -96,6 +96,7 @@
 %token <tval> F2ROPCODE
 %token <tval> FBROPCODE
 %token <tval> IMOPCODE
+%token <tval> FMOPCODE
 %token <ival> INTVALUE
 %token <tval> FLOATVALUE
 %token <tval> TEXTVALUE
@@ -184,6 +185,14 @@ instruction:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free($1);
 		}
+  |	FMOPCODE FREGISTER COMMA INTVALUE OBRACKET REGISTER CBRACKET
+    {
+      stringstream ss;
+      ss << $1 << " $" << $2 << ", " << $4 << "($" << $6 << ")";
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, false, false, 0, ""});
+      free($1);
+    }
 	|	JOPCODE LABELJUMP
 		{
       stringstream ss;

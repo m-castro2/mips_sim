@@ -58,7 +58,7 @@ typedef enum
 } fpsubopcode_t;
 
 /* primary opcodes */
-#define OP_COUNT 24
+#define OP_COUNT 26
 
 typedef enum
 {
@@ -85,7 +85,9 @@ typedef enum
   OP_LHU   = 0x25,
   OP_SB    = 0x28,
   OP_SH    = 0x29,
-  OP_SW    = 0x2b
+  OP_SW    = 0x2b,
+  OP_LWC1  = 0x31,
+  OP_SWC1  = 0x39
 } opcode_t;
 
 /*
@@ -188,6 +190,8 @@ const instruction_format_t instructions_def[]
   { OP_SB,    0,            "sb",       4, FORMAT_I },
   { OP_SH,    0,            "sh",       4, FORMAT_I },
   { OP_SW,    0,            "sw",       4, FORMAT_I },
+  { OP_LWC1,  0,            "lwc1",     4, FORMAT_I },
+  { OP_SWC1,  0,            "swc1",     4, FORMAT_I },
   { OP_FTYPE, SUBOP_FPADD,  "add.",     4, FORMAT_F },
   { OP_FTYPE, SUBOP_FPSUB,  "sub.",     4, FORMAT_F },
   { OP_FTYPE, SUBOP_FPMUL,  "mul.",     4, FORMAT_F },
@@ -200,9 +204,4 @@ const instruction_format_t instructions_def[]
   { OP_FTYPE, 0,            "bc1f",     2, FORMAT_F }, // Special case
 };
 
-const std::string signal_names[] = {
- "PCWrite",  "PCSrc",  "IoD", "MemRead", "MemWrite", "IRWrite",
- "MemToReg", "RegDst", "RegWrite", "SelALUA", "SelALUB", "ALUSrc",
- "ALUOp", "Branch"
-};
 #endif

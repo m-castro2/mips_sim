@@ -4,6 +4,7 @@
 #include "../global_defs.h"
 
 #include <vector>
+#include <string>
 
 #define X -1
 #define MAX_MICROINSTRUCTIONS 32
@@ -21,7 +22,7 @@ typedef struct
   size_t jump4;
 } ctrl_dir_t;
 
-#define SIGNAL_COUNT 15
+#define SIGNAL_COUNT 16
 
 typedef enum
 {
@@ -32,15 +33,22 @@ typedef enum
   SIG_MEMWRITE  = 4,
   SIG_IRWRITE   = 5,
   SIG_MEM2REG   = 6,
-  SIG_REGDST    = 7,
-  SIG_REGWRITE  = 8,
-  SIG_SELALUA   = 9,
-  SIG_SELALUB   = 10,
-  SIG_ALUSRC    = 11,
-  SIG_ALUOP     = 12,
-  SIG_BRANCH    = 13,
-  SIG_CTRLDIR   = 14
+  SIG_REGBANK   = 7,
+  SIG_REGDST    = 8,
+  SIG_REGWRITE  = 9,
+  SIG_SELALUA   = 10,
+  SIG_SELALUB   = 11,
+  SIG_ALUSRC    = 12,
+  SIG_ALUOP     = 13,
+  SIG_BRANCH    = 14,
+  SIG_CTRLDIR   = 15
 } signal_t;
+
+const std::string signal_names[] = {
+ "PCWrite",  "PCSrc",  "IoD", "MemRead", "MemWrite", "IRWrite",
+ "MemToReg", "RegBank", "RegDst", "RegWrite", "SelALUA", "SelALUB", "ALUSrc",
+ "ALUOp", "Branch", "CtrlDir"
+};
 
 class ControlUnit
 {
@@ -64,6 +72,8 @@ public:
   void print_microcode( void ) const;
 
   void print_microinstruction( size_t index ) const;
+
+  void print_signals( uint32_t microinstruction ) const;
 
   uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
 

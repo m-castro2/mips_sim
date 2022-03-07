@@ -33,5 +33,7 @@ FTYPE
   mov.s  0x11 (17)  r0    --    rt    rd    func = 6
   bc1t   0x11 (17)   8     1   Offset(16)
   bc1f   0x11 (17)   8     0   Offset(16)
+  lwc1   0x31      base   rt   Offset(16)
+  swc1   0x39      base   rt   Offset(16)
   0x44000306
   0100 0100 0000 0000 1111 1011 011 00 000110

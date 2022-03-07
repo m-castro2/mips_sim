@@ -100,6 +100,11 @@ void ControlUnit::print_microcode( void ) const
 void ControlUnit::print_microinstruction( size_t index ) const
 {
   uint32_t microinstruction = uc_microcode[index];
+  print_signals(microinstruction);
+}
+
+void ControlUnit::print_signals( uint32_t microinstruction ) const
+{
   for (size_t i = 0; i < SIGNAL_COUNT; ++i)
   {
     uint32_t sigvalue = test(microinstruction, static_cast<signal_t>(i));

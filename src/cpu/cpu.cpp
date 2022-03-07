@@ -237,10 +237,22 @@ void Cpu::print_registers( void ) const
   cout << endl;
   for (size_t i=0; i<8; ++i)
   {
-    cout << setw(3) << setfill(' ') << registers_def[i].regname_int << " [" << Utils::hex32(gpr[i]) << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+8].regname_int << " [" << Utils::hex32(gpr[i+8]) << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+16].regname_int << " [" << Utils::hex32(gpr[i+16]) << "]      ";
-    cout << setw(3) << setfill(' ') <<registers_def[i+24].regname_int << " [" << Utils::hex32(gpr[i+24]) << "]" << endl;
+    cout << setw(4) << setfill(' ') << registers_def[i].regname_int << " [" << Utils::hex32(gpr[i]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+8].regname_int << " [" << Utils::hex32(gpr[i+8]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+16].regname_int << " [" << Utils::hex32(gpr[i+16]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+24].regname_int << " [" << Utils::hex32(gpr[i+24]) << "]" << endl;
+  }
+}
+
+void Cpu::print_fp_registers( void ) const
+{
+  cout << endl;
+  for (size_t i=0; i<8; ++i)
+  {
+    cout << setw(4) << setfill(' ') << registers_def[i].regname_fp << " [" << Utils::hex32(fpr[i]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+8].regname_fp << " [" << Utils::hex32(fpr[i+8]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+16].regname_fp << " [" << Utils::hex32(fpr[i+16]) << "]     ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+24].regname_fp << " [" << Utils::hex32(fpr[i+24]) << "]" << endl;
   }
 }
 
@@ -251,12 +263,26 @@ uint32_t Cpu::read_register( size_t reg_index) const
   return gpr[reg_index];
 }
 
+uint32_t Cpu::read_fp_register( size_t reg_index) const
+{
+  assert(reg_index < 32);
+
+  return fpr[reg_index];
+}
+
 void Cpu::write_register( size_t reg_index, uint32_t value)
 {
   assert(reg_index != 0); // cannot write $0
   assert(reg_index < 32);
 
   gpr[reg_index] = value;
+}
+
+void Cpu::write_fp_register( size_t reg_index, uint32_t value)
+{
+  assert(reg_index < 32);
+
+  fpr[reg_index] = value;
 }
 
 float Cpu::read_register_f( size_t reg_index ) const

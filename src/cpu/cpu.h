@@ -26,7 +26,9 @@ public:
   bool is_ready( void ) const;
 
   void print_registers( void ) const;
+  void print_fp_registers( void ) const;
   uint32_t read_register( size_t reg_index) const;
+  uint32_t read_fp_register( size_t reg_index) const;
   float read_register_f( size_t reg_index) const;
   double read_register_d( size_t reg_index) const;
 
@@ -48,6 +50,7 @@ protected:
   void syscall( uint32_t value );
 
   void write_register( size_t reg_index, uint32_t value);
+  void write_fp_register( size_t reg_index, uint32_t value);
   void write_register_f( size_t reg_index, float value);
   void write_register_d( size_t reg_index, double value);
 

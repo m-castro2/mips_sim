@@ -12,13 +12,16 @@ Signals:
   SIG_MEMWRITE  0: -
                 1: Write data memory
   SIG_IRWRITE   Not used
-  SIG_MEM2REG   0: Write ALU output
-                1: Write memory output
-                2: PC value (for jal/jalr)
+  SIG_MEM2REG   0: Write memory output
+                1: Write ALU output
+                2: Write PC value (for jal/jalr)
   SIG_REGDST    0: Rt register
                 1: Rd register
                 2: $ra register (for jal/jalr)
   SIG_REGWRITE  0: -
+                1: Write registers bank
+  SIG_REGBANK   0: Integer registers bank
+                1: FP registers bank
   SIG_SELALUA   Not used
   SIG_SELALUB   Not used
                 1: Write register

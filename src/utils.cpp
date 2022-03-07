@@ -340,7 +340,8 @@ string Utils::decode_instruction(const instruction_t instruction)
     {
       ss << registers_def[instruction.rt].regname_int << ", ";
       if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
-          instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+          instruction.opcode == OP_LB || instruction.opcode == OP_SB ||
+          instruction.opcode == OP_LWC1 || instruction.opcode == OP_SWC1)
       {
         ss << "0x" << hex << instruction.addr_i << "(";
         ss << registers_def[instruction.rs].regname_int << ")";
@@ -486,7 +487,8 @@ uint32_t Utils::assemble_instruction(const string instruction_str)
     instruction.rt = find_register_by_name(tok);
     tok = strtok(nullptr, ",() ");
     if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
-        instruction.opcode == OP_LB || instruction.opcode == OP_SB)
+        instruction.opcode == OP_LB || instruction.opcode == OP_SB ||
+        instruction.opcode == OP_LWC1 || instruction.opcode == OP_SWC1)
     {
       if (tok[1] == 'x')
         instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));

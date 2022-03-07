@@ -61,23 +61,24 @@ class CpuPipelined : public Cpu
   public:
 
     static constexpr uint32_t uc_signal_bits[SIGNAL_COUNT] =
-     { 0, 2, 0, 1, 1, 0, 2, 2, 1, 0, 0, 1, 2, 1, 0 };
+     { 0, 2, 0, 1, 1, 0, 2, 1, 2, 1, 0, 0, 1, 2, 1, 0 };
 
     static constexpr int uc_microcode_matrix[][SIGNAL_COUNT] =
-    // P  P  I  M  M  I  M  R  R  S  S  A  A  B  C
-    // C  C  o  R  W  W  2  D  W  A  A  S  O  r  t
-    // w  s  D  d  r  r  R  s  r  A  B  r  p  a  d
-    // -  1  -  1  1  -  1  1  1  -  -  1  2  1  -
-     {{X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, //  0 R type
-      {X, 3, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, //  1 J
-      {X, 2, X, 0, 0, X, 0, 0, 0, X, X, 0, 0, 1, X}, //  2 JR
-      {X, 3, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, //  3 JAL
-      {X, 2, X, 0, 0, X, 2, 2, 1, X, X, 0, 0, 1, X}, //  4 JALR
-      {X, 1, X, 0, 0, X, 0, 0, 0, X, X, 0, 1, 1, X}, //  5 BNE/BEQ
-      {X, 0, X, 1, 0, X, 0, 0, 1, X, X, 1, 0, 0, X}, //  6 LW
-      {X, 0, X, 0, 1, X, 0, 0, 0, X, X, 1, 0, 0, X}, //  7 SW
-      {X, 0, X, 0, 0, X, 1, 0, 1, X, X, 1, 2, 0, X}, //  8 I type
-      {X, 0, X, 0, 0, X, 1, 1, 1, X, X, 0, 2, 0, X}, //  9 FType add/sub/mul/div
+    // P  P  I  M  M  I  M  R  R  R  S  S  A  A  B  C
+    // C  C  o  R  W  W  2  B  D  W  A  A  S  O  r  t
+    // w  s  D  d  r  r  R  k  s  r  A  B  r  p  a  d
+    // -  1  -  1  1  -  2  1  2  1  -  -  1  2  1  -
+     {{X, 0, X, 0, 0, X, 1, 0, 1, 1, X, X, 0, 2, 0, X}, //  0 R type
+      {X, 3, X, 0, 0, X, 0, 0, 0, 0, X, X, 0, 0, 1, X}, //  1 J
+      {X, 2, X, 0, 0, X, 0, 0, 0, 0, X, X, 0, 0, 1, X}, //  2 JR
+      {X, 3, X, 0, 0, X, 2, 0, 2, 1, X, X, 0, 0, 1, X}, //  3 JAL
+      {X, 2, X, 0, 0, X, 2, 0, 2, 1, X, X, 0, 0, 1, X}, //  4 JALR
+      {X, 1, X, 0, 0, X, 0, 0, 0, 0, X, X, 0, 1, 1, X}, //  5 BNE/BEQ
+      {X, 0, X, 1, 0, X, 0, 0, 0, 1, X, X, 1, 0, 0, X}, //  6 LW
+      {X, 0, X, 0, 1, X, 0, 0, 0, 0, X, X, 1, 0, 0, X}, //  7 SW
+      {X, 0, X, 0, 0, X, 1, 0, 0, 1, X, X, 1, 2, 0, X}, //  8 I type
+      {X, 0, X, 0, 0, X, 1, 1, 1, 1, X, X, 0, 2, 0, X}, //  9 FType add/sub/mul/div
+      {X, 0, X, 1, 0, X, 0, 1, 0, 1, X, X, 1, 0, 0, X}, // 10 LWC1
       {0} // end
     };
 
@@ -91,11 +92,13 @@ class CpuPipelined : public Cpu
       {OP_BNE,   UNDEF8,      5},
       {OP_BEQ,   UNDEF8,      5},
       {OP_LW,    UNDEF8,      6},
+      {OP_LWC1,  UNDEF8,     10},
       {OP_SW,    UNDEF8,      7},
-      {OP_FTYPE, SUBOP_FPADD, 0},
-      {OP_FTYPE, SUBOP_FPSUB, 0},
-      {OP_FTYPE, SUBOP_FPMUL, 0},
-      {OP_FTYPE, SUBOP_FPDIV, 0},
+      {OP_SWC1,  UNDEF8,      7},
+      {OP_FTYPE, SUBOP_FPADD, 9},
+      {OP_FTYPE, SUBOP_FPSUB, 9},
+      {OP_FTYPE, SUBOP_FPMUL, 9},
+      {OP_FTYPE, SUBOP_FPDIV, 9},
       {OP_FTYPE, SUBOP_FPCEQ, 8},
       {OP_FTYPE, SUBOP_FPCLE, 8},
       {OP_FTYPE, SUBOP_FPCLT, 8},
@@ -127,9 +130,9 @@ class CpuPipelined : public Cpu
     uint32_t next_pc;
     int flush_pipeline;
 
-    uint32_t forward_register( uint32_t reg, uint32_t reg_value ) const;
-    bool detect_hazard( uint32_t read_reg, bool can_forward ) const;
-    bool process_branch(uint32_t instruction_code,
+    uint32_t forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg = false ) const;
+    bool detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg = false ) const;
+        bool process_branch(uint32_t instruction_code,
                         uint32_t rs_value, uint32_t rt_value,
                         uint32_t pc_value);
 

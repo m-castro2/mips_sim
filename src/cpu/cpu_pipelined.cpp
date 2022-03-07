@@ -22,15 +22,15 @@ namespace mips_sim
   {
     /* signals sorted in reverse order */
     signal_t signals_ID[] = {
-      SIG_MEM2REG, SIG_REGWRITE, // WB stage
+      SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE, // WB stage
       SIG_MEMREAD, SIG_MEMWRITE, // MEM stage
       SIG_BRANCH, SIG_PCSRC, SIG_ALUSRC, SIG_ALUOP, SIG_REGDST}; // EX stage
 
     /* build signals bitmask as the number of signals passed to the next stage */
     sigmask[IF_ID]  = UNDEF32;
-    sigmask[ID_EX]  = control_unit->get_signal_bitmask(signals_ID, 9);
-    sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 6);
-    sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 2);
+    sigmask[ID_EX]  = control_unit->get_signal_bitmask(signals_ID, 10);
+    sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 7);
+    sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 3);
 
     pc_write = true;
     flush_pipeline = 0;
@@ -40,20 +40,21 @@ namespace mips_sim
     pc_register_jump      = 0;
     pc_instruction_jump   = 0;
   }
+
   CpuPipelined::CpuPipelined(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
     : Cpu(_control_unit, _memory)
   {
     /* signals sorted in reverse order */
     signal_t signals_ID[] = {
-      SIG_MEM2REG, SIG_REGWRITE, // WB stage
+      SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE, // WB stage
       SIG_MEMREAD, SIG_MEMWRITE, // MEM stage
       SIG_BRANCH, SIG_PCSRC, SIG_ALUSRC, SIG_ALUOP, SIG_REGDST}; // EX stage
 
     /* build signals bitmask as the number of signals passed to the next stage */
     sigmask[IF_ID]  = UNDEF32;
-    sigmask[ID_EX]  = control_unit->get_signal_bitmask(signals_ID, 9);
-    sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 6);
-    sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 2);
+    sigmask[ID_EX]  = control_unit->get_signal_bitmask(signals_ID, 10);
+    sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 7);
+    sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 3);
 
     pc_write = true;
     flush_pipeline = 0;
@@ -147,20 +148,32 @@ namespace mips_sim
 
 /******************************************************************************/
 
-  bool CpuPipelined::detect_hazard( uint32_t read_reg, bool can_forward ) const
+  bool CpuPipelined::detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg) const
   {
     assert(HAS_HAZARD_DETECTION_UNIT);
+    bool hazard;
 
     /* check next 2 registers as forwarding would happen on next cycle */
     uint32_t ex_regdest   = seg_regs[ID_EX].data[SR_REGDEST];
     uint32_t ex_regwrite  = control_unit->test(seg_regs[ID_EX].data[SR_SIGNALS], SIG_REGWRITE);
+    uint32_t ex_fpwrite   = control_unit->test(seg_regs[ID_EX].data[SR_SIGNALS], SIG_REGBANK);
     uint32_t ex_memread   = control_unit->test(seg_regs[ID_EX].data[SR_SIGNALS], SIG_MEMREAD);
     uint32_t mem_regdest  = seg_regs[EX_MEM].data[SR_REGDEST];
     uint32_t mem_regwrite = control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGWRITE);
+    uint32_t mem_fpwrite  = control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGBANK);
 
-    bool hazard = (ex_regdest == read_reg) && ex_regwrite && (ex_memread || !can_forward);
+    bool ex_regtype_match = !(ex_fpwrite ^ fp_reg);
+    bool mem_regtype_match = !(mem_fpwrite ^ fp_reg);
 
-    hazard |= (mem_regdest == read_reg) && mem_regwrite && !can_forward;
+    hazard =     (ex_regdest == read_reg)
+              && ex_regwrite
+              && ex_regtype_match
+              && (ex_memread || !can_forward);
+
+    hazard |=    (mem_regdest == read_reg)
+              && mem_regtype_match
+              && mem_regwrite
+              && !can_forward;
 
     return hazard;
   }
@@ -184,9 +197,17 @@ namespace mips_sim
                       << endl;
 
     instruction_t instruction = Utils::fill_instruction(instruction_code);
-
-    rs_value = read_register(instruction.rs);
-    rt_value = read_register(instruction.rt);
+    cout << "  -Instruction:"
+              << " OP=" << static_cast<uint32_t>(instruction.opcode)
+              << " Rs=" << Utils::get_register_name(instruction.rs)
+              << " Rt=" << Utils::get_register_name(instruction.rt)
+              << " Rd=" << Utils::get_register_name(instruction.rd)
+              << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+              << " Func=" << static_cast<uint32_t>(instruction.funct)
+              << endl << "            "
+              << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
+              << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
+              << endl;
 
     if (instruction.code == 0)
     {
@@ -222,114 +243,149 @@ namespace mips_sim
                 seg_regs[EX_MEM].data[SR_INSTRUCTION] == 0);
     }
 
-    if (HAS_HAZARD_DETECTION_UNIT)
+    if (instruction.opcode == OP_FTYPE)
     {
-      //TODO: Branch stage can be decided using additional signals.
-      // That way we don't need explicit comparisons here
-      bool can_forward = HAS_FORWARDING_UNIT &&
-                         ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ)
-                           || BRANCH_STAGE > STAGE_ID);
-      /* check for hazards */
-      if (instruction.code > 0 && instruction.funct != SUBOP_SYSCALL && instruction.opcode != OP_LUI)
-      {
-        stall = detect_hazard(instruction.rs, can_forward);
+      /* will go to coprocessor */
+      //TODO
+      assert(0);
 
-        if ((!control_unit->test(microinstruction, SIG_ALUSRC))
-            || instruction.opcode == OP_SW)
-        {
-          stall |= detect_hazard(instruction.rt, can_forward);
-        }
-      }
-
-      if (verbose && stall) cout << "   Hazard detected: Pipeline stall" << endl;
-    }
-
-    pc_write = !stall;
-    if (stall)
-    {
-      /* send "NOP" to next stage */
-      next_seg_reg = {};
+      write_segmentation_register(ID_EX, {});
     }
     else
     {
-      if (control_unit->test(microinstruction, SIG_BRANCH))
+      /* integer unit */
+      rs_value = read_register(instruction.rs);
+      if (instruction.opcode == OP_SWC1)
+        rt_value = read_fp_register(instruction.rt);
+      else
+        rt_value = read_register(instruction.rt);
+
+      if (HAS_HAZARD_DETECTION_UNIT)
       {
-        /* unconditional branches are resolved here */
-        bool branch_taken = process_branch(instruction_code,
-                                           rs_value, rt_value, pc_value);
-
-        if (!branch_taken)
-        {
-          control_unit->set(microinstruction, SIG_PCSRC, 0);
-        }
-
-        //TODO: $ra register write can be decided using additional signals
+        //TODO: Branch stage can be decided using additional signals.
         // That way we don't need explicit comparisons here
-        // if (instruction.opcode == OP_JAL
-        //    || (instruction.opcode == OP_RTYPE && instruction.funct == SUBOP_JALR))
-        // {
-        //   /* hack the processor! */
-        //   rs_value = seg_regs[IF_ID].data[SR_PC];
-        //   rt_value = 0;
-        // }
+        bool can_forward = HAS_FORWARDING_UNIT &&
+                           ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ)
+                             || BRANCH_STAGE > STAGE_ID);
 
-        if (BRANCH_TYPE == BRANCH_FLUSH
-            || (BRANCH_TYPE == BRANCH_NON_TAKEN && branch_taken))
+        /* check for hazards */
+        if (instruction.code > 0 && instruction.funct != SUBOP_SYSCALL
+            && instruction.opcode != OP_LUI)
         {
-          flush_pipeline = 1;
+          stall = detect_hazard(instruction.rs, can_forward);
+
+          if ((!control_unit->test(microinstruction, SIG_ALUSRC))
+              || instruction.opcode == OP_SW
+              || instruction.opcode == OP_SWC1)
+          {
+              stall |= detect_hazard(instruction.rt, can_forward, instruction.opcode == OP_SWC1);
+          }
         }
+
+        if (verbose && stall) cout << "   Hazard detected: Pipeline stall" << endl;
       }
 
-      /* send data to next stage */
-      next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-      next_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask[ID_EX];
-      next_seg_reg.data[SR_PC]      = pc_value; // bypass PC
-      next_seg_reg.data[SR_RSVALUE] = rs_value;
-      next_seg_reg.data[SR_RTVALUE] = rt_value;
-      next_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
-      next_seg_reg.data[SR_RT]      = instruction.rt;
-      next_seg_reg.data[SR_RD]      = instruction.rd;
-      next_seg_reg.data[SR_FUNCT]   = instruction.funct;
-      next_seg_reg.data[SR_OPCODE]  = instruction.opcode;
-      next_seg_reg.data[SR_RS]      = instruction.rs;
-      next_seg_reg.data[SR_SHAMT]   = instruction.shamt;
-    }
+      pc_write = !stall;
+      if (stall)
+      {
+        /* send "NOP" to next stage */
+        next_seg_reg = {};
+      }
+      else
+      {
+        if (control_unit->test(microinstruction, SIG_BRANCH))
+        {
+          /* unconditional branches are resolved here */
+          bool branch_taken = process_branch(instruction_code,
+                                             rs_value, rt_value, pc_value);
 
-    if (!write_segmentation_register(ID_EX, next_seg_reg))
-    {
-      /* no structural hazard should happen here */
-      assert(0);
+          if (!branch_taken)
+          {
+            control_unit->set(microinstruction, SIG_PCSRC, 0);
+          }
+
+          if (BRANCH_TYPE == BRANCH_FLUSH
+              || (BRANCH_TYPE == BRANCH_NON_TAKEN && branch_taken))
+          {
+            flush_pipeline = 1;
+          }
+        }
+
+        /* send data to next stage */
+        next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+        next_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask[ID_EX];
+        next_seg_reg.data[SR_PC]      = pc_value; // bypass PC
+        next_seg_reg.data[SR_RSVALUE] = rs_value;
+        next_seg_reg.data[SR_RTVALUE] = rt_value;
+        next_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
+        next_seg_reg.data[SR_RT]      = instruction.rt;
+        next_seg_reg.data[SR_RD]      = instruction.rd;
+        next_seg_reg.data[SR_FUNCT]   = instruction.funct;
+        next_seg_reg.data[SR_OPCODE]  = instruction.opcode;
+        next_seg_reg.data[SR_RS]      = instruction.rs;
+        next_seg_reg.data[SR_SHAMT]   = instruction.shamt;
+      }
+
+      if (!write_segmentation_register(ID_EX, next_seg_reg))
+      {
+        /* no structural hazard should happen here */
+        assert(0);
+      }
     }
   }
 
 /******************************************************************************/
 
-  uint32_t CpuPipelined::forward_register( uint32_t reg, uint32_t reg_value ) const
+  uint32_t CpuPipelined::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg ) const
   {
     assert(HAS_FORWARDING_UNIT);
 
     uint32_t mem_regdest  = seg_regs[EX_MEM].data[SR_REGDEST];
     uint32_t mem_regvalue = seg_regs[EX_MEM].data[SR_ALUOUTPUT];
+    uint32_t mem_fpwrite  = control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGBANK);
     uint32_t wb_regdest   = seg_regs[MEM_WB].data[SR_REGDEST];
-    uint32_t wb_regvalue  = seg_regs[MEM_WB].data[SR_ALUOUTPUT];
+    uint32_t wb_regvalue; /* can come from ALU output or Memory */
+    uint32_t wb_fpwrite  = control_unit->test(seg_regs[MEM_WB].data[SR_SIGNALS], SIG_REGBANK);
 
-    if (reg == 0)
+    if (reg == 0 && !fp_reg)
       return reg_value;
 
     /* check EX/MEM register */
-    if (mem_regdest == reg &&
-        !control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_MEMREAD) &&
-        control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGWRITE))
+    if  (mem_regdest == reg
+        && !(mem_fpwrite ^ fp_reg)
+        && !control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_MEMREAD)
+        && control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGWRITE))
     {
-      cout << " -- forward " << reg << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
+      cout << " -- forward "
+           << (fp_reg?Utils::get_fp_register_name(reg)
+                     :Utils::get_register_name(reg))
+           << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
       return mem_regvalue;
     }
 
     /* check MEM/WB register */
-    if (wb_regdest == reg &&
-        control_unit->test(seg_regs[MEM_WB].data[SR_SIGNALS], SIG_REGWRITE))
+    if (wb_regdest == reg
+        && !(wb_fpwrite ^ fp_reg)
+        && control_unit->test(seg_regs[MEM_WB].data[SR_SIGNALS], SIG_REGWRITE))
     {
-      cout << " -- forward " << reg << " [0x" << Utils::hex32(wb_regvalue) << "] from MEM/WB" << endl;
+      switch (control_unit->test(seg_regs[MEM_WB].data[SR_SIGNALS], SIG_MEM2REG))
+      {
+        case 0:
+          wb_regvalue = seg_regs[MEM_WB].data[SR_WORDREAD];
+          break;
+        case 1:
+          wb_regvalue = seg_regs[MEM_WB].data[SR_ALUOUTPUT];
+          break;
+        case 2:
+          wb_regvalue = seg_regs[MEM_WB].data[SR_PC];
+          break;
+        default:
+          assert(0);
+      }
+      cout << " -- forward "
+           << (fp_reg?Utils::get_fp_register_name(reg)
+                     :Utils::get_register_name(reg))
+           << " [0x" << Utils::hex32(wb_regvalue) << "] from MEM/WB" << endl;
       return wb_regvalue;
     }
 
@@ -366,8 +422,8 @@ namespace mips_sim
     {
       rs_value = forward_register(rs, rs_value);
       if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
-          control_unit->test(microinstruction, SIG_REGWRITE) == 0)
-        rt_value = forward_register(rt, rt_value);
+          !control_unit->test(microinstruction, SIG_REGWRITE))
+        rt_value = forward_register(rt, rt_value, opcode == OP_SWC1);
     }
 
     alu_input_a = rs_value;
@@ -514,14 +570,8 @@ namespace mips_sim
     {
        cout << "WB Stage: "
                       << Utils::decode_instruction(instruction_code) << endl;
-       cout << "   Signal RegWrite: " << control_unit->test(microinstruction, SIG_REGWRITE) << endl;
-
-      if (control_unit->test(microinstruction, SIG_REGWRITE))
-      {
-        cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
-        cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
-        cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
-      }
+       //cout << "   Signal RegWrite: " << control_unit->test(microinstruction, SIG_REGWRITE) << endl;
+       //cout << "   Signal RegBank:  " << control_unit->test(microinstruction, SIG_REGBANK) << endl;
     }
 
     switch (control_unit->test(microinstruction, SIG_MEM2REG))
@@ -536,10 +586,31 @@ namespace mips_sim
         assert(0);
     }
 
+    if (verbose)
+    {
+      if (control_unit->test(microinstruction, SIG_REGWRITE))
+      {
+        cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
+        if (control_unit->test(microinstruction, SIG_REGBANK))
+          cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
+        else
+          cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
+        cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
+      }
+    }
+
     if (control_unit->test(microinstruction, SIG_REGWRITE))
     {
-      if (verbose) cout << "   REG write " << Utils::get_register_name(reg_dest) << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
-      write_register(reg_dest, regwrite_value);
+      if (control_unit->test(microinstruction, SIG_REGBANK))
+      {
+        if (verbose) cout << "   REG write " << Utils::get_fp_register_name(reg_dest) << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+        write_fp_register(reg_dest, regwrite_value);
+      }
+      else
+      {
+        if (verbose) cout << "   REG write " << Utils::get_register_name(reg_dest) << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+        write_register(reg_dest, regwrite_value);
+      }
     }
   }
 
