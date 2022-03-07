@@ -21,6 +21,9 @@
 #define MODE_RUN_HEX  2
 #define MODE_ASSEMBLE 3
 
+#define CPU_MULTICYCLE 1
+#define CPU_PIPELINED  2
+
 using namespace mips_sim;
 using namespace std;
 
@@ -39,7 +42,7 @@ int main(int argc, char * argv[])
   unique_ptr<Cpu> cpu;
 
   string input_file, output_file;
-  int run_mode = 0, retval = 0;
+  int run_mode = 0, cpu_mode = 0, retval = 0;
 
   // TEST ZONE
   // vector<uint32_t> mc = ControlUnit::build_microcode(CpuMulti::uc_microcode_matrix,
@@ -50,9 +53,9 @@ int main(int argc, char * argv[])
   // exit(0);
   // ---------
 
-  if (argc != 3)
+  if (argc < 3)
   {
-    cout << "Call " << argv[0] << "{run|runhex|asm} filename" << endl;
+    cout << "Call " << argv[0] << "{run|runhex|asm} filename [multi|pipe]" << endl;
     return 0;
   }
 
@@ -67,6 +70,12 @@ int main(int argc, char * argv[])
     cerr << "Undefined run mode: " << argv[1] << endl;
     return EXIT_FAILURE;
   }
+
+  cpu_mode = CPU_PIPELINED; /* default mode */
+  if (!strcmp(argv[3], "multi"))
+    cpu_mode = CPU_MULTICYCLE;
+  else if (!strcmp(argv[3], "pipe"))
+    cpu_mode = CPU_PIPELINED;
 
   input_file = argv[2];
   output_file = input_file + ".hex";
@@ -128,8 +137,17 @@ int main(int argc, char * argv[])
   if (retval != 0)
     return retval;
 
-  cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
-  //cpu = unique_ptr<Cpu>(new CpuMulti(mem));
+  switch (cpu_mode)
+  {
+    case CPU_MULTICYCLE:
+      cpu = unique_ptr<Cpu>(new CpuMulti(mem));
+      break;
+    case CPU_PIPELINED:
+      cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
+      break;
+    default:
+      assert(0);
+  }
 
   try
   {
