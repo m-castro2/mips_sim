@@ -1,4 +1,5 @@
 #include "control_unit.h"
+#include "../exception.h"
 
 #include <iostream>
 #include <cassert>
@@ -52,12 +53,8 @@ ControlUnit::ControlUnit(const uint32_t _uc_signal_bits[SIGNAL_COUNT],
               << x << endl;
   }
 
-  if (_uc_ctrl_dir != nullptr)
-  {
-    ctrl_dir_set = true;
-    for (size_t i = 0; i < OP_COUNT; ++i)
-      uc_ctrl_dir[i] = _uc_ctrl_dir[i];
-  }
+  uc_ctrl_dir = _uc_ctrl_dir;
+  ctrl_dir_set =  (_uc_ctrl_dir != nullptr);
 }
 
 uint32_t ControlUnit::test(uint32_t state, signal_t signal) const
@@ -118,24 +115,29 @@ uint32_t ControlUnit::get_microinstruction(size_t index) const
   return uc_microcode[index];
 }
 
-size_t ControlUnit::get_next_microinstruction(size_t index, int opcode) const
+ctrl_dir_t ControlUnit::find_ctrl_dir_entry(uint8_t opcode, uint8_t subopcode) const
+{
+  for (size_t i=0; uc_ctrl_dir[i].opcode != UNDEF8; ++i)
+  {
+    if (uc_ctrl_dir[i].opcode == opcode
+       && (subopcode == UNDEF8 || uc_ctrl_dir[i].subopcode == UNDEF8
+           || uc_ctrl_dir[i].subopcode == subopcode))
+    {
+        return uc_ctrl_dir[i];
+    }
+  }
+
+  throw Exception::e(CTRL_UNDEF_EXCEPTION, "Undefined CtrlDir entry");
+}
+
+size_t ControlUnit::get_next_microinstruction(size_t index, uint8_t opcode, uint8_t subopcode) const
 {
   assert(ctrl_dir_set);
 
   //int jump_type = (uc_microcode[index] >> 28) & 0xF;
   size_t jump_type = test(uc_microcode[static_cast<size_t>(index)], SIG_CTRLDIR);
   size_t mi_index = index;
-  ctrl_dir_t ctrl_dir_entry = {};
-
-  //TODO: Hashtable
-  for (size_t i=0; i<OP_COUNT; ++i)
-  {
-    if (uc_ctrl_dir[i].opcode == opcode)
-    {
-      ctrl_dir_entry = uc_ctrl_dir[i];
-      break;
-    }
-  }
+  ctrl_dir_t ctrl_dir_entry;
 
   switch (jump_type)
   {
@@ -143,6 +145,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, int opcode) const
       mi_index = 0;
       break;
     case 1:
+      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
       mi_index = ctrl_dir_entry.jump1;
 
       if (mi_index == UNDEF32)
@@ -152,6 +155,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, int opcode) const
       }
       break;
     case 2:
+      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
       mi_index = ctrl_dir_entry.jump2;
 
       if (mi_index == UNDEF32)
@@ -165,6 +169,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, int opcode) const
       mi_index++;
       break;
     case 4:
+      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
       mi_index = ctrl_dir_entry.jump4;
 
       if (mi_index == UNDEF32)

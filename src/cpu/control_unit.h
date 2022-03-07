@@ -16,7 +16,8 @@ namespace mips_sim
 
 typedef struct
 {
-  int opcode;
+  uint8_t opcode;
+  uint8_t subopcode;
   size_t jump1;
   size_t jump2;
   size_t jump4;
@@ -67,7 +68,7 @@ public:
 
   uint32_t get_microinstruction(size_t index) const;
 
-  size_t get_next_microinstruction(size_t index, int opcode) const;
+  size_t get_next_microinstruction(size_t index, uint8_t opcode, uint8_t subopcode = UNDEF8) const;
 
   void print_microcode( void ) const;
 
@@ -78,9 +79,11 @@ public:
   uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
 
 private:
+  ctrl_dir_t find_ctrl_dir_entry(uint8_t opcode, uint8_t subopcode) const;
+
   uint32_t uc_signals[SIGNAL_COUNT];
   std::vector<uint32_t> uc_microcode;
-  ctrl_dir_t uc_ctrl_dir[OP_COUNT];
+  const ctrl_dir_t * uc_ctrl_dir;
 
   bool ctrl_dir_set;
 };

@@ -255,7 +255,7 @@ namespace mips_sim
     {
       /* integer unit */
       rs_value = read_register(instruction.rs);
-      if (instruction.opcode == OP_SWC1)
+      if (control_unit->test(microinstruction, SIG_REGBANK))
         rt_value = read_fp_register(instruction.rt);
       else
         rt_value = read_register(instruction.rt);

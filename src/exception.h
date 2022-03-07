@@ -11,6 +11,9 @@
 #define PARSER_EXCEPTION         128
 #define PARSER_UNDEF_EXCEPTION   129
 
+#define CTRL_EXCEPTION           192
+#define CTRL_UNDEF_EXCEPTION     193
+
 namespace mips_sim
 {
 

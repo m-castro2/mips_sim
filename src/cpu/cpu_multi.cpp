@@ -11,7 +11,7 @@ namespace mips_sim
 
   constexpr int CpuMulti::uc_microcode_matrix[][SIGNAL_COUNT];
   constexpr uint32_t CpuMulti::uc_signal_bits[SIGNAL_COUNT];
-  constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[OP_COUNT];
+  constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[];
 
   CpuMulti::CpuMulti(shared_ptr<Memory> _memory)
     : Cpu(shared_ptr<ControlUnit>(
@@ -46,8 +46,6 @@ namespace mips_sim
   {
     instruction = Utils::fill_instruction(instruction_code);
 
-    //cout << "Instruction: " << " " << Utils::decode_instruction(instruction) << endl;
-    //TMP: TEST ENCODER
     cout << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
     cout << "  -IR write:"
               << " OP=" << static_cast<uint32_t>(instruction.opcode)
@@ -86,6 +84,8 @@ namespace mips_sim
     cout << "PC: 0x" << Utils::hex32(PC)
               << " A_REG: 0x" << Utils::hex32(A_REG)
               << " B_REG: 0x" << Utils::hex32(B_REG)
+              << " FA_REG: 0x" << Utils::hex32(FA_REG)
+              << " FB_REG: 0x" << Utils::hex32(FB_REG)
               << " ALU_OUT 0x" << Utils::hex32(ALU_OUT_REG)
               << " MEM_DATA 0x" << Utils::hex32(MEM_DATA_REG) << endl;
 
@@ -106,7 +106,10 @@ namespace mips_sim
       assert(control_unit->test(microinstruction, SIG_IOD) == 1);
 
       uint32_t address = ALU_OUT_REG;
-      memory->mem_write_32(address, B_REG);
+      if (control_unit->test(microinstruction, SIG_REGBANK) == 1)
+        memory->mem_write_32(address, FB_REG);
+      else
+        memory->mem_write_32(address, B_REG);
     }
 
     /* ALU */
@@ -199,6 +202,44 @@ namespace mips_sim
                       << Utils::hex32(alu_input_b) << " = 0x"
                       << Utils::hex32(alu_output) << endl;
 
+    /* Update registers */
+
+    if (control_unit->test(microinstruction, SIG_IRWRITE))
+    {
+        write_instruction_register(word_read);
+    }
+
+    if (control_unit->test(microinstruction, SIG_REGWRITE))
+    {
+        uint32_t writereg, writedata;
+
+        if (control_unit->test(microinstruction, SIG_REGDST) == 0)
+          writereg = instruction.rt;
+        else if (control_unit->test(microinstruction, SIG_REGDST) == 1)
+          writereg = instruction.rd;
+          else if (control_unit->test(microinstruction, SIG_REGDST) == 2)
+            writereg = 31; /* for jal/jalr instructions */
+        else
+          assert(0);
+
+        if (control_unit->test(microinstruction, SIG_MEM2REG) == 0)
+          writedata = ALU_OUT_REG;
+        else if (control_unit->test(microinstruction, SIG_MEM2REG) == 1)
+          writedata = MEM_DATA_REG;
+        else if (control_unit->test(microinstruction, SIG_MEM2REG) == 2)
+          writedata = PC;
+        else
+          assert(0);
+
+        if (control_unit->test(microinstruction, SIG_REGBANK) == 1)
+          write_fp_register(writereg, writedata);
+        else
+          write_register(writereg, writedata);
+
+        cout << "Register write: Reg=" << Utils::get_register_name(writereg)
+                  << ", Data=0x" << Utils::hex32(writedata) << endl;
+    }
+
     if (control_unit->test(microinstruction, SIG_PCWRITE))
     {
       bool pcwrite = true;
@@ -220,6 +261,9 @@ namespace mips_sim
         case 2:
           PC = (PC & 0xF0000000) + (instruction.addr_j << 2);
           break;
+        case 3:
+          PC = A_REG;
+          break;
         default:
           assert(0);
         }
@@ -227,51 +271,23 @@ namespace mips_sim
       }
     }
 
-    /* Update registers */
-
-    if (control_unit->test(microinstruction, SIG_IRWRITE))
-    {
-        write_instruction_register(word_read);
-    }
-
-    if (control_unit->test(microinstruction, SIG_REGWRITE))
-    {
-        uint32_t writereg, writedata;
-
-        if (control_unit->test(microinstruction, SIG_REGDST) == 0)
-          writereg = instruction.rt;
-        else if (control_unit->test(microinstruction, SIG_REGDST) == 1)
-          writereg = instruction.rd;
-        else
-          assert(0);
-
-        if (control_unit->test(microinstruction, SIG_MEM2REG) == 0)
-          writedata = ALU_OUT_REG;
-        else if (control_unit->test(microinstruction, SIG_MEM2REG) == 1)
-          writedata = MEM_DATA_REG;
-        else
-          assert(0);
-
-        write_register(writereg, writedata);
-
-        cout << "Register write: Reg=" << Utils::get_register_name(writereg)
-                  << ", Data=0x" << Utils::hex32(writedata) << endl;
-    }
-
-
+    /* write registers */
     A_REG = read_register(instruction.rs);
     B_REG = read_register(instruction.rt);
-    cout << "Set A [" << dec << static_cast<uint32_t>(instruction.rs) << "]  = 0x" << Utils::hex32(A_REG) << endl;
-    cout << "Set B [" << dec << static_cast<uint32_t>(instruction.rt) << "]  = 0x" << Utils::hex32(B_REG) << endl;
+    FA_REG = read_fp_register(instruction.rs);
+    FB_REG = read_fp_register(instruction.rt);
+    ALU_OUT_REG = alu_output;
+    MEM_DATA_REG = word_read;
+
     cop0_input_a = read_register_f(instruction.rs);
     cop0_input_b = read_register_f(instruction.rt);
     cop1_input_a = read_register_d(instruction.rs);
     cop1_input_b = read_register_d(instruction.rt);
-    ALU_OUT_REG = alu_output;
-    MEM_DATA_REG = word_read;
 
     /* update MI index */
-    mi_index = control_unit->get_next_microinstruction(mi_index, instruction.opcode);
+    mi_index = control_unit->get_next_microinstruction(mi_index,
+                                                       instruction.opcode,
+                                                       instruction.funct);
     if (mi_index == UNDEF32)
        exit(ERROR_UNSUPPORTED_OPERATION);
 

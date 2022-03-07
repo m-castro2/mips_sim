@@ -79,6 +79,7 @@ class CpuPipelined : public Cpu
       {X, 0, X, 0, 0, X, 1, 0, 0, 1, X, X, 1, 2, 0, X}, //  8 I type
       {X, 0, X, 0, 0, X, 1, 1, 1, 1, X, X, 0, 2, 0, X}, //  9 FType add/sub/mul/div
       {X, 0, X, 1, 0, X, 0, 1, 0, 1, X, X, 1, 0, 0, X}, // 10 LWC1
+      {X, 0, X, 0, 1, X, 0, 1, 0, 0, X, X, 1, 0, 0, X}, // 11 SWC1
       {0} // end
     };
 
@@ -94,7 +95,7 @@ class CpuPipelined : public Cpu
       {OP_LW,    UNDEF8,      6},
       {OP_LWC1,  UNDEF8,     10},
       {OP_SW,    UNDEF8,      7},
-      {OP_SWC1,  UNDEF8,      7},
+      {OP_SWC1,  UNDEF8,     11},
       {OP_FTYPE, SUBOP_FPADD, 9},
       {OP_FTYPE, SUBOP_FPSUB, 9},
       {OP_FTYPE, SUBOP_FPMUL, 9},
