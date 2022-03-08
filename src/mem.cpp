@@ -187,9 +187,8 @@ void Memory::print_memory( uint32_t start, uint32_t length, ostream &out ) const
 {
   for (size_t i = 0; i < MEM_NREGIONS; i++)
   if (start >= MEM_REGIONS[i].start &&
-      start+length < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
+      start+length <= (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
   {
-    out << endl;
     try
     {
       for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)

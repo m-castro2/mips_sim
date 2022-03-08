@@ -94,7 +94,7 @@ namespace mips_sim
 
 /******************************************************************************/
 
-  void CpuPipelined::stage_if( bool verbose )
+  void CpuPipelined::stage_if( ostream &out )
   {
     uint32_t pc_src_signal = control_unit->test(next_seg_regs[ID_EX].data[SR_SIGNALS],
                                                 SIG_PCSRC);
@@ -102,15 +102,15 @@ namespace mips_sim
     uint32_t instruction_code;
     string cur_instr_name;
 
-    if (verbose) cout << "IF stage" << endl;
+    out << "IF stage" << endl;
 
     /* fetch instruction */
     instruction_code = memory->mem_read_32(PC);
 
     cur_instr_name = Utils::decode_instruction(instruction_code);
-    if (verbose) cout << "   *** PC: 0x" << Utils::hex32(PC) << endl;
-    if (verbose) cout << "   *** " << cur_instr_name << " : 0x"
-                      << Utils::hex32(instruction_code) << endl;
+    out << "   *** PC: 0x" << Utils::hex32(PC) << endl;
+    out << "   *** " << cur_instr_name << " : 0x"
+        << Utils::hex32(instruction_code) << endl;
 
     /* increase PC */
     if (pc_write)
@@ -120,16 +120,16 @@ namespace mips_sim
         case 0:
           PC += 4; break;
         case 1:
-          cout << "   !!! Conditional branch taken >> 0x"
-               << Utils::hex32(pc_conditional_branch) << endl;
+          out << "   !!! Conditional branch taken >> 0x"
+             << Utils::hex32(pc_conditional_branch) << endl;
           PC = pc_conditional_branch; break;
         case 2:
-          cout << "   !!! Register jump taken >> 0x"
-               << Utils::hex32(pc_register_jump) << endl;
+          out << "   !!! Register jump taken >> 0x"
+             << Utils::hex32(pc_register_jump) << endl;
           PC = pc_register_jump; break;
         case 3:
-          cout << "   !!! Unconditional jump taken >> 0x"
-               << Utils::hex32(pc_instruction_jump) << endl;
+          out << "   !!! Unconditional jump taken >> 0x"
+             << Utils::hex32(pc_instruction_jump) << endl;
           PC = pc_instruction_jump; break;
         default:
           assert(0);
@@ -180,7 +180,7 @@ namespace mips_sim
   }
 
   /* ID stage: Decode and branch */
-  void CpuPipelined::stage_id( bool verbose )
+  void CpuPipelined::stage_id( ostream &out )
   {
     seg_reg_t next_seg_reg = {};
 
@@ -193,22 +193,20 @@ namespace mips_sim
     uint32_t instruction_code = seg_regs[IF_ID].data[SR_INSTRUCTION];
     uint32_t pc_value = seg_regs[IF_ID].data[SR_PC];
 
-    if (verbose) cout << "ID stage: "
-                      << Utils::decode_instruction(instruction_code)
-                      << endl;
+    out << "ID stage: " << Utils::decode_instruction(instruction_code) << endl;
 
     instruction_t instruction = Utils::fill_instruction(instruction_code);
-    cout << "  -Instruction:"
-              << " OP=" << static_cast<uint32_t>(instruction.opcode)
-              << " Rs=" << Utils::get_register_name(instruction.rs)
-              << " Rt=" << Utils::get_register_name(instruction.rt)
-              << " Rd=" << Utils::get_register_name(instruction.rd)
-              << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
-              << " Func=" << static_cast<uint32_t>(instruction.funct)
-              << endl << "            "
-              << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
-              << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
-              << endl;
+    out << "  -Instruction:"
+        << " OP=" << static_cast<uint32_t>(instruction.opcode)
+        << " Rs=" << Utils::get_register_name(instruction.rs)
+        << " Rt=" << Utils::get_register_name(instruction.rt)
+        << " Rd=" << Utils::get_register_name(instruction.rd)
+        << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+        << " Func=" << static_cast<uint32_t>(instruction.funct)
+        << endl << "            "
+        << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
+        << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
+        << endl;
 
     if (instruction.code == 0)
     {
@@ -233,8 +231,8 @@ namespace mips_sim
       }
 
       microinstruction = control_unit->get_microinstruction(mi_index);
-      if (verbose) cout << "   Microinstruction: [" << mi_index << "]: 0x"
-                        << Utils::hex32(microinstruction) << endl;
+      out << "   Microinstruction: [" << mi_index << "]: 0x"
+          << Utils::hex32(microinstruction) << endl;
     }
 
     if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
@@ -283,7 +281,7 @@ namespace mips_sim
           }
         }
 
-        if (verbose && stall) cout << "   Hazard detected: Pipeline stall" << endl;
+        if (stall) out << "   Hazard detected: Pipeline stall" << endl;
       }
 
       pc_write = !stall;
@@ -337,7 +335,8 @@ namespace mips_sim
 
 /******************************************************************************/
 
-  uint32_t CpuPipelined::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg ) const
+  uint32_t CpuPipelined::forward_register( uint32_t reg, uint32_t reg_value,
+                                           bool fp_reg, ostream &out ) const
   {
     assert(HAS_FORWARDING_UNIT);
 
@@ -357,10 +356,10 @@ namespace mips_sim
         && !control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_MEMREAD)
         && control_unit->test(seg_regs[EX_MEM].data[SR_SIGNALS], SIG_REGWRITE))
     {
-      cout << " -- forward "
-           << (fp_reg?Utils::get_fp_register_name(reg)
-                     :Utils::get_register_name(reg))
-           << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
+      out << " -- forward "
+         << (fp_reg?Utils::get_fp_register_name(reg)
+                   :Utils::get_register_name(reg))
+         << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
       return mem_regvalue;
     }
 
@@ -383,17 +382,17 @@ namespace mips_sim
         default:
           assert(0);
       }
-      cout << " -- forward "
-           << (fp_reg?Utils::get_fp_register_name(reg)
-                     :Utils::get_register_name(reg))
-           << " [0x" << Utils::hex32(wb_regvalue) << "] from MEM/WB" << endl;
+      out << " -- forward "
+          << (fp_reg?Utils::get_fp_register_name(reg)
+                    :Utils::get_register_name(reg))
+          << " [0x" << Utils::hex32(wb_regvalue) << "] from MEM/WB" << endl;
       return wb_regvalue;
     }
 
     return reg_value;
   }
 
-  void CpuPipelined::stage_ex( bool verbose )
+  void CpuPipelined::stage_ex( ostream &out )
   {
     seg_reg_t next_seg_reg = {};
     uint32_t microinstruction = seg_regs[ID_EX].data[SR_SIGNALS];
@@ -415,16 +414,15 @@ namespace mips_sim
 
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(addr_i) << 16 >> 16);
 
-    if (verbose) cout << "EX stage: "
-                      << Utils::decode_instruction(instruction_code) << endl;
+    out << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
 
     /* forwarding unit */
     if (HAS_FORWARDING_UNIT)
     {
-      rs_value = forward_register(rs, rs_value);
+      rs_value = forward_register(rs, rs_value, false, out);
       if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
           !control_unit->test(microinstruction, SIG_REGWRITE))
-        rt_value = forward_register(rt, rt_value, opcode == OP_SWC1);
+        rt_value = forward_register(rt, rt_value, opcode == OP_SWC1, out);
     }
 
     alu_input_a = rs_value;
@@ -454,9 +452,9 @@ namespace mips_sim
         assert(0);
     }
 
-    if (verbose) cout << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
-                      << Utils::hex32(alu_input_b) << " = 0x"
-                      << Utils::hex32(alu_output) << endl;
+    out << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
+        << Utils::hex32(alu_input_b) << " = 0x"
+        << Utils::hex32(alu_output) << endl;
 
     switch(control_unit->test(microinstruction, SIG_REGDST))
     {
@@ -490,7 +488,7 @@ namespace mips_sim
 
 /******************************************************************************/
 
-  void CpuPipelined::stage_mem( bool verbose )
+  void CpuPipelined::stage_mem( ostream &out )
   {
     seg_reg_t next_seg_reg = {};
     uint32_t word_read = UNDEF32;
@@ -504,8 +502,7 @@ namespace mips_sim
     uint32_t branch_addr      = seg_regs[EX_MEM].data[SR_RELBRANCH];
     uint32_t alu_zero         = seg_regs[EX_MEM].data[SR_ALUZERO];
 
-    if (verbose) cout << "MEM stage: "
-                      << Utils::decode_instruction(instruction_code) << endl;
+    out << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
 
     if (BRANCH_STAGE == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
     {
@@ -518,7 +515,7 @@ namespace mips_sim
 
       if (alu_zero)
       {
-        if (verbose) cout << "  BRANCH: Jump to 0x" << Utils::hex32(branch_addr) << endl;
+        out << "  BRANCH: Jump to 0x" << Utils::hex32(branch_addr) << endl;
 
         next_pc = branch_addr;
       }
@@ -526,17 +523,17 @@ namespace mips_sim
 
     if (control_unit->test(microinstruction, SIG_MEMREAD))
     {
-      if (verbose) cout << "   MEM read 0x" << Utils::hex32(mem_addr);
+      out << "   MEM read 0x" << Utils::hex32(mem_addr);
       word_read = memory->mem_read_32(mem_addr);
     }
     else if (control_unit->test(microinstruction, SIG_MEMWRITE))
     {
-      if (verbose) cout << "   MEM write 0x" << Utils::hex32(rt_value) << " to 0x" << Utils::hex32(mem_addr) << endl;
+      out << "   MEM write 0x" << Utils::hex32(rt_value) << " to 0x" << Utils::hex32(mem_addr) << endl;
       memory->mem_write_32(mem_addr, rt_value);
     }
 
     // ...
-    if (verbose) cout << "   Address/ALU_Bypass: 0x" << Utils::hex32(mem_addr) << endl;
+    out << "   Address/ALU_Bypass: 0x" << Utils::hex32(mem_addr) << endl;
 
     /* send data to next stage */
     next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
@@ -555,7 +552,7 @@ namespace mips_sim
 
 /******************************************************************************/
 
-  void CpuPipelined::stage_wb( bool verbose )
+  void CpuPipelined::stage_wb( ostream &out )
   {
     uint32_t regwrite_value = UNDEF32;
 
@@ -567,13 +564,7 @@ namespace mips_sim
     uint32_t mem_word_read    = seg_regs[MEM_WB].data[SR_WORDREAD];
     uint32_t alu_output       = seg_regs[MEM_WB].data[SR_ALUOUTPUT];
 
-    if (verbose)
-    {
-       cout << "WB Stage: "
-                      << Utils::decode_instruction(instruction_code) << endl;
-       //cout << "   Signal RegWrite: " << control_unit->test(microinstruction, SIG_REGWRITE) << endl;
-       //cout << "   Signal RegBank:  " << control_unit->test(microinstruction, SIG_REGBANK) << endl;
-    }
+    out << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
 
     switch (control_unit->test(microinstruction, SIG_MEM2REG))
     {
@@ -587,29 +578,28 @@ namespace mips_sim
         assert(0);
     }
 
-    if (verbose)
+    if (control_unit->test(microinstruction, SIG_REGWRITE))
     {
-      if (control_unit->test(microinstruction, SIG_REGWRITE))
-      {
-        cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
-        if (control_unit->test(microinstruction, SIG_REGBANK))
-          cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
-        else
-          cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
-        cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
-      }
+      out << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
+      if (control_unit->test(microinstruction, SIG_REGBANK))
+        out << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
+      else
+        out << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
+      out << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
     }
 
     if (control_unit->test(microinstruction, SIG_REGWRITE))
     {
       if (control_unit->test(microinstruction, SIG_REGBANK))
       {
-        if (verbose) cout << "   REG write " << Utils::get_fp_register_name(reg_dest) << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+        out << "   REG write " << Utils::get_fp_register_name(reg_dest)
+            << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
         write_fp_register(reg_dest, regwrite_value);
       }
       else
       {
-        if (verbose) cout << "   REG write " << Utils::get_register_name(reg_dest) << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+        out << "   REG write " << Utils::get_register_name(reg_dest)
+            << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
         write_register(reg_dest, regwrite_value);
       }
     }
@@ -633,18 +623,18 @@ namespace mips_sim
     return true;
   }
 
-  bool CpuPipelined::next_cycle( bool verbose )
+  bool CpuPipelined::next_cycle( ostream &out )
   {
-    Cpu::next_cycle( verbose );
+    Cpu::next_cycle( out );
 
     /* reset segmentation register write flags */
     seg_regs_wrflag = 0;
 
-    stage_wb(verbose);
-    stage_mem(verbose);
-    stage_ex(verbose);
-    stage_id(verbose);
-    stage_if(verbose);
+    stage_wb(out);
+    stage_mem(out);
+    stage_ex(out);
+    stage_id(out);
+    stage_if(out);
 
     /* update segmentation registers */
     memcpy(seg_regs, next_seg_regs, sizeof(seg_regs));

@@ -112,14 +112,14 @@ class CpuPipelined : public Cpu
     CpuPipelined(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
     virtual ~CpuPipelined() override;
 
-    virtual bool next_cycle( bool verbose = true ) override;
+    virtual bool next_cycle( std::ostream &out = std::cout ) override;
 
   private:
-    void stage_if( bool verbose = true );
-    void stage_id( bool verbose = true );
-    void stage_ex( bool verbose = true );
-    void stage_mem( bool verbose = true );
-    void stage_wb( bool verbose = true );
+    void stage_if( std::ostream &out = std::cout );
+    void stage_id( std::ostream &out = std::cout );
+    void stage_ex( std::ostream &out = std::cout );
+    void stage_mem( std::ostream &out = std::cout );
+    void stage_wb( std::ostream &out = std::cout );
 
     // void stage_ex_cop ( bool verbose = true);
     // void stage_mem_cop ( bool verbose = true);
@@ -131,8 +131,11 @@ class CpuPipelined : public Cpu
     uint32_t next_pc;
     int flush_pipeline;
 
-    uint32_t forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg = false ) const;
-    bool detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg = false ) const;
+    uint32_t forward_register( uint32_t reg, uint32_t reg_value,
+                               bool fp_reg = false,
+                               std::ostream &out = std::cout ) const;
+    bool detect_hazard( uint32_t read_reg, bool can_forward,
+                        bool fp_reg = false ) const;
         bool process_branch(uint32_t instruction_code,
                         uint32_t rs_value, uint32_t rt_value,
                         uint32_t pc_value);

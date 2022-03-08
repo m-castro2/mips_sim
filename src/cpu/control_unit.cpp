@@ -34,8 +34,6 @@ ControlUnit::ControlUnit(const uint32_t _uc_signal_bits[SIGNAL_COUNT],
 
       uc_signals[i] = static_cast<uint32_t>(((1<<_uc_signal_bits[i])-1) << bit_count);
 
-      // cout << "Signal " << i << ": " << (1<<_uc_signal_bits[i])-1 << "<<" << bit_count << endl;
-
       bit_count += _uc_signal_bits[i];
     }
     else
@@ -43,16 +41,6 @@ ControlUnit::ControlUnit(const uint32_t _uc_signal_bits[SIGNAL_COUNT],
   }
 
   uc_microcode = build_microcode(_uc_microcode_matrix, _uc_signal_bits);
-
-  for (size_t i = 0; i < SIGNAL_COUNT; ++i)
-  {
-    bitset<16> x(uc_signals[i]);
-    if (uc_signals[i] > 0)
-    cout << "Signal " << setfill('0') << setw(2) << i << ": "
-              << setfill(' ') << setw(10) << signal_names[i] << " "
-              << x << endl;
-  }
-
   uc_ctrl_dir = _uc_ctrl_dir;
   ctrl_dir_set =  (_uc_ctrl_dir != nullptr);
 }
@@ -69,44 +57,43 @@ void ControlUnit::set(uint32_t & state, signal_t signal, int value) const
   state |= static_cast<uint32_t>(value << ctz(uc_signals[signal]));
 }
 
-void ControlUnit::print_microcode( void ) const
+void ControlUnit::print_microcode( ostream &out ) const
 {
   int l = 10;
-  cout << "           ";
+  out << "           ";
   for (size_t i = 0; i < SIGNAL_COUNT && uc_microcode[i] != 0; ++i)
   {
-    cout << i/10 << " ";
+    out << i/10 << " ";
     l += 2;
   }
-  cout << endl << "           ";
+  out << endl << "           ";
   for (size_t i = 0; i < SIGNAL_COUNT && uc_microcode[i] != 0; ++i)
-    cout << i%10 << " ";
-  cout << endl << setfill('-') << setw(l) << "" << endl;
+    out << i%10 << " ";
+  out << endl << setfill('-') << setw(l) << "" << endl;
   for (size_t i = 0; i < SIGNAL_COUNT; ++i)
   {
-    cout << setfill(' ') << setw(10) << signal_names[i] << " ";
+    out << setfill(' ') << setw(10) << signal_names[i] << " ";
     for (size_t j = 0; j < MAX_MICROINSTRUCTIONS; ++j)
     {
       if (uc_microcode[j] == 0) break;
-      cout << test(uc_microcode[j], static_cast<signal_t>(i)) << " ";
+      out << test(uc_microcode[j], static_cast<signal_t>(i)) << " ";
     }
-    cout << endl;
+    out << endl;
   }
 }
 
-void ControlUnit::print_microinstruction( size_t index ) const
+void ControlUnit::print_microinstruction( size_t index, ostream &out ) const
 {
   uint32_t microinstruction = uc_microcode[index];
-  print_signals(microinstruction);
+  print_signals(microinstruction, out);
 }
 
-void ControlUnit::print_signals( uint32_t microinstruction ) const
+void ControlUnit::print_signals( uint32_t microinstruction, ostream &out ) const
 {
   for (size_t i = 0; i < SIGNAL_COUNT; ++i)
   {
     uint32_t sigvalue = test(microinstruction, static_cast<signal_t>(i));
-    cout << setfill(' ') << setw(10) << signal_names[i] << " "
-              << sigvalue << endl;
+    out << setfill(' ') << setw(10) << signal_names[i] << " " << sigvalue << endl;
   }
 }
 
@@ -130,7 +117,9 @@ ctrl_dir_t ControlUnit::find_ctrl_dir_entry(uint8_t opcode, uint8_t subopcode) c
   throw Exception::e(CTRL_UNDEF_EXCEPTION, "Undefined CtrlDir entry");
 }
 
-size_t ControlUnit::get_next_microinstruction(size_t index, uint8_t opcode, uint8_t subopcode) const
+size_t ControlUnit::get_next_microinstruction_index(size_t index,
+                                                    uint8_t opcode,
+                                                    uint8_t subopcode) const
 {
   assert(ctrl_dir_set);
 
@@ -150,8 +139,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, uint8_t opcode, uint
 
       if (mi_index == UNDEF32)
       {
-          cout << "Operation level 1 not supported: " << opcode << endl;
-          return UNDEF32;
+        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 1 not supported:", opcode);
       }
       break;
     case 2:
@@ -160,8 +148,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, uint8_t opcode, uint
 
       if (mi_index == UNDEF32)
       {
-          cout << "Operation level 2 not supported: " << opcode << endl;
-          return UNDEF32;
+        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 2 not supported:", opcode);
       }
       break;
     case 3:
@@ -174,8 +161,7 @@ size_t ControlUnit::get_next_microinstruction(size_t index, uint8_t opcode, uint
 
       if (mi_index == UNDEF32)
       {
-          cout << "Operation level 3 not supported: " << opcode << endl;
-          return UNDEF32;
+        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 3 not supported:", opcode);
       }
       //TODO: Check overflow
       break;

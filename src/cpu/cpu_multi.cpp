@@ -46,12 +46,12 @@ namespace mips_sim
 
   }
 
-  void CpuMulti::write_instruction_register( uint32_t instruction_code )
+  void CpuMulti::write_instruction_register( uint32_t instruction_code, ostream &out )
   {
     instruction = Utils::fill_instruction(instruction_code);
 
-    cout << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
-    cout << "  -IR write:"
+    out << "  -Instruction: 0x" << Utils::hex32(instruction.code) << "   ***   " << Utils::decode_instruction(instruction) << endl;
+    out << "  -IR write:"
               << " OP=" << static_cast<uint32_t>(instruction.opcode)
               << " Rs=" << Utils::get_register_name(instruction.rs)
               << " Rt=" << Utils::get_register_name(instruction.rt)
@@ -64,9 +64,9 @@ namespace mips_sim
               << endl;
   }
 
-  bool CpuMulti::next_cycle( bool verbose )
+  bool CpuMulti::next_cycle( ostream &out )
   {
-    Cpu::next_cycle( verbose );
+    Cpu::next_cycle( out );
 
     /* temporary data */
     uint32_t alu_input_a, alu_input_b, alu_output = 0;
@@ -78,42 +78,42 @@ namespace mips_sim
     if (execution_stall > 0)
     {
       execution_stall--;
-      cout << "-- stall" << endl;
+      out << "-- stall" << endl;
       return ready;
     }
 
     uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
-    cout << "Next microinstruction [" << mi_index << "]: 0x"
+    out << "Next microinstruction [" << mi_index << "]: 0x"
               << Utils::hex32(microinstruction) << endl;
     if (mi_index > 0)
     {
-      cout << "   PC: [" << Utils::hex32(PC)
+      out << "   PC: [" << Utils::hex32(PC)
                 << "] A_REG: [" << Utils::hex32(A_REG)
                 << "]    B_REG: [" << Utils::hex32(B_REG) << "]" << endl;
       if (instruction.fp_op)
       {
         if (instruction.cop == 0)
         {
-          cout << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << "] "
+          out << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << "] "
                << scientific << setprecision(2) << Utils::word_to_float(FA_REG) << endl;
-          cout << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << "] "
+          out << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << "] "
                << scientific << setprecision(2) << Utils::word_to_float(FB_REG) << endl;
-          cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] "
+          out << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] "
                << scientific << setprecision(2) << Utils::word_to_float(ALU_OUT_REG) << " ";
         }
         else
         {
-          cout << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << " " << Utils::hex32(FA_REG[1]) << "] "
+          out << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << " " << Utils::hex32(FA_REG[1]) << "] "
                << scientific << setprecision(2) << Utils::word_to_double(FA_REG) << endl;
-          cout << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << " " << Utils::hex32(FB_REG[1]) << "] "
+          out << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << " " << Utils::hex32(FB_REG[1]) << "] "
                << scientific << setprecision(2) << Utils::word_to_double(FB_REG) << endl;
-          cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << " " << Utils::hex32(ALU_OUT_REG[1])<< "] "
+          out << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << " " << Utils::hex32(ALU_OUT_REG[1])<< "] "
                << scientific << setprecision(2) << Utils::word_to_double(ALU_OUT_REG) << " ";
         }
       }
       else
-        cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] ";
-      cout << "MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
+        out << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] ";
+      out << "MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
     }
 
     //control_unit->print_microinstruction(mi_index);
@@ -125,9 +125,9 @@ namespace mips_sim
         address = PC;
       else
         address = ALU_OUT_REG[0];
-      cout << "  -Read memory address: 0x" << Utils::hex32(address) << endl;
+      out << "  -Read memory address: 0x" << Utils::hex32(address) << endl;
       word_read = memory->mem_read_32(address);
-      cout << "  -Word read: 0x" << Utils::hex32(word_read) << endl;
+      out << "  -Word read: 0x" << Utils::hex32(word_read) << endl;
     }
     else if (control_unit->test(microinstruction, SIG_MEMWRITE))
     {
@@ -137,13 +137,13 @@ namespace mips_sim
       uint32_t address = ALU_OUT_REG[0];
       if (control_unit->test(microinstruction, SIG_REGBANK) == 1)
       {
-        cout << "  -Write memory address: 0x" << Utils::hex32(address)
+        out << "  -Write memory address: 0x" << Utils::hex32(address)
              << " <-- " << Utils::hex32(FB_REG[0]) << endl;
         memory->mem_write_32(address, FB_REG[0]);
       }
       else
       {
-        cout << "  -Write memory address: 0x" << Utils::hex32(address)
+        out << "  -Write memory address: 0x" << Utils::hex32(address)
              << " <-- " << Utils::hex32(B_REG) << endl;
         memory->mem_write_32(address, B_REG);
       }
@@ -246,26 +246,26 @@ namespace mips_sim
     if (control_unit->test(microinstruction, SIG_ALUOP) == 3)
     {
       if (instruction.cop == 0)
-        cout << "   FP compute " << cop0_input_a << " OP "
+        out << "   FP compute " << cop0_input_a << " OP "
              << cop0_input_b << " = "
              << cop0_output << endl;
       else
-        cout << "   DP compute " << cop1_input_a << " OP "
+        out << "   DP compute " << cop1_input_a << " OP "
              << cop1_input_b << " = "
              << cop1_output << endl;
     }
     else
     {
-      if (verbose) cout << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
-                        << Utils::hex32(alu_input_b) << " = 0x"
-                        << Utils::hex32(alu_output) << endl;
+      out << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
+          << Utils::hex32(alu_input_b) << " = 0x"
+          << Utils::hex32(alu_output) << endl;
     }
 
     /* Update registers */
 
     if (control_unit->test(microinstruction, SIG_IRWRITE))
     {
-        write_instruction_register(word_read);
+        write_instruction_register(word_read, out);
     }
 
     if (control_unit->test(microinstruction, SIG_REGWRITE))
@@ -310,8 +310,8 @@ namespace mips_sim
         else
           write_register(writereg, writedata);
 
-        cout << "Register write: Reg=" << Utils::get_register_name(writereg)
-                  << ", Data=0x" << Utils::hex32(writedata) << endl;
+        out << "Register write: Reg=" << Utils::get_register_name(writereg)
+            << ", Data=0x" << Utils::hex32(writedata) << endl;
     }
 
     if (control_unit->test(microinstruction, SIG_PCWRITE))
@@ -328,19 +328,19 @@ namespace mips_sim
         {
         case 0:
           PC = alu_output;
-          cout << "PC write [ALU]: 0x" << Utils::hex32(PC) << endl;
+          out << "PC write [ALU]: 0x" << Utils::hex32(PC) << endl;
           break;
         case 1:
           PC = ALU_OUT_REG[0];
-          cout << "PC write [ALU_OUT]: 0x" << Utils::hex32(PC) << endl;
+          out << "PC write [ALU_OUT]: 0x" << Utils::hex32(PC) << endl;
           break;
         case 2:
           PC = (PC & 0xF0000000) + (instruction.addr_j << 2);
-          cout << "PC write [J]: 0x" << Utils::hex32(PC) << endl;
+          out << "PC write [J]: 0x" << Utils::hex32(PC) << endl;
           break;
         case 3:
           PC = A_REG;
-          cout << "PC write [REG]: 0x" << Utils::hex32(PC) << endl;
+          out << "PC write [REG]: 0x" << Utils::hex32(PC) << endl;
           break;
         default:
           assert(0);
@@ -369,9 +369,9 @@ namespace mips_sim
     MEM_DATA_REG = word_read;
 
     /* update MI index */
-    mi_index = control_unit->get_next_microinstruction(mi_index,
-                                                       instruction.opcode,
-                                                       instruction.funct);
+    mi_index = control_unit->get_next_microinstruction_index(mi_index,
+                                                             instruction.opcode,
+                                                             instruction.funct);
     if (mi_index == UNDEF32)
        exit(ERROR_UNSUPPORTED_OPERATION);
 

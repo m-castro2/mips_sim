@@ -78,11 +78,12 @@ class CpuMulti : public Cpu
     CpuMulti(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
     virtual ~CpuMulti() override;
 
-    virtual bool next_cycle( bool verbose = true ) override;
+    virtual bool next_cycle( std::ostream &out = std::cout ) override;
 
   private:
 
-    void write_instruction_register( uint32_t instruction_code );
+    void write_instruction_register( uint32_t instruction_code,
+                                     std::ostream &out = std::cout );
 
     /* datapath registers */
     uint32_t A_REG;

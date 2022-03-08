@@ -13,6 +13,7 @@
 
 #define CTRL_EXCEPTION           192
 #define CTRL_UNDEF_EXCEPTION     193
+#define CTRL_BAD_JUMP_EXCEPTION  194
 
 #define CPU_EXCEPTION            256
 #define CPU_UNIMPL_EXCEPTION     257

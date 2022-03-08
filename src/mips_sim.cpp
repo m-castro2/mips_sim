@@ -44,18 +44,9 @@ int main(int argc, char * argv[])
   string input_file, output_file;
   int run_mode = 0, cpu_mode = 0, retval = 0;
 
-  // TEST ZONE
-  // vector<uint32_t> mc = ControlUnit::build_microcode(CpuMulti::uc_microcode_matrix,
-  //                                                    CpuMulti::uc_signal_bits);
-  // for (uint32_t mi : mc)
-  //   cout << "MICROINSTRUCTION " << hex << mi << endl;
-  //
-  // exit(0);
-  // ---------
-
   if (argc < 3)
   {
-    cout << "Call " << argv[0] << "{run|runhex|asm} filename [multi|pipe]" << endl;
+    cerr << "Call " << argv[0] << "{run|runhex|asm} filename [multi|pipe]" << endl;
     return 0;
   }
 
@@ -165,9 +156,14 @@ int main(int argc, char * argv[])
     cerr << endl;
   }
 
-  cpu->print_registers();
-  cpu->print_fp_registers();
-  mem->print_memory(MEM_DATA_START, 256);
+  cout << endl << "Registers:" << endl;
+  cpu->print_registers(cout);
+
+  cout << endl << "Data Memory:" << endl;
+  mem->print_memory(MEM_DATA_START, MEM_DATA_SIZE, cout);
+
+  cout << endl << "Instructions Memory:" << endl;
+  mem->print_memory(MEM_TEXT_START, MEM_TEXT_SIZE, cout);
 
   return EXIT_SUCCESS;
 }

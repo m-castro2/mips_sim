@@ -6,6 +6,7 @@
 #include "../mem.h"
 
 #include <memory>
+#include <iostream>
 
 #define ERROR_UNSUPPORTED_OPERATION    101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
@@ -26,15 +27,16 @@ public:
 
   bool is_ready( void ) const;
 
-  void print_registers( void ) const;
-  void print_fp_registers( void ) const;
+  void print_registers( std::ostream &out = std::cout ) const;
+  void print_int_registers( std::ostream &out = std::cout ) const;
+  void print_fp_registers( std::ostream &out = std::cout ) const;
   uint32_t read_register( size_t reg_index) const;
   uint32_t read_fp_register( size_t reg_index) const;
   float read_register_f( size_t reg_index) const;
   double read_register_d( size_t reg_index) const;
 
   void reset( bool reset_memory = true );
-  virtual bool next_cycle( bool verbose = true );
+  virtual bool next_cycle( std::ostream &out = std::cout );
   bool run_to_cycle( uint32_t cycle );
 
 protected:
@@ -71,9 +73,13 @@ protected:
   int execution_stall;
 
 private:
+
   /* register banks */
   uint32_t gpr[32];
   uint32_t fpr[32];
+
+  std::string register_str(size_t reg_id, bool fp,
+                           bool show_value, bool show_double) const;
 };
 
 } /* namespace */

@@ -2,7 +2,7 @@
 #include "../utils.h"
 
 #include <cassert>
-#include <iostream>
+#include <sstream>
 #include <iomanip>
 
 using namespace std;
@@ -136,35 +136,27 @@ uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_
   switch(alu_op)
   {
     case OP_ADDI:
-      //cout << "---[ALU] ADDI" << endl;
       alu_output = static_cast<uint32_t>(static_cast<int>(alu_input_a) + static_cast<int>(alu_input_b));
       break;
     case OP_ADDIU:
-      //cout << "---[ALU] ADDIU" << endl;
       alu_output = alu_input_a + alu_input_b;
       break;
     case OP_SLTI:
-      //cout << "---[ALU] SLTI" << endl;
       alu_output = (static_cast<int>(alu_input_a) < static_cast<int>(alu_input_b))?1:0;
       break;
     case OP_SLTIU:
-      //cout << "---[ALU] SLTIU" << endl;
       alu_output = (alu_input_a < alu_input_b)?1:0;
       break;
     case OP_ANDI:
-      //cout << "---[ALU] ANDI" << endl;
       alu_output = alu_input_a & alu_input_b;
       break;
     case OP_ORI:
-      //cout << "---[ALU] ORI" << endl;
       alu_output = alu_input_a | alu_input_b;
       break;
     case OP_XORI:
-      //cout << "---[ALU] XORI" << endl;
       alu_output = alu_input_a ^ alu_input_b;
       break;
     case OP_LUI:
-      //cout << "---[ALU] LUI" << endl;
       alu_output = alu_input_b<<16;
       break;
     default:
@@ -232,51 +224,71 @@ void Cpu::syscall( uint32_t value )
   }
 }
 
-void Cpu::print_registers( void ) const
+string Cpu::register_str(size_t reg_id, bool fp, bool show_value, bool show_double) const
 {
-  cout << endl;
-  cout << setw(110) << setfill('-') << " " << endl;
-  for (size_t i=0; i<8; ++i)
+  string regname;
+  uint32_t regvalue[2];
+
+  regname = fp?registers_def[reg_id].regname_fp:registers_def[reg_id].regname_int;
+  regvalue[0] = fp?fpr[reg_id]:gpr[reg_id];
+  if (show_double)
+    regvalue[1] = fpr[reg_id+1];
+
+  stringstream ss;
+  ss << setw(4) << setfill(' ') << regname;
+  if (show_value && !fp)
+    ss << setw(10) << static_cast<int>(regvalue[0]);
+  ss << " [" << Utils::hex32(regvalue[0]) << "]";
+  if (show_value && fp)
   {
-    cout << "|" << setw(4) << setfill(' ') << registers_def[i].regname_int
-         << setw(10) << static_cast<int>(gpr[i])
-         << " [" << Utils::hex32(gpr[i]) << "] ";
-    cout << "|" << setw(4) << setfill(' ') << registers_def[i+8].regname_int
-         << setw(10) << static_cast<int>(gpr[i+8])
-         << " [" << Utils::hex32(gpr[i+8]) << "] ";
-    cout << "|" << setw(4) << setfill(' ') << registers_def[i+16].regname_int
-         << setw(10) << static_cast<int>(gpr[i+16])
-         << " [" << Utils::hex32(gpr[i+16]) << "] ";
-    cout << "|" << setw(4) << setfill(' ') << registers_def[i+24].regname_int
-         << setw(10) << static_cast<int>(gpr[i+24])
-         << " [" << Utils::hex32(gpr[i+24]) << "] |" << endl;
+    ss << setw(9) << scientific << setprecision(2) << Utils::word_to_float(regvalue);
+    if (show_double)
+      ss << " / " << setw(9) << scientific << setprecision(2) << Utils::word_to_double(regvalue);
+    else
+      ss << setw(12) << " ";
   }
-  cout << setw(110) << setfill('-') << " " << endl;
+
+  return ss.str();
 }
 
-void Cpu::print_fp_registers( void ) const
+void Cpu::print_registers( ostream &out ) const
 {
-  cout << endl;
-  cout << setw(78) << setfill('-') << " " << endl;
+  out << setw(134) << setfill('-') << " " << endl;
   for (size_t i=0; i<16; ++i)
   {
-    cout << "| " << setw(4) << setfill(' ') << registers_def[i].regname_fp
-         << " [" << Utils::hex32(fpr[i]) << "] "
-         << scientific << setprecision(2) << Utils::word_to_float(&fpr[i]);
-    if (!(i%2))
-      cout << " / " << scientific << setprecision(2) << Utils::word_to_double(&fpr[i]);
-    else
-      cout << setw(11) << " ";
-    cout << " | " << setw(4) << setfill(' ') <<registers_def[i+8].regname_fp
-         << " [" << Utils::hex32(fpr[i+8]) << "] "
-         << scientific << setprecision(2) << Utils::word_to_float(&fpr[i+8]);
-   if (!(i%2))
-     cout << " / " << scientific << setprecision(2) << Utils::word_to_double(&fpr[i+8]);
-   else
-     cout << setw(11) << " ";
-   cout << " |" << endl;
+    out << "|" << register_str(i, false, true, false);
+    out << " |" << register_str(i+8, false, true, false);
+    out << " | " << register_str(i, true, true, !(i%2));
+    out << " | " << register_str(i+8, true, true, !(i%2));
+    out << " |" << endl;
   }
-  cout << setw(78) << setfill('-') << " " << endl;
+  out << setw(134) << setfill('-') << " " << endl;
+}
+
+void Cpu::print_int_registers( ostream &out ) const
+{
+  out << setw(110) << setfill('-') << " " << endl;
+  for (size_t i=0; i<8; ++i)
+  {
+    out << "|" << register_str(i, false, true, false);
+    out << " |" << register_str(i+8, false, true, false);
+    out << " |" << register_str(i+16, false, true, false);
+    out << " |" << register_str(i+24, false, true, false);
+    out << " |" << endl;
+  }
+  out << setw(110) << setfill('-') << " " << endl;
+}
+
+void Cpu::print_fp_registers( ostream &out ) const
+{
+  out << setw(80) << setfill('-') << " " << endl;
+  for (size_t i=0; i<16; ++i)
+  {
+    out << "| " << register_str(i, true, true, !(i%2));
+    out << " | " << register_str(i+8, true, true, !(i%2));
+    out << " |" << endl;
+  }
+  out << setw(80) << setfill('-') << " " << endl;
 }
 
 uint32_t Cpu::read_register( size_t reg_index) const
@@ -337,13 +349,13 @@ void Cpu::write_register_d( size_t reg_index, double value )
   Utils::double_to_word(value, &fpr[reg_index]);
 }
 
-bool Cpu::next_cycle( bool verbose )
+bool Cpu::next_cycle( ostream &out )
 {
   cycle++;
 
-  if (verbose)
-    cout << "------------------------------------------ cycle "
-         << dec << cycle << endl;
+  out << "------------------------------------------ cycle "
+      << dec << cycle << endl;
+
   return true;
 }
 

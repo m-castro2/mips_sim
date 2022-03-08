@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 #define X -1
 #define MAX_MICROINSTRUCTIONS 32
@@ -68,15 +69,17 @@ public:
 
   uint32_t get_microinstruction(size_t index) const;
 
-  size_t get_next_microinstruction(size_t index, uint8_t opcode, uint8_t subopcode = UNDEF8) const;
-
-  void print_microcode( void ) const;
-
-  void print_microinstruction( size_t index ) const;
-
-  void print_signals( uint32_t microinstruction ) const;
+  size_t get_next_microinstruction_index(size_t current_index,
+                                         uint8_t opcode,
+                                         uint8_t subopcode = UNDEF8) const;
 
   uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
+
+  void print_microcode( std::ostream &out = std::cout ) const;
+
+  void print_microinstruction( size_t index, std::ostream &out = std::cout ) const;
+
+  void print_signals( uint32_t microinstruction, std::ostream &out = std::cout ) const;
 
 private:
   ctrl_dir_t find_ctrl_dir_entry(uint8_t opcode, uint8_t subopcode) const;
