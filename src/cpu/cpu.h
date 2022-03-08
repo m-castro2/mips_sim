@@ -11,6 +11,7 @@
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
 
 //TODO: Change into config file
+#define FP_ADD_DELAY 2
 #define MULT_DELAY 4
 #define DIV_DELAY  6
 

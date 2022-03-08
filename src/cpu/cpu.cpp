@@ -249,10 +249,10 @@ void Cpu::print_fp_registers( void ) const
   cout << endl;
   for (size_t i=0; i<8; ++i)
   {
-    cout << setw(4) << setfill(' ') << registers_def[i].regname_fp << " [" << Utils::hex32(fpr[i]) << "]     ";
-    cout << setw(4) << setfill(' ') <<registers_def[i+8].regname_fp << " [" << Utils::hex32(fpr[i+8]) << "]     ";
-    cout << setw(4) << setfill(' ') <<registers_def[i+16].regname_fp << " [" << Utils::hex32(fpr[i+16]) << "]     ";
-    cout << setw(4) << setfill(' ') <<registers_def[i+24].regname_fp << " [" << Utils::hex32(fpr[i+24]) << "]" << endl;
+    cout << setw(4) << setfill(' ') << registers_def[i].regname_fp << " [" << Utils::hex32(fpr[i]) << "] " << scientific << setprecision(2) << Utils::word_to_float(&fpr[i]) << "   ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+8].regname_fp << " [" << Utils::hex32(fpr[i+8]) << "] " << scientific << setprecision(2) << Utils::word_to_float(&fpr[i+8]) << "   ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+16].regname_fp << " [" << Utils::hex32(fpr[i+16]) << "] " << scientific << setprecision(2) << Utils::word_to_float(&fpr[i+16]) << "   ";
+    cout << setw(4) << setfill(' ') <<registers_def[i+24].regname_fp << " [" << Utils::hex32(fpr[i+24]) << "] " << scientific << setprecision(2) << Utils::word_to_float(&fpr[i+24]) << endl;
   }
 }
 

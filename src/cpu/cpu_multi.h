@@ -36,6 +36,7 @@ class CpuMulti : public Cpu
       {1, 2, X, X, X, X, 2, 0, 2, 1, X, X, X, X, X, 0}, // 15 Jal
       {1, 3, X, X, X, X, X, 0, X, X, X, X, X, X, X, 0}, // 16 Jr
       {1, 3, X, X, X, X, 2, 0, 2, 1, X, X, X, X, X, 0}, // 17 Jalr
+      {X, X, X, X, X, X, X, 0, X, X, 1, 0, X, 3, X, 4}, // 18 Fformat2
       {0} // end
     };
 
@@ -45,6 +46,7 @@ class CpuMulti : public Cpu
       {OP_RTYPE, SUBOP_JR,     16,      UNDEF32,  7},
       {OP_RTYPE, SUBOP_JALR,   17,      UNDEF32,  7},
       {OP_RTYPE, UNDEF8,        6,      UNDEF32,  7},
+      {OP_FTYPE, UNDEF8,       18,      UNDEF32,  7},
       {OP_J,     UNDEF8,        9,      UNDEF32, UNDEF32},
       {OP_JAL,   UNDEF8,       15,      UNDEF32, UNDEF32},
       {OP_BEQ,   UNDEF8,        8,      UNDEF32, UNDEF32},

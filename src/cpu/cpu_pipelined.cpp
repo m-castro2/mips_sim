@@ -1,9 +1,10 @@
 #include "cpu_pipelined.h"
+#include "../utils.h"
+#include "../exception.h"
 
 #include <cassert>
 #include <iostream>
 #include <iomanip>
-#include "../utils.h"
 
 using namespace std;
 
@@ -247,9 +248,9 @@ namespace mips_sim
     {
       /* will go to coprocessor */
       //TODO
-      assert(0);
+      throw Exception::e(CPU_UNIMPL_EXCEPTION, "Instruction not implemented yet: " + Utils::decode_instruction(instruction_code));
 
-      write_segmentation_register(ID_EX, {});
+      //write_segmentation_register(ID_EX, {});
     }
     else
     {
