@@ -11,6 +11,12 @@
   #include <memory>
   #include <algorithm>
 
+  #define MEM_TYPE_WORD   1
+  #define MEM_TYPE_FLOAT  2
+  #define MEM_TYPE_DOUBLE 3
+  #define MEM_TYPE_STRING 4
+  #define MEM_TYPE_SPACE  5
+
   using namespace std;
   using namespace mips_sim;
 
@@ -245,28 +251,28 @@ instruction:
         reverse(values.begin(), values.end());
         if (!strcmp($2, "word"))
         {
-          type = 1;
+          type = MEM_TYPE_WORD;
           mem_pos += values.size() * 4;
         }
         else if (!strcmp($2, "float"))
         {
-          type = 2;
+          type = MEM_TYPE_FLOAT;
           mem_pos += values.size() * 4;
         }
         else if (!strcmp($2, "double"))
         {
-          type = 3;
+          type = MEM_TYPE_DOUBLE;
           mem_pos += values.size() * 8;
         }
         else if (!strcmp($2, "asciiz"))
         {
-          type = 4;
+          type = MEM_TYPE_STRING;
           assert(values.size() == 1);
           mem_pos += values[0].length();
         }
         else if (!strcmp($2, "space"))
         {
-          type = 5;
+          type = MEM_TYPE_SPACE;
           assert(values.size() == 1);
           mem_pos += stoi(values[0]);
         }
@@ -318,20 +324,20 @@ static void setup_memory(shared_ptr<Memory> memory)
     /* copy data */
     for (string s : memsection.values)
     {
-      if (memsection.type == 1)
+      if (memsection.type == MEM_TYPE_WORD)
       {
         memory->mem_write_32(next_address,
                               stoi(s));
         next_address += 4;
       }
-      else if (memsection.type == 2)
+      else if (memsection.type == MEM_TYPE_FLOAT)
       {
         Utils::float_to_word(stof(s), words_to_mem);
         memory->mem_write_32(next_address,
                              words_to_mem[0]);
         next_address += 4;
       }
-      else if (memsection.type == 3)
+      else if (memsection.type == MEM_TYPE_DOUBLE)
       {
         Utils::double_to_word(stod(s), words_to_mem);
         memory->mem_write_32(next_address,
@@ -340,12 +346,12 @@ static void setup_memory(shared_ptr<Memory> memory)
                              words_to_mem[1]);
         next_address += 8;
       }
-      else if (memsection.type == 4)
+      else if (memsection.type == MEM_TYPE_STRING)
       {
         //TODO: Save text
         assert(0);
       }
-      else if (memsection.type == 5)
+      else if (memsection.type == MEM_TYPE_SPACE)
       {
         next_address += stoi(s);
       }

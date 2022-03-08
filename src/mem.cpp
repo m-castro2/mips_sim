@@ -21,14 +21,6 @@ Memory::Memory( void )
     MEM_REGIONS[i].mem = static_cast<uint8_t *>(malloc(MEM_REGIONS[i].size));
     memset(MEM_REGIONS[i].mem, 0, MEM_REGIONS[i].size);
   }
-
-  // //Arbitrarily initialize memory
-  // //TODO: Parse from asm code
-  // uint32_t datamemwords = 100;
-  // allocated_regions.push_back({MEM_DATA_START, datamemwords*4, nullptr});
-  // for (size_t i = 0; i < datamemwords; i++) {
-  //   mem_write_32(static_cast<uint32_t>(MEM_DATA_START + i*4), static_cast<uint32_t>(i+1));
-  // }
 }
 
 void Memory::snapshot(int r)

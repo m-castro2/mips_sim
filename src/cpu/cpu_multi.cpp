@@ -22,7 +22,9 @@ namespace mips_sim
   {
     A_REG = UNDEF32;
     B_REG = UNDEF32;
-    ALU_OUT_REG = UNDEF32;
+    FA_REG[0] = FA_REG[1] = UNDEF32;
+    FB_REG[0] = FB_REG[1] = UNDEF32;
+    ALU_OUT_REG[0] = ALU_OUT_REG[1] = UNDEF32;
     MEM_DATA_REG = UNDEF32;
     instruction = {};
   }
@@ -32,7 +34,9 @@ namespace mips_sim
   {
     A_REG = UNDEF32;
     B_REG = UNDEF32;
-    ALU_OUT_REG = UNDEF32;
+    FA_REG[0] = FA_REG[1] = UNDEF32;
+    FB_REG[0] = FB_REG[1] = UNDEF32;
+    ALU_OUT_REG[0] = ALU_OUT_REG[1] = UNDEF32;
     MEM_DATA_REG = UNDEF32;
     instruction = {};
   }
@@ -81,13 +85,36 @@ namespace mips_sim
     uint32_t microinstruction = control_unit->get_microinstruction(mi_index);
     cout << "Next microinstruction [" << mi_index << "]: 0x"
               << Utils::hex32(microinstruction) << endl;
-    cout << "   PC: [" << Utils::hex32(PC)
-              << "] A_REG: [" << Utils::hex32(A_REG)
-              << "]    B_REG: [" << Utils::hex32(B_REG) << "]" << endl;
-    cout << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG) << "] " << scientific << setprecision(2) << Utils::word_to_float(&FA_REG) << endl;
-    cout << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG) << "] " << scientific << setprecision(2) << Utils::word_to_float(&FB_REG) << endl;
-    cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG)
-              << "] MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
+    if (mi_index > 0)
+    {
+      cout << "   PC: [" << Utils::hex32(PC)
+                << "] A_REG: [" << Utils::hex32(A_REG)
+                << "]    B_REG: [" << Utils::hex32(B_REG) << "]" << endl;
+      if (instruction.fp_op)
+      {
+        if (instruction.cop == 0)
+        {
+          cout << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << "] "
+               << scientific << setprecision(2) << Utils::word_to_float(FA_REG) << endl;
+          cout << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << "] "
+               << scientific << setprecision(2) << Utils::word_to_float(FB_REG) << endl;
+          cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] "
+               << scientific << setprecision(2) << Utils::word_to_float(ALU_OUT_REG) << " ";
+        }
+        else
+        {
+          cout << setw(26) << "FA_REG: [" << Utils::hex32(FA_REG[0]) << " " << Utils::hex32(FA_REG[1]) << "] "
+               << scientific << setprecision(2) << Utils::word_to_double(FA_REG) << endl;
+          cout << setw(26) << "FB_REG: [" << Utils::hex32(FB_REG[0]) << " " << Utils::hex32(FB_REG[1]) << "] "
+               << scientific << setprecision(2) << Utils::word_to_double(FB_REG) << endl;
+          cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << " " << Utils::hex32(ALU_OUT_REG[1])<< "] "
+               << scientific << setprecision(2) << Utils::word_to_double(ALU_OUT_REG) << " ";
+        }
+      }
+      else
+        cout << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] ";
+      cout << "MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
+    }
 
     //control_unit->print_microinstruction(mi_index);
 
@@ -97,7 +124,7 @@ namespace mips_sim
       if (control_unit->test(microinstruction, SIG_IOD) == 0)
         address = PC;
       else
-        address = ALU_OUT_REG;
+        address = ALU_OUT_REG[0];
       cout << "  -Read memory address: 0x" << Utils::hex32(address) << endl;
       word_read = memory->mem_read_32(address);
       cout << "  -Word read: 0x" << Utils::hex32(word_read) << endl;
@@ -107,12 +134,12 @@ namespace mips_sim
       /* prevent writing instruction data */
       assert(control_unit->test(microinstruction, SIG_IOD) == 1);
 
-      uint32_t address = ALU_OUT_REG;
+      uint32_t address = ALU_OUT_REG[0];
       if (control_unit->test(microinstruction, SIG_REGBANK) == 1)
       {
         cout << "  -Write memory address: 0x" << Utils::hex32(address)
-             << " <-- " << Utils::hex32(FB_REG) << endl;
-        memory->mem_write_32(address, FB_REG);
+             << " <-- " << Utils::hex32(FB_REG[0]) << endl;
+        memory->mem_write_32(address, FB_REG[0]);
       }
       else
       {
@@ -170,10 +197,10 @@ namespace mips_sim
         break;
       case 3:
         //TODO
-        cop0_input_a = Utils::word_to_float(&FA_REG);
-        cop0_input_b = Utils::word_to_float(&FB_REG);
-        //cop1_input_a = read_register_d(instruction.rs);
-        //cop1_input_b = read_register_d(instruction.rt);
+        cop0_input_a = Utils::word_to_float(FA_REG);
+        cop0_input_b = Utils::word_to_float(FB_REG);
+        cop1_input_a = Utils::word_to_double(FA_REG);
+        cop1_input_b = Utils::word_to_double(FB_REG);
         switch(instruction.funct)
         {
           case SUBOP_FPADD:
@@ -218,9 +245,14 @@ namespace mips_sim
 
     if (control_unit->test(microinstruction, SIG_ALUOP) == 3)
     {
-      if (verbose) cout << "   FP compute " << cop0_input_a << " OP "
-                        << cop0_input_b << " = "
-                        << cop0_output << endl;
+      if (instruction.cop == 0)
+        cout << "   FP compute " << cop0_input_a << " OP "
+             << cop0_input_b << " = "
+             << cop0_output << endl;
+      else
+        cout << "   DP compute " << cop1_input_a << " OP "
+             << cop1_input_b << " = "
+             << cop1_output << endl;
     }
     else
     {
@@ -250,7 +282,7 @@ namespace mips_sim
           assert(0);
 
         if (control_unit->test(microinstruction, SIG_MEM2REG) == 0)
-          writedata = ALU_OUT_REG;
+          writedata = ALU_OUT_REG[0];
         else if (control_unit->test(microinstruction, SIG_MEM2REG) == 1)
           writedata = MEM_DATA_REG;
         else if (control_unit->test(microinstruction, SIG_MEM2REG) == 2)
@@ -265,14 +297,12 @@ namespace mips_sim
           //TODO
           if (instruction.cop == 0)
           {
-            write_fp_register(writereg, ALU_OUT_REG);
+            write_fp_register(writereg, ALU_OUT_REG[0]);
           }
           else if (instruction.cop == 1)
           {
-            uint32_t doubledata[2];
-            Utils::double_to_word(cop1_output, doubledata);
-            write_fp_register(writereg, doubledata[0]);
-            write_fp_register(writereg+1, doubledata[1]);
+            write_fp_register(writereg, ALU_OUT_REG[0]);
+            write_fp_register(writereg+1, ALU_OUT_REG[1]);
           }
           else
             assert(0);
@@ -301,7 +331,7 @@ namespace mips_sim
           cout << "PC write [ALU]: 0x" << Utils::hex32(PC) << endl;
           break;
         case 1:
-          PC = ALU_OUT_REG;
+          PC = ALU_OUT_REG[0];
           cout << "PC write [ALU_OUT]: 0x" << Utils::hex32(PC) << endl;
           break;
         case 2:
@@ -321,12 +351,21 @@ namespace mips_sim
     /* write registers */
     A_REG = read_register(instruction.rs);
     B_REG = read_register(instruction.rt);
-    FA_REG = read_fp_register(instruction.rs);
-    FB_REG = read_fp_register(instruction.rt);
+    FA_REG[0] = read_fp_register(instruction.rs);
+    if (!(instruction.rs%2))
+      FA_REG[1] = read_fp_register(instruction.rs + 1);
+    FB_REG[0] = read_fp_register(instruction.rt);
+    if (!(instruction.rt%2))
+      FB_REG[1] = read_fp_register(instruction.rt + 1);
     if (control_unit->test(microinstruction, SIG_ALUOP) == 3)
-      Utils::float_to_word(cop0_output, &ALU_OUT_REG);
+    {
+      if (instruction.cop == 0)
+        Utils::float_to_word(cop0_output, ALU_OUT_REG);
+      else
+        Utils::double_to_word(cop1_output, ALU_OUT_REG);
+    }
     else
-      ALU_OUT_REG = alu_output;
+      ALU_OUT_REG[0] = alu_output;
     MEM_DATA_REG = word_read;
 
     /* update MI index */

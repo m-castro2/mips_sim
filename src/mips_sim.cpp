@@ -167,7 +167,7 @@ int main(int argc, char * argv[])
 
   cpu->print_registers();
   cpu->print_fp_registers();
-  mem->print_memory(MEM_DATA_START, 128);
+  mem->print_memory(MEM_DATA_START, 256);
 
   return EXIT_SUCCESS;
 }

@@ -87,9 +87,9 @@ class CpuMulti : public Cpu
     /* datapath registers */
     uint32_t A_REG;
     uint32_t B_REG;
-    uint32_t FA_REG;
-    uint32_t FB_REG;
-    uint32_t ALU_OUT_REG;
+    uint32_t FA_REG[2];
+    uint32_t FB_REG[2];
+    uint32_t ALU_OUT_REG[2];
     uint32_t MEM_DATA_REG;
     instruction_t instruction;
 };
