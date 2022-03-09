@@ -1,6 +1,7 @@
 %{
   #include "../utils.h"
   #include "../mem.h"
+  #include "../exception.h"
   #include "mips_assembler.h"
 
   #include <iostream>
@@ -388,10 +389,14 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
   {
     if (instruction.has_branch_label)
     {
+      bool label_found = false;
       for (Label label : labels)
       {
         if (!instruction.label.compare(label.name))
         {
+          if (label_found)
+            throw Exception::e(PARSER_DUPLABEL_EXCEPTION, "Dublicated label '"+label.name + "'");
+          label_found = true;
           if (instruction.relative)
           {
             int rel_branch = label.line - instruction.line - 1;
@@ -404,14 +409,20 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
           }
         }
       }
+      if (!label_found)
+        throw Exception::e(PARSER_NOLABEL_EXCEPTION, "Undefined label '"+instruction.label + "'");
     }
     else if (instruction.has_data_label > 0)
     {
       assert(instruction.has_data_label <= 2);
+      bool label_found = false;
       for (Memsection mem_section : memsections)
       {
         if (!instruction.label.compare(mem_section.label))
         {
+          if (label_found)
+            throw Exception::e(PARSER_DUPLABEL_EXCEPTION, "Dublicated label '"+mem_section.label + "'");
+          label_found = true;
           uint32_t address = MEM_DATA_START + mem_section.position;
           if (instruction.has_data_label == 1)
             instruction.instcode |= (address >> 16 & 0xFFFF);
@@ -419,6 +430,8 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
             instruction.instcode |= (address & 0xFFFF);
         }
       }
+      if (!label_found)
+        throw Exception::e(PARSER_NOLABEL_EXCEPTION, "Undefined label '"+instruction.label + "'");
     }
   }
 

@@ -13,24 +13,14 @@ namespace mips_sim
   constexpr uint32_t CpuMulti::uc_signal_bits[SIGNAL_COUNT];
   constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[];
 
-  CpuMulti::CpuMulti(shared_ptr<Memory> _memory)
-    : Cpu(shared_ptr<ControlUnit>(
-            new ControlUnit(CpuMulti::uc_signal_bits,
-                            CpuMulti::uc_microcode_matrix,
-                            CpuMulti::uc_ctrl_dir)),
-            _memory)
-  {
-    A_REG = UNDEF32;
-    B_REG = UNDEF32;
-    FA_REG[0] = FA_REG[1] = UNDEF32;
-    FB_REG[0] = FB_REG[1] = UNDEF32;
-    ALU_OUT_REG[0] = ALU_OUT_REG[1] = UNDEF32;
-    MEM_DATA_REG = UNDEF32;
-    instruction = {};
-  }
-
-  CpuMulti::CpuMulti(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
-    : Cpu(_control_unit, _memory)
+  CpuMulti::CpuMulti(shared_ptr<Memory> _memory, shared_ptr<ControlUnit> _control_unit)
+    : Cpu(_memory,
+          _control_unit?_control_unit:
+            shared_ptr<ControlUnit>(
+              new ControlUnit(CpuMulti::uc_signal_bits,
+                              CpuMulti::uc_microcode_matrix,
+                              CpuMulti::uc_ctrl_dir))
+         )
   {
     A_REG = UNDEF32;
     B_REG = UNDEF32;
@@ -115,8 +105,13 @@ namespace mips_sim
         out << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] ";
       out << "MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
     }
+    else
+    {
+      loaded_instructions.push_back(PC);
+      icycle = 0;
+    }
 
-    //control_unit->print_microinstruction(mi_index);
+    diagram[loaded_instructions.size()-1][icycle++] = static_cast<uint32_t>(mi_index);
 
     if (control_unit->test(microinstruction, SIG_MEMREAD))
     {
@@ -376,6 +371,36 @@ namespace mips_sim
        exit(ERROR_UNSUPPORTED_OPERATION);
 
     return ready;
+  }
+
+  void CpuMulti::print_diagram( ostream &out ) const
+  {
+    uint32_t c = 1;
+    out << setw(24) << " " << "cycle | microinstruction" << endl;
+    out << setw(56) << setfill('-') << " " << setfill(' ') << endl;
+
+    for (size_t i = 1; i < loaded_instructions.size(); ++i)
+    {
+      uint32_t ipc = loaded_instructions[i];
+      uint32_t icode = ipc?memory->mem_read_32(ipc):0;
+      uint32_t iindex = (ipc - MEM_TEXT_START)/4 + 1;
+      out << setw(2) << right << iindex << " " << setw(23) << left << Utils::decode_instruction(icode);
+      int runstate = 0;
+      out << setw(4) << right << c << " | ";
+      for (size_t j = 0; j<=10 && runstate < 2; j++)
+        if (diagram[i][j] > 0 || !runstate)
+        {
+          runstate = 1;
+          out << right << setw(4) << (diagram[i][j]);
+          c++;
+        }
+        else
+        {
+          if (runstate)
+            runstate = 2;
+        }
+      out << endl;
+    }
   }
 
 } /* namespace */

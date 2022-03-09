@@ -29,6 +29,7 @@
 #define SR_REGDEST     13
 #define SR_WORDREAD    14
 #define SR_SHAMT       15
+#define SR_IID         30
 #define SR_INSTRUCTION 31
 
 #define BRANCH_FLUSH     0 /* flush pipeline */
@@ -39,6 +40,9 @@
 
 namespace mips_sim
 {
+
+  const std::string stage_names[] = {"IF",  "ID",  "EX", "MEM", "WB"};
+
 
 const int  BRANCH_TYPE               = BRANCH_NON_TAKEN;
 const int  BRANCH_STAGE              = STAGE_ID;
@@ -108,11 +112,12 @@ class CpuPipelined : public Cpu
 
     };
 
-    CpuPipelined(std::shared_ptr<Memory>);
-    CpuPipelined(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
+    //CpuPipelined(std::shared_ptr<Memory>);
+    CpuPipelined(std::shared_ptr<Memory>, std::shared_ptr<ControlUnit> = nullptr);
     virtual ~CpuPipelined() override;
 
     virtual bool next_cycle( std::ostream &out = std::cout ) override;
+    virtual void print_diagram( std::ostream &out = std::cout ) const override;
 
   private:
     void stage_if( std::ostream &out = std::cout );
@@ -120,6 +125,8 @@ class CpuPipelined : public Cpu
     void stage_ex( std::ostream &out = std::cout );
     void stage_mem( std::ostream &out = std::cout );
     void stage_wb( std::ostream &out = std::cout );
+
+    size_t get_current_instruction(size_t stage) const;
 
     // void stage_ex_cop ( bool verbose = true);
     // void stage_mem_cop ( bool verbose = true);
@@ -136,7 +143,8 @@ class CpuPipelined : public Cpu
                                std::ostream &out = std::cout ) const;
     bool detect_hazard( uint32_t read_reg, bool can_forward,
                         bool fp_reg = false ) const;
-        bool process_branch(uint32_t instruction_code,
+
+    bool process_branch(uint32_t instruction_code,
                         uint32_t rs_value, uint32_t rt_value,
                         uint32_t pc_value);
 
@@ -154,6 +162,9 @@ class CpuPipelined : public Cpu
     uint32_t pc_conditional_branch;
     uint32_t pc_instruction_jump;
     uint32_t pc_register_jump;
+
+    uint32_t loaded_instruction_index;
+    uint32_t diagram[400][400] = {};
 };
 
 } /* namespace */

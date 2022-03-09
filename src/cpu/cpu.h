@@ -6,6 +6,7 @@
 #include "../mem.h"
 
 #include <memory>
+#include <vector>
 #include <iostream>
 
 #define ERROR_UNSUPPORTED_OPERATION    101
@@ -22,7 +23,7 @@ namespace mips_sim
 class Cpu
 {
 public:
-  Cpu(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
+  Cpu(std::shared_ptr<Memory>, std::shared_ptr<ControlUnit>);
   virtual ~Cpu();
 
   bool is_ready( void ) const;
@@ -36,7 +37,9 @@ public:
   double read_register_d( size_t reg_index) const;
 
   void reset( bool reset_memory = true );
+
   virtual bool next_cycle( std::ostream &out = std::cout );
+  virtual void print_diagram( std::ostream &out = std::cout ) const;
   bool run_to_cycle( uint32_t cycle );
 
 protected:
@@ -57,8 +60,8 @@ protected:
   void write_register_f( size_t reg_index, float value);
   void write_register_d( size_t reg_index, double value);
 
-  std::shared_ptr<ControlUnit> control_unit;
   std::shared_ptr<Memory> memory;
+  std::shared_ptr<ControlUnit> control_unit;
 
   /* status */
   uint32_t cycle;
@@ -71,6 +74,8 @@ protected:
 
   /* stall cycles */
   int execution_stall;
+
+  std::vector<uint32_t> loaded_instructions;
 
 private:
 

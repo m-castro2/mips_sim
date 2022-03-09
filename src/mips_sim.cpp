@@ -89,6 +89,7 @@ int main(int argc, char * argv[])
           if (err_v)
             cerr << " [0x" << Utils::hex32(err_v) << "]";
           cerr << endl;
+          exit(EXIT_FAILURE);
         }
       }
       break;
@@ -140,11 +141,13 @@ int main(int argc, char * argv[])
       assert(0);
   }
 
+  //ostream nullout(nullptr);
   try
   {
     for (size_t i = 0; cpu->is_ready() ; i++)
     //for (size_t i = 0; i < 13 ; i++)
     {
+      //cpu->next_cycle(nullout);
       cpu->next_cycle();
     }
   }
@@ -165,6 +168,9 @@ int main(int argc, char * argv[])
   cout << endl << "Instructions Memory:" << endl;
   mem->print_memory(MEM_TEXT_START, MEM_TEXT_SIZE, cout);
 
+  cout << endl << endl;
+  cpu->print_diagram();
+  
   return EXIT_SUCCESS;
 }
 

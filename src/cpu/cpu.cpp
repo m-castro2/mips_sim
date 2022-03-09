@@ -9,10 +9,13 @@ using namespace std;
 namespace mips_sim
 {
 
-Cpu::Cpu(shared_ptr<ControlUnit> _control_unit, shared_ptr<Memory> _memory)
-  : control_unit(_control_unit), memory(_memory)
+Cpu::Cpu(shared_ptr<Memory> _memory, shared_ptr<ControlUnit> _control_unit)
+  : memory(_memory), control_unit(_control_unit)
 {
   memory->snapshot(MEM_TEXT_REGION);
+
+  loaded_instructions.reserve(400);
+  loaded_instructions.push_back(0); /* start with a nop instruction */
 
   /* reset CPU but no memory */
   reset(false);
@@ -372,6 +375,11 @@ bool Cpu::run_to_cycle( uint32_t target_cycle )
   }
 
   return true;
+}
+
+void Cpu::print_diagram( ostream &out ) const
+{
+  out << "Diagram not implemented" << endl;
 }
 
 } /* namespace */

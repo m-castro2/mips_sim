@@ -74,12 +74,12 @@ class CpuMulti : public Cpu
       {UNDEF8,   UNDEF8,       UNDEF32, UNDEF32, UNDEF32}
     };
 
-    CpuMulti(std::shared_ptr<Memory>);
-    CpuMulti(std::shared_ptr<ControlUnit>, std::shared_ptr<Memory>);
+    // CpuMulti(std::shared_ptr<Memory>);
+    CpuMulti(std::shared_ptr<Memory>, std::shared_ptr<ControlUnit> = nullptr);
     virtual ~CpuMulti() override;
 
     virtual bool next_cycle( std::ostream &out = std::cout ) override;
-
+    virtual void print_diagram( std::ostream &out = std::cout ) const override;
   private:
 
     void write_instruction_register( uint32_t instruction_code,
@@ -93,6 +93,9 @@ class CpuMulti : public Cpu
     uint32_t ALU_OUT_REG[2];
     uint32_t MEM_DATA_REG;
     instruction_t instruction;
+
+    uint32_t diagram[400][10] = {};
+    uint32_t icycle;
 };
 
 } /* namespace */

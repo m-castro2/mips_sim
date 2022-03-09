@@ -14,12 +14,14 @@ namespace mips_sim
   constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
   constexpr op_microcode_t CpuPipelined::op_select[];
 
-  CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory)
-    : Cpu(std::shared_ptr<ControlUnit>(
-            new ControlUnit(CpuPipelined::uc_signal_bits,
-                            CpuPipelined::uc_microcode_matrix,
-                            nullptr)),
-            _memory)
+  CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory, std::shared_ptr<ControlUnit> _control_unit)
+    : Cpu(_memory,
+          _control_unit?_control_unit:
+            std::shared_ptr<ControlUnit>(
+              new ControlUnit(CpuPipelined::uc_signal_bits,
+                              CpuPipelined::uc_microcode_matrix,
+                              nullptr))
+         )
   {
     /* signals sorted in reverse order */
     signal_t signals_ID[] = {
@@ -40,26 +42,9 @@ namespace mips_sim
     pc_conditional_branch = 0;
     pc_register_jump      = 0;
     pc_instruction_jump   = 0;
-  }
 
-  CpuPipelined::CpuPipelined(std::shared_ptr<ControlUnit> _control_unit, std::shared_ptr<Memory> _memory)
-    : Cpu(_control_unit, _memory)
-  {
-    /* signals sorted in reverse order */
-    signal_t signals_ID[] = {
-      SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE, // WB stage
-      SIG_MEMREAD, SIG_MEMWRITE, // MEM stage
-      SIG_BRANCH, SIG_PCSRC, SIG_ALUSRC, SIG_ALUOP, SIG_REGDST}; // EX stage
-
-    /* build signals bitmask as the number of signals passed to the next stage */
-    sigmask[IF_ID]  = UNDEF32;
-    sigmask[ID_EX]  = control_unit->get_signal_bitmask(signals_ID, 10);
-    sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 7);
-    sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 3);
-
-    pc_write = true;
-    flush_pipeline = 0;
-    next_pc = 0;
+    loaded_instruction_index = 1;
+    loaded_instructions.push_back(PC);
   }
 
   CpuPipelined::~CpuPipelined()
@@ -102,6 +87,12 @@ namespace mips_sim
     uint32_t instruction_code;
     string cur_instr_name;
 
+    if (PC != loaded_instructions[loaded_instruction_index])
+    {
+      loaded_instruction_index++;
+      loaded_instructions.push_back(PC);
+    }
+
     out << "IF stage" << endl;
 
     /* fetch instruction */
@@ -135,9 +126,11 @@ namespace mips_sim
           assert(0);
       }
 
-
+      /* next instruction */
       next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
       next_seg_reg.data[SR_PC] = PC;
+
+      next_seg_reg.data[SR_IID] = loaded_instruction_index;
 
       if (!write_segmentation_register(IF_ID, next_seg_reg))
       {
@@ -170,12 +163,10 @@ namespace mips_sim
               && ex_regwrite
               && ex_regtype_match
               && (ex_memread || !can_forward);
-
     hazard |=    (mem_regdest == read_reg)
               && mem_regtype_match
               && mem_regwrite
               && !can_forward;
-
     return hazard;
   }
 
@@ -188,6 +179,7 @@ namespace mips_sim
     uint32_t microinstruction;
     bool stall = false;
     uint32_t rs_value, rt_value;
+    uint32_t reg_dest;
 
     /* get data from previous stage */
     uint32_t instruction_code = seg_regs[IF_ID].data[SR_INSTRUCTION];
@@ -310,6 +302,18 @@ namespace mips_sim
           }
         }
 
+        switch(control_unit->test(microinstruction, SIG_REGDST))
+        {
+          case 0:
+            reg_dest = instruction.rt; break;
+          case 1:
+            reg_dest = instruction.rd; break;
+          case 2:
+            reg_dest = 31; break;
+          default:
+            assert(0);
+        }
+
         /* send data to next stage */
         next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
         next_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask[ID_EX];
@@ -319,10 +323,13 @@ namespace mips_sim
         next_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
         next_seg_reg.data[SR_RT]      = instruction.rt;
         next_seg_reg.data[SR_RD]      = instruction.rd;
+        next_seg_reg.data[SR_REGDEST] = reg_dest;
         next_seg_reg.data[SR_FUNCT]   = instruction.funct;
         next_seg_reg.data[SR_OPCODE]  = instruction.opcode;
         next_seg_reg.data[SR_RS]      = instruction.rs;
         next_seg_reg.data[SR_SHAMT]   = instruction.shamt;
+
+        next_seg_reg.data[SR_IID]     = seg_regs[IF_ID].data[SR_IID];
       }
 
       if (!write_segmentation_register(ID_EX, next_seg_reg))
@@ -397,7 +404,6 @@ namespace mips_sim
     seg_reg_t next_seg_reg = {};
     uint32_t microinstruction = seg_regs[ID_EX].data[SR_SIGNALS];
     uint32_t alu_input_a, alu_input_b, alu_output;
-    uint32_t reg_dest;
 
     /* get data from previous stage */
     uint32_t instruction_code = seg_regs[ID_EX].data[SR_INSTRUCTION];
@@ -407,7 +413,6 @@ namespace mips_sim
     uint32_t addr_i   = seg_regs[ID_EX].data[SR_ADDR_I];
     uint32_t rs       = seg_regs[ID_EX].data[SR_RS];
     uint32_t rt       = seg_regs[ID_EX].data[SR_RT];
-    uint32_t rd       = seg_regs[ID_EX].data[SR_RD];
     uint32_t opcode   = seg_regs[ID_EX].data[SR_OPCODE];
     uint32_t funct    = seg_regs[ID_EX].data[SR_FUNCT];
     uint32_t shamt    = seg_regs[ID_EX].data[SR_SHAMT];
@@ -456,18 +461,6 @@ namespace mips_sim
         << Utils::hex32(alu_input_b) << " = 0x"
         << Utils::hex32(alu_output) << endl;
 
-    switch(control_unit->test(microinstruction, SIG_REGDST))
-    {
-      case 0:
-        reg_dest = rt; break;
-      case 1:
-        reg_dest = rd; break;
-      case 2:
-        reg_dest = 31; break;
-      default:
-        assert(0);
-    }
-
     /* send data to next stage */
     next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
     next_seg_reg.data[SR_PC]         = pc_value; /* bypass PC */
@@ -477,7 +470,9 @@ namespace mips_sim
                                                || ((alu_output != 0) && (opcode == OP_BNE));
     next_seg_reg.data[SR_ALUOUTPUT]  = alu_output;
     next_seg_reg.data[SR_RTVALUE]    = rt_value;
-    next_seg_reg.data[SR_REGDEST]    = reg_dest;
+    next_seg_reg.data[SR_REGDEST]    = seg_regs[ID_EX].data[SR_REGDEST];
+
+    next_seg_reg.data[SR_IID] = seg_regs[ID_EX].data[SR_IID];
 
     if (!write_segmentation_register(EX_MEM, next_seg_reg))
     {
@@ -542,6 +537,8 @@ namespace mips_sim
     next_seg_reg.data[SR_WORDREAD]    = word_read;
     next_seg_reg.data[SR_ALUOUTPUT]   = mem_addr; // come from alu output
     next_seg_reg.data[SR_REGDEST]     = seg_regs[EX_MEM].data[SR_REGDEST];
+
+    next_seg_reg.data[SR_IID] = seg_regs[EX_MEM].data[SR_IID];
 
     if (!write_segmentation_register(MEM_WB, next_seg_reg))
     {
@@ -623,6 +620,23 @@ namespace mips_sim
     return true;
   }
 
+  size_t CpuPipelined::get_current_instruction(size_t stage) const
+  {
+    assert(stage <= STAGE_WB);
+
+    uint32_t instruction_code;
+    if (stage == STAGE_IF)
+    {
+      instruction_code = loaded_instruction_index;
+    }
+    else
+    {
+      instruction_code = seg_regs[stage-1].data[SR_IID];
+    }
+
+    return instruction_code;
+  }
+
   bool CpuPipelined::next_cycle( ostream &out )
   {
     Cpu::next_cycle( out );
@@ -635,6 +649,19 @@ namespace mips_sim
     stage_ex(out);
     stage_id(out);
     stage_if(out);
+
+    //cout << setw(4) << cycle << " ";
+    for (size_t stage_id = 0; stage_id < STAGE_COUNT; ++stage_id)
+    {
+      size_t iindex = get_current_instruction(stage_id);
+      //uint32_t ipc = loaded_instructions[iindex];
+      //uint32_t icode = ipc?memory->mem_read_32(ipc):0;
+
+      diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
+
+      //cout << setw(25) << Utils::decode_instruction(icode);
+    }
+    //cout << endl;
 
     /* update segmentation registers */
     memcpy(seg_regs, next_seg_regs, sizeof(seg_regs));
@@ -656,4 +683,36 @@ namespace mips_sim
     return ready;
   }
 
+  void CpuPipelined::print_diagram( ostream &out ) const
+  {
+    out << setw(24) << " ";
+    for (size_t i = 1; i <= cycle; ++i)
+      out << setw(4) << i;
+    out << endl;
+
+    for (size_t i = 1; i < loaded_instructions.size(); ++i)
+    {
+      uint32_t ipc = loaded_instructions[i];
+      uint32_t icode = ipc?memory->mem_read_32(ipc):0;
+      uint32_t iindex = (ipc - MEM_TEXT_START)/4 + 1;
+      out << setw(2) << right << iindex << " " << setw(23) << left << Utils::decode_instruction(icode);
+      int runstate = 0;
+      for (size_t j = 1; j<=cycle && runstate < 2; j++)
+        if (diagram[i][j] > 0)
+        {
+          runstate = 1;
+          if (diagram[i][j] == diagram[i][j-1])
+            out << setw(4) << "--";
+          else
+            out << setw(4) << stage_names[diagram[i][j]-1];
+        }
+        else
+        {
+          if (runstate)
+            runstate = 2;
+          cout << setw(4) << " ";
+        }
+      out << endl;
+    }
+  }
 } /* namespace */
