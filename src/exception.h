@@ -5,8 +5,9 @@
 /* bits [0..5] - Specific type */
 #define MEMORY_EXCEPTION          64
 #define MEMORY_ALLOC_EXCEPTION    65
-#define MEMORY_READ_EXCEPTION     66
-#define MEMORY_WRITE_EXCEPTION    67
+#define MEMORY_LOCK_EXCEPTION     66
+#define MEMORY_ACCESS_EXCEPTION   67
+#define MEMORY_ALIGN_EXCEPTION    68
 
 #define PARSER_EXCEPTION          128
 #define PARSER_UNDEF_EXCEPTION    129

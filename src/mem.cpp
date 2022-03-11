@@ -147,18 +147,23 @@ mem_region_t Memory::get_memory_region(uint32_t address) const
   }
   else
   {
-    throw Exception::e(MEMORY_READ_EXCEPTION,
+    throw Exception::e(MEMORY_ACCESS_EXCEPTION,
                        "Invalid memory address",
                         address);
   }
 
-  throw Exception::e(MEMORY_READ_EXCEPTION,
+  throw Exception::e(MEMORY_LOCK_EXCEPTION,
                      "Access to invalid memory space",
                       address);
 }
 
 uint32_t Memory::mem_read_32(uint32_t address) const
 {
+  if (address & 0x3)
+    throw Exception::e(MEMORY_ALIGN_EXCEPTION,
+                       "Memory address is not aligned",
+                       address);
+
   mem_region_t mem_region = get_memory_region(address);
   uint32_t offset = address - mem_region.start;
 
@@ -184,6 +189,11 @@ uint8_t Memory::mem_read_8(uint32_t address) const
 
 void Memory::mem_write_32(uint32_t address, uint32_t value)
 {
+  if (address & 0x3)
+    throw Exception::e(MEMORY_ALIGN_EXCEPTION,
+                       "Memory address is not aligned",
+                       address);
+
   mem_region_t mem_region = get_memory_region(address);
   uint32_t offset = address - mem_region.start;
 
