@@ -23,6 +23,21 @@ Memory::Memory( void )
   }
 }
 
+void Memory::clear( void )
+{
+  for (size_t r=0; r<MEM_NREGIONS; r++)
+  {
+    assert(MEM_REGIONS[r].mem != nullptr);
+    memset(MEM_REGIONS[r].mem, 0, MEM_REGIONS[r].size);
+    if (MEM_SNAPSHOT[r].mem != nullptr)
+    {
+      free(MEM_SNAPSHOT[r].mem);
+      MEM_SNAPSHOT[r].mem = nullptr;
+    }
+  }
+  allocated_regions.clear();
+}
+
 void Memory::snapshot(int r)
 {
   if (MEM_SNAPSHOT[r].mem == nullptr)

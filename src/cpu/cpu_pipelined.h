@@ -1,6 +1,7 @@
 #ifndef MIPS_SIM_CPU_PIPELINED_H
 #define MIPS_SIM_CPU_PIPELINED_H
 
+/* processor stages */
 #define STAGE_IF      0
 #define STAGE_ID      1
 #define STAGE_EX      2
@@ -8,30 +9,33 @@
 #define STAGE_WB      4
 #define STAGE_COUNT   5
 
+/* segmentation register types */
 #define IF_ID  0
 #define ID_EX  1
 #define EX_MEM 2
 #define MEM_WB 3
 
-#define SR_SIGNALS      0
-#define SR_PC           1
-#define SR_RSVALUE      2
-#define SR_RTVALUE      3
-#define SR_ADDR_I       4
+/* data through segmentation registers */
+#define SR_INSTRUCTION  0
+#define SR_IID          1
+#define SR_PC           2
+#define SR_SIGNALS      3
+#define SR_OPCODE       4
 #define SR_RS           5
 #define SR_RT           6
 #define SR_RD           7
-#define SR_FUNCT        8
-#define SR_OPCODE       9
-#define SR_ALUOUTPUT   10
-#define SR_ALUZERO     11
-#define SR_RELBRANCH   12
+#define SR_SHAMT        8
+#define SR_FUNCT        9
+#define SR_RSVALUE     10
+#define SR_RTVALUE     11
+#define SR_ADDR_I      12
 #define SR_REGDEST     13
-#define SR_WORDREAD    14
-#define SR_SHAMT       15
-#define SR_IID         30
-#define SR_INSTRUCTION 31
+#define SR_ALUOUTPUT   14
+#define SR_ALUZERO     15
+#define SR_RELBRANCH   16
+#define SR_WORDREAD    17
 
+/* brahch processing options */
 #define BRANCH_FLUSH     0 /* flush pipeline */
 #define BRANCH_NON_TAKEN 1 /* fixed non taken */
 #define BRANCH_DELAYED   2 /* delayed branch */
@@ -43,11 +47,6 @@ namespace mips_sim
 
   const std::string stage_names[] = {"IF",  "ID",  "EX", "MEM", "WB"};
 
-
-const int  BRANCH_TYPE               = BRANCH_NON_TAKEN;
-const int  BRANCH_STAGE              = STAGE_ID;
-const bool HAS_FORWARDING_UNIT       = true;
-const bool HAS_HAZARD_DETECTION_UNIT = true;
 
 /* segmentation register */
 struct seg_reg_t {
@@ -113,13 +112,49 @@ class CpuPipelined : public Cpu
     };
 
     //CpuPipelined(std::shared_ptr<Memory>);
-    CpuPipelined(std::shared_ptr<Memory>, std::shared_ptr<ControlUnit> = nullptr);
+    CpuPipelined(std::shared_ptr<Memory>,
+                 std::shared_ptr<ControlUnit> = nullptr,
+                 int branch_type = BRANCH_NON_TAKEN,
+                 int branch_stage = STAGE_ID,
+                 bool has_forwarding_unit = true,
+                 bool has_hazard_detection_unit = true);
     virtual ~CpuPipelined() override;
 
-    virtual bool next_cycle( std::ostream &out = std::cout ) override;
-    virtual void print_diagram( std::ostream &out = std::cout ) const override;
+    virtual bool next_cycle( std::ostream & = std::cout ) override;
+    virtual void print_diagram( std::ostream & = std::cout ) const override;
+    virtual void print_status( std::ostream & = std::cout ) const override;
+    virtual void reset( bool reset_data_memory = true,
+                        bool reset_text_memory = true ) override;
 
+    void enable_hazard_detection_unit( bool );
+    void enable_forwarding_unit( bool );
+    void set_branch_stage( int );
+    void set_branch_type( int );
   private:
+
+    bool pc_write; /* if false, blocks pipeline */
+    uint32_t next_pc;
+    int flush_pipeline;
+    seg_reg_t seg_regs[STAGE_COUNT-1] = {};
+    uint32_t seg_regs_wrflag = 0;
+
+    seg_reg_t next_seg_regs[STAGE_COUNT-1] = {};
+
+    uint32_t sigmask[STAGE_COUNT-1] = {};
+
+    uint32_t pc_conditional_branch;
+    uint32_t pc_instruction_jump;
+    uint32_t pc_register_jump;
+
+    uint32_t loaded_instruction_index;
+    uint32_t diagram[400][400] = {};
+
+    /* configuration */
+    int  cpu_branch_type;
+    int  cpu_branch_stage;
+    bool cpu_has_forwarding_unit;
+    bool cpu_has_hazard_detection_unit;
+
     void stage_if( std::ostream &out = std::cout );
     void stage_id( std::ostream &out = std::cout );
     void stage_ex( std::ostream &out = std::cout );
@@ -134,10 +169,6 @@ class CpuPipelined : public Cpu
     //
     // seg_reg_t cop_seg_regs[DIV_DELAY + 2] = {};
 
-    bool pc_write; /* if false, blocks pipeline */
-    uint32_t next_pc;
-    int flush_pipeline;
-
     uint32_t forward_register( uint32_t reg, uint32_t reg_value,
                                bool fp_reg = false,
                                std::ostream &out = std::cout ) const;
@@ -151,20 +182,6 @@ class CpuPipelined : public Cpu
     /* return false in case of structural hazard */
     /* registers can be written once per cycle */
     bool write_segmentation_register(size_t index, seg_reg_t values);
-
-    seg_reg_t seg_regs[STAGE_COUNT-1] = {};
-    uint32_t seg_regs_wrflag = 0;
-
-    seg_reg_t next_seg_regs[STAGE_COUNT-1] = {};
-
-    uint32_t sigmask[STAGE_COUNT-1] = {};
-
-    uint32_t pc_conditional_branch;
-    uint32_t pc_instruction_jump;
-    uint32_t pc_register_jump;
-
-    uint32_t loaded_instruction_index;
-    uint32_t diagram[400][400] = {};
 };
 
 } /* namespace */

@@ -8,13 +8,19 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 using namespace std;
 
 namespace mips_sim
 {
-
 static size_t find_instruction(instruction_t instruction);
+
+bool Utils::file_exists (const string & filename)
+{
+  ifstream f(filename.c_str());
+  return f.good();
+}
 
 string Utils::hex32(const uint32_t value, const int length)
 {
@@ -87,7 +93,7 @@ static size_t find_instruction(instruction_t instruction)
   return instruction_index;
 }
 
-uint32_t Utils::find_instruction_by_name(const string opname)
+uint32_t Utils::find_instruction_by_name(const string & opname)
 {
   uint32_t instruction_index = UNDEF32;
   string instruction_name = opname;
@@ -114,7 +120,7 @@ uint32_t Utils::find_instruction_by_name(const string opname)
   return instruction_index;
 }
 
-uint8_t Utils::find_register_by_name(const string regname)
+uint8_t Utils::find_register_by_name(const string & regname)
 {
   uint8_t register_index = UNDEF8;
   for (uint8_t i=0; i<(sizeof(registers_def)/sizeof(register_format_t)); ++i)
@@ -324,7 +330,7 @@ instruction_t Utils::fill_instruction(const uint32_t instruction_code)
   return instruction;
 }
 
-uint32_t Utils::assemble_instruction(const string instruction_str)
+uint32_t Utils::assemble_instruction(const string & instruction_str)
 {
   uint32_t instcode = 0;
   char instruction_cstr[100];

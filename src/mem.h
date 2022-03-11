@@ -40,10 +40,10 @@ class Memory
   public:
     Memory( void );
     Memory( Memory const& ) = default;
-    ~Memory();
+    ~Memory( void );
 
-    void lock();
-    void unlock();
+    void lock( void );
+    void unlock( void );
 
     void allocate_space(uint32_t address, uint32_t size);
 
@@ -51,6 +51,8 @@ class Memory
     uint32_t mem_read_32(uint32_t address) const;
     void print_memory( uint32_t start, uint32_t length,
                        std::ostream &out = std::cout ) const;
+
+    void clear( void );
 
     /* these 2 functions allow to recover a specific state */
     void snapshot(int region);

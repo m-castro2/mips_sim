@@ -12,13 +12,11 @@ namespace mips_sim
 Cpu::Cpu(shared_ptr<Memory> _memory, shared_ptr<ControlUnit> _control_unit)
   : memory(_memory), control_unit(_control_unit)
 {
-  memory->snapshot(MEM_TEXT_REGION);
-
   loaded_instructions.reserve(400);
   loaded_instructions.push_back(0); /* start with a nop instruction */
 
   /* reset CPU but no memory */
-  reset(false);
+  reset(false, false);
 }
 
 Cpu::~Cpu() {}
@@ -28,7 +26,7 @@ bool Cpu::is_ready( void ) const
   return ready;
 }
 
-void Cpu::reset( bool reset_memory )
+void Cpu::reset( bool reset_data_memory, bool reset_text_memory )
 {
   PC = MEM_TEXT_START;
 
@@ -41,7 +39,10 @@ void Cpu::reset( bool reset_memory )
   memset(gpr, 0, 32 * sizeof(int));
   memset(fpr, 0, 32 * sizeof(int));
 
-  if (reset_memory)
+  if (reset_data_memory)
+    memory->reset(MEM_DATA_REGION);
+
+  if (reset_text_memory)
     memory->reset(MEM_TEXT_REGION);
 }
 
@@ -362,17 +363,26 @@ bool Cpu::next_cycle( ostream &out )
   return true;
 }
 
-bool Cpu::run_to_cycle( uint32_t target_cycle )
+uint32_t Cpu::get_cycle( void ) const
+{
+  return cycle;
+}
+
+bool Cpu::run_to_cycle( uint32_t target_cycle, ostream &out)
 {
   assert(target_cycle > 0);
 
-  /* reset CPU and memory text region */
-  reset( true );
-  while(cycle < target_cycle)
+  ostream nullostream(nullptr);
+
+  /* reset CPU and memory */
+  reset( true, true );
+
+  while(cycle < (target_cycle-1) && ready)
   {
-    if (!next_cycle())
+    if (!next_cycle(nullostream))
       return false;
   }
+  next_cycle(out);
 
   return true;
 }

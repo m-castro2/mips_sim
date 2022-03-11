@@ -14,15 +14,24 @@ namespace mips_sim
   constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
   constexpr op_microcode_t CpuPipelined::op_select[];
 
-  CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory, std::shared_ptr<ControlUnit> _control_unit)
+  CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory,
+                             std::shared_ptr<ControlUnit> _control_unit,
+                             int _branch_type,
+                             int _branch_stage,
+                             bool _has_forwarding_unit,
+                             bool _has_hazard_detection_unit)
     : Cpu(_memory,
           _control_unit?_control_unit:
             std::shared_ptr<ControlUnit>(
               new ControlUnit(CpuPipelined::uc_signal_bits,
                               CpuPipelined::uc_microcode_matrix,
                               nullptr))
-         )
+         ), cpu_branch_type(_branch_type),
+            cpu_branch_stage(_branch_stage),
+            cpu_has_forwarding_unit(_has_forwarding_unit),
+            cpu_has_hazard_detection_unit(_has_hazard_detection_unit)
   {
+
     /* signals sorted in reverse order */
     signal_t signals_ID[] = {
       SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE, // WB stage
@@ -62,7 +71,7 @@ namespace mips_sim
     uint32_t funct = instruction.funct;
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
 
-    bool conditional_branch = (BRANCH_STAGE == STAGE_ID) &&
+    bool conditional_branch = (cpu_branch_stage == STAGE_ID) &&
                               ((rs_value == rt_value && opcode == OP_BEQ)
                            || (rs_value != rt_value && opcode == OP_BNE));
 
@@ -144,7 +153,7 @@ namespace mips_sim
 
   bool CpuPipelined::detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg) const
   {
-    assert(HAS_HAZARD_DETECTION_UNIT);
+    assert(cpu_has_hazard_detection_unit);
     bool hazard;
 
     /* check next 2 registers as forwarding would happen on next cycle */
@@ -251,13 +260,13 @@ namespace mips_sim
       else
         rt_value = read_register(instruction.rt);
 
-      if (HAS_HAZARD_DETECTION_UNIT)
+      if (cpu_has_hazard_detection_unit)
       {
         //TODO: Branch stage can be decided using additional signals.
         // That way we don't need explicit comparisons here
-        bool can_forward = HAS_FORWARDING_UNIT &&
+        bool can_forward = cpu_has_forwarding_unit &&
                            ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ)
-                             || BRANCH_STAGE > STAGE_ID);
+                             || cpu_branch_stage > STAGE_ID);
 
         /* check for hazards */
         if (instruction.code > 0 && instruction.funct != SUBOP_SYSCALL
@@ -295,10 +304,13 @@ namespace mips_sim
             control_unit->set(microinstruction, SIG_PCSRC, 0);
           }
 
-          if (BRANCH_TYPE == BRANCH_FLUSH
-              || (BRANCH_TYPE == BRANCH_NON_TAKEN && branch_taken))
+          if (cpu_branch_type == BRANCH_FLUSH
+              || (cpu_branch_type == BRANCH_NON_TAKEN && branch_taken))
           {
             flush_pipeline = 1;
+
+            if (!branch_taken)
+              PC = pc_value-4;
           }
         }
 
@@ -345,7 +357,7 @@ namespace mips_sim
   uint32_t CpuPipelined::forward_register( uint32_t reg, uint32_t reg_value,
                                            bool fp_reg, ostream &out ) const
   {
-    assert(HAS_FORWARDING_UNIT);
+    assert(cpu_has_forwarding_unit);
 
     uint32_t mem_regdest  = seg_regs[EX_MEM].data[SR_REGDEST];
     uint32_t mem_regvalue = seg_regs[EX_MEM].data[SR_ALUOUTPUT];
@@ -422,7 +434,7 @@ namespace mips_sim
     out << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
 
     /* forwarding unit */
-    if (HAS_FORWARDING_UNIT)
+    if (cpu_has_forwarding_unit)
     {
       rs_value = forward_register(rs, rs_value, false, out);
       if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
@@ -495,20 +507,23 @@ namespace mips_sim
     uint32_t mem_addr         = seg_regs[EX_MEM].data[SR_ALUOUTPUT];
     uint32_t rt_value         = seg_regs[EX_MEM].data[SR_RTVALUE];
     uint32_t branch_addr      = seg_regs[EX_MEM].data[SR_RELBRANCH];
-    uint32_t alu_zero         = seg_regs[EX_MEM].data[SR_ALUZERO];
+    uint32_t branch_taken     = seg_regs[EX_MEM].data[SR_ALUZERO];
 
     out << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
 
-    if (BRANCH_STAGE == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
+    if (cpu_branch_stage == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
     {
       /* if conditional branches are resolved here */
-      if (BRANCH_TYPE == BRANCH_FLUSH
-          || (BRANCH_TYPE == BRANCH_NON_TAKEN && alu_zero))
+      if (cpu_branch_type == BRANCH_FLUSH
+          || (cpu_branch_type == BRANCH_NON_TAKEN && branch_taken))
       {
         flush_pipeline = 3;
+
+        if (!branch_taken)
+          PC = pc_value-4;
       }
 
-      if (alu_zero)
+      if (branch_taken)
       {
         out << "  BRANCH: Jump to 0x" << Utils::hex32(branch_addr) << endl;
 
@@ -687,7 +702,7 @@ namespace mips_sim
   {
     out << setw(24) << " ";
     for (size_t i = 1; i <= cycle; ++i)
-      out << setw(4) << i;
+      out << right << setw(4) << i;
     out << endl;
 
     for (size_t i = 1; i < loaded_instructions.size(); ++i)
@@ -714,5 +729,72 @@ namespace mips_sim
         }
       out << endl;
     }
+  }
+
+  void CpuPipelined::print_status( ostream &out ) const
+  {
+    out << "5-stage Pipelined CPU (IF/ID/EX/MEM/WB)" << endl;
+    out << "  Hazard detection unit: " << (cpu_has_hazard_detection_unit?"yes":"no") << endl;
+    out << "  Forwarding unit: " << (cpu_has_forwarding_unit?"yes":"no") << endl;
+    out << "  Conditional branches decided at " << (cpu_branch_stage==STAGE_ID?"ID":"MEM") << " stage" << endl;
+    out << "  Branch processing strategy: ";
+    if (cpu_branch_type == BRANCH_NON_TAKEN)
+      out << "Fixed non-taken" << endl;
+    else if (cpu_branch_type == BRANCH_FLUSH)
+      out << "Flush the pipeline" << endl;
+    else if (cpu_branch_type == BRANCH_NON_TAKEN)
+      out << "Delayed branch" << endl;
+    else
+      assert(0);
+    out << "  Multiplication delay: " << MULT_DELAY << " cycles"  << endl;
+    out << "  Division delay: " << DIV_DELAY << " cycles" << endl;
+    out << "  Floating Point Add delay: " << FP_ADD_DELAY << " cycles" << endl;
+  }
+
+  void CpuPipelined::reset( bool reset_data_memory, bool reset_text_memory )
+  {
+    Cpu::reset(reset_data_memory, reset_text_memory);
+
+    memset(seg_regs, 0, sizeof(seg_regs));
+    memset(next_seg_regs, 0, sizeof(next_seg_regs));
+    memset(diagram, 0, sizeof(diagram));
+
+    pc_write = true;
+    flush_pipeline = 0;
+    next_pc = 0;
+
+    pc_conditional_branch = 0;
+    pc_register_jump      = 0;
+    pc_instruction_jump   = 0;
+
+    loaded_instruction_index = 1;
+    loaded_instructions.clear();
+    loaded_instructions.push_back(PC);
+  }
+
+  void CpuPipelined::enable_hazard_detection_unit(bool enabled)
+  {
+    cpu_has_hazard_detection_unit = enabled;
+  }
+
+  void CpuPipelined::enable_forwarding_unit(bool enabled)
+  {
+    cpu_has_forwarding_unit = enabled;
+  }
+
+  void CpuPipelined::set_branch_stage(int branch_stage)
+  {
+    if (branch_stage != STAGE_ID && branch_stage != STAGE_MEM)
+      throw Exception::e(CPU_EXCEPTION, "Branch decision should be at ID or MEM stages only");
+
+    cpu_branch_stage = branch_stage;
+  }
+
+  void CpuPipelined::set_branch_type(int branch_type)
+  {
+    if (branch_type != BRANCH_NON_TAKEN && branch_type != BRANCH_FLUSH && branch_type != BRANCH_DELAYED)
+      throw Exception::e(CPU_UNDEF_EXCEPTION, "Undefined branch processing technique");
+
+    cpu_branch_type = branch_type;
   }
 } /* namespace */

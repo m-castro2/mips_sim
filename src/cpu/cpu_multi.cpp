@@ -403,4 +403,12 @@ namespace mips_sim
     }
   }
 
+  void CpuMulti::print_status( ostream &out ) const
+  {
+    out << "Multicycle CPU" << endl;
+    out << "  Multiplication delay: " << MULT_DELAY << " cycles"  << endl;
+    out << "  Division delay: " << DIV_DELAY << " cycles" << endl;
+    out << "  Floating Point Add delay: " << FP_ADD_DELAY << " cycles" << endl;
+  }
+
 } /* namespace */

@@ -71,8 +71,8 @@
   static vector<Instruction> instructions;
   static vector<Memsection> memsections;
 
-  static uint32_t line = 0;
-  static uint32_t mem_pos = 0;
+  static uint32_t line;
+  static uint32_t mem_pos;
 
 %}
 
@@ -375,11 +375,28 @@ static void setup_memory(shared_ptr<Memory> memory)
 
 int assemble_file(const char filename[], shared_ptr<Memory> memory)
 {
-  int retval;
-  yyin = fopen(filename, "r");
-  retval = yyparse();
-  fclose(yyin);
+  int retval = 1;
 
+  /* reset stuff */
+  memory->clear();
+  values.clear();
+  labels.clear();
+  instructions.clear();
+  memsections.clear();
+  line = 0;
+  mem_pos = 0;
+
+  /* parse file */
+  if (Utils::file_exists(filename))
+  {
+    yyin = fopen(filename, "r");
+    retval = yyparse();
+    fclose(yyin);
+
+    yylex_destroy();
+  }
+
+  /* process file */
   if (retval)
   {
     return 1;

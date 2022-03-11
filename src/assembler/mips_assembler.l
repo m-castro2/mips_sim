@@ -12,6 +12,7 @@ using namespace mips_sim;
 
 extern "C"
 {
+  int yylex_destroy(void);  
   int yylex( void );
 }
 %}

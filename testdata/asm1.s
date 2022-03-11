@@ -5,7 +5,6 @@
 Loop:
     add $t1, $t1, $s0
     sw $8, 0($a0)
-    sw $8, 4($a0)
     addi $8, $8, -1
     addi $a0, $a0, 4
     bne $8, $0, Loop
@@ -15,4 +14,4 @@ Loop:
     
 .data
 
-Mem: .space 20
+Mem: .space 100

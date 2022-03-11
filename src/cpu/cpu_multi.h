@@ -80,6 +80,7 @@ class CpuMulti : public Cpu
 
     virtual bool next_cycle( std::ostream &out = std::cout ) override;
     virtual void print_diagram( std::ostream &out = std::cout ) const override;
+    virtual void print_status( std::ostream &out = std::cout ) const override;
   private:
 
     void write_instruction_register( uint32_t instruction_code,

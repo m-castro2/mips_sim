@@ -36,11 +36,14 @@ public:
   float read_register_f( size_t reg_index) const;
   double read_register_d( size_t reg_index) const;
 
-  void reset( bool reset_memory = true );
+  virtual void reset( bool reset_data_memory = true,
+                      bool reset_text_memory = true );
 
   virtual bool next_cycle( std::ostream &out = std::cout );
   virtual void print_diagram( std::ostream &out = std::cout ) const;
-  bool run_to_cycle( uint32_t cycle );
+  virtual void print_status( std::ostream &out = std::cout ) const = 0;
+  uint32_t get_cycle( void ) const;
+  bool run_to_cycle( uint32_t cycle, std::ostream &out = std::cout );
 
 protected:
 

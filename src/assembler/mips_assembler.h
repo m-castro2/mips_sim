@@ -8,7 +8,6 @@
 
 namespace mips_sim
 {
-
 int assemble_file(const char filename[], std::shared_ptr<mips_sim::Memory> memory);
 void print_file(std::string output_file);
 
