@@ -83,31 +83,33 @@ class CpuPipelined : public Cpu
       {X, 0, X, 0, 0, X, 1, 1, 1, 1, X, X, 0, 2, 0, X}, //  9 FType add/sub/mul/div
       {X, 0, X, 1, 0, X, 0, 1, 0, 1, X, X, 1, 0, 0, X}, // 10 LWC1
       {X, 0, X, 0, 1, X, 0, 1, 0, 0, X, X, 1, 0, 0, X}, // 11 SWC1
+      {X, 0, X, 0, 0, X, 0, 0, 0, 0, X, X, 0, 2, 0, X}, // 12 SYSCALL
       {0} // end
     };
 
     static constexpr op_microcode_t op_select[] =
     {
-      {OP_RTYPE, SUBOP_JR,    2},
-      {OP_RTYPE, SUBOP_JALR,  4},
-      {OP_RTYPE, UNDEF8,      0},
-      {OP_J,     UNDEF8,      1},
-      {OP_JAL,   UNDEF8,      3},
-      {OP_BNE,   UNDEF8,      5},
-      {OP_BEQ,   UNDEF8,      5},
-      {OP_LW,    UNDEF8,      6},
-      {OP_LWC1,  UNDEF8,     10},
-      {OP_SW,    UNDEF8,      7},
-      {OP_SWC1,  UNDEF8,     11},
-      {OP_FTYPE, SUBOP_FPADD, 9},
-      {OP_FTYPE, SUBOP_FPSUB, 9},
-      {OP_FTYPE, SUBOP_FPMUL, 9},
-      {OP_FTYPE, SUBOP_FPDIV, 9},
-      {OP_FTYPE, SUBOP_FPCEQ, 8},
-      {OP_FTYPE, SUBOP_FPCLE, 8},
-      {OP_FTYPE, SUBOP_FPCLT, 8},
-      {OP_FTYPE, UNDEF8     , 5}, // bc1t / bc1f
-      {UNDEF8,   UNDEF8,      8}   // I type
+      {OP_RTYPE, SUBOP_JR,       2},
+      {OP_RTYPE, SUBOP_JALR,     4},
+      {OP_RTYPE, SUBOP_SYSCALL, 12},
+      {OP_RTYPE, UNDEF8,         0},
+      {OP_J,     UNDEF8,         1},
+      {OP_JAL,   UNDEF8,         3},
+      {OP_BNE,   UNDEF8,         5},
+      {OP_BEQ,   UNDEF8,         5},
+      {OP_LW,    UNDEF8,         6},
+      {OP_LWC1,  UNDEF8,        10},
+      {OP_SW,    UNDEF8,         7},
+      {OP_SWC1,  UNDEF8,        11},
+      {OP_FTYPE, SUBOP_FPADD,    9},
+      {OP_FTYPE, SUBOP_FPSUB,    9},
+      {OP_FTYPE, SUBOP_FPMUL,    9},
+      {OP_FTYPE, SUBOP_FPDIV,    9},
+      {OP_FTYPE, SUBOP_FPCEQ,    8},
+      {OP_FTYPE, SUBOP_FPCLE,    8},
+      {OP_FTYPE, SUBOP_FPCLT,    8},
+      {OP_FTYPE, UNDEF8     ,    5}, // bc1t / bc1f
+      {UNDEF8,   UNDEF8,         8}   // I type
 
     };
 

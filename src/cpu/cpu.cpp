@@ -188,6 +188,16 @@ void Cpu::syscall( uint32_t value )
       break;
     case 4:
       //TODO: print_string $a0
+      {
+        uint32_t address = gpr[Utils::find_register_by_name("$a0")];
+        uint32_t alloc_length = memory->get_allocated_length(address);
+        stringstream ss;
+        for (uint32_t i=0; i<alloc_length; ++i)
+        {
+          ss << static_cast<char>(memory->mem_read_8(address + i));
+        }
+        cout << "[SYSCALL] " << ss.str() << endl;
+      }
       break;
     case 5:
       //TODO: read_integer $v0

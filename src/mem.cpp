@@ -101,7 +101,22 @@ void Memory::allocate_space(uint32_t address, uint32_t size)
                         address);
 }
 
-uint32_t Memory::mem_read_32(uint32_t address) const
+uint32_t Memory::get_allocated_length(uint32_t address) const
+{
+  for (mem_region_t block : allocated_regions)
+  {
+    if (address >= block.start && address < block.start + block.size)
+    {
+      return block.start + block.size - address;
+    }
+  }
+
+  throw Exception::e(MEMORY_ALLOC_EXCEPTION,
+                     "Unallocated memory address",
+                      address);
+}
+
+mem_region_t Memory::get_memory_region(uint32_t address) const
 {
   bool valid_address = !locked;
 
@@ -126,76 +141,64 @@ uint32_t Memory::mem_read_32(uint32_t address) const
       if (address >= MEM_REGIONS[i].start &&
               address < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
       {
-        uint32_t offset = address - MEM_REGIONS[i].start;
-
-        uint32_t v = static_cast<uint32_t>
-           ((MEM_REGIONS[i].mem[offset+3] << 24) |
-            (MEM_REGIONS[i].mem[offset+2] << 16) |
-            (MEM_REGIONS[i].mem[offset+1] <<  8) |
-            (MEM_REGIONS[i].mem[offset+0] <<  0));
-
-        return v;
+        return MEM_REGIONS[i];
       }
     }
   }
   else
   {
     throw Exception::e(MEMORY_READ_EXCEPTION,
-                       "Invalid read memory address",
+                       "Invalid memory address",
                         address);
   }
 
   throw Exception::e(MEMORY_READ_EXCEPTION,
-                     "Read to invalid memory space",
+                     "Access to invalid memory space",
                       address);
+}
+
+uint32_t Memory::mem_read_32(uint32_t address) const
+{
+  mem_region_t mem_region = get_memory_region(address);
+  uint32_t offset = address - mem_region.start;
+
+  uint32_t v = static_cast<uint32_t>
+           ((mem_region.mem[offset+3] << 24) |
+            (mem_region.mem[offset+2] << 16) |
+            (mem_region.mem[offset+1] <<  8) |
+            (mem_region.mem[offset+0] <<  0));
+
+  return v;
+}
+
+uint8_t Memory::mem_read_8(uint32_t address) const
+
+{
+  mem_region_t mem_region = get_memory_region(address);
+  uint32_t offset = address - mem_region.start;
+
+  uint8_t v = mem_region.mem[offset];
+
+  return v;
 }
 
 void Memory::mem_write_32(uint32_t address, uint32_t value)
 {
-  bool valid_address = !locked;
+  mem_region_t mem_region = get_memory_region(address);
+  uint32_t offset = address - mem_region.start;
 
-  if (locked)
-  {
-    /* check if address is valid */
-    for (mem_region_t region : allocated_regions)
-    {
-      if (address >= region.start &&
-          address < (region.start + region.size))
-      {
-        valid_address = true;
-        break;
-      }
-    }
-  }
+  mem_region.mem[offset+3] = (value >> 24) & 0xFF;
+  mem_region.mem[offset+2] = (value >> 16) & 0xFF;
+  mem_region.mem[offset+1] = (value >>  8) & 0xFF;
+  mem_region.mem[offset+0] = (value >>  0) & 0xFF;
+}
 
-  if (valid_address)
-  {
-    for (size_t i = 0; i < MEM_NREGIONS; i++)
-    {
-      if (address >= MEM_REGIONS[i].start &&
-              address < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
-      {
-        uint32_t offset = address - MEM_REGIONS[i].start;
+void Memory::mem_write_8(uint32_t address, uint8_t value)
+{
+  mem_region_t mem_region = get_memory_region(address);
+  uint32_t offset = address - mem_region.start;
 
-        MEM_REGIONS[i].mem[offset+3] = (value >> 24) & 0xFF;
-        MEM_REGIONS[i].mem[offset+2] = (value >> 16) & 0xFF;
-        MEM_REGIONS[i].mem[offset+1] = (value >>  8) & 0xFF;
-        MEM_REGIONS[i].mem[offset+0] = (value >>  0) & 0xFF;
-
-        return;
-      }
-    }
-  }
-  else
-  {
-    throw Exception::e(MEMORY_WRITE_EXCEPTION,
-                       "Invalid write memory addresss",
-                        address);
-  }
-
-  throw Exception::e(MEMORY_WRITE_EXCEPTION,
-                     "Write to invalid memory space",
-                      address);
+  mem_region.mem[offset] = value;
 }
 
 void Memory::print_memory( uint32_t start, uint32_t length, ostream &out ) const

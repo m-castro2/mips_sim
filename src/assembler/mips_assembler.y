@@ -269,7 +269,9 @@ instruction:
         {
           type = MEM_TYPE_STRING;
           assert(values.size() == 1);
-          mem_pos += values[0].length();
+          /* round up to word size */
+          mem_pos += values[0].length()
+                  + ((values[0].length()%4)?(4-values[0].length()%4):0);
         }
         else if (!strcmp($2, "space"))
         {
@@ -301,7 +303,10 @@ instruction:
       }
       | TEXTVALUE
       {
-        values.push_back($1);
+        string s = $1;
+        /* remove quotes */
+        assert(s[0] == s[s.length()-1] && s[0] == '\"');
+        values.push_back(s.substr(1, s.length()-2));
       }
 %%
 
@@ -349,8 +354,15 @@ static void setup_memory(shared_ptr<Memory> memory)
       }
       else if (memsection.type == MEM_TYPE_STRING)
       {
-        //TODO: Save text
-        assert(0);
+        uint32_t writevalue;
+        uint32_t str_len = s.length();
+
+        for (uint32_t i=0; i<str_len; i++)
+        {
+          memory->mem_write_8(next_address + i, static_cast<uint8_t>(s[i]));
+        }
+
+        next_address += memsection.length;
       }
       else if (memsection.type == MEM_TYPE_SPACE)
       {
@@ -369,7 +381,6 @@ static void setup_memory(shared_ptr<Memory> memory)
     /* Read in the program. */
     memory->mem_write_32(next_address, instruction.instcode);
     next_address += 4;
-    //words_read++;
   }
 }
 

@@ -46,9 +46,12 @@ class Memory
     void unlock( void );
 
     void allocate_space(uint32_t address, uint32_t size);
+    uint32_t get_allocated_length(uint32_t address) const;
 
     void mem_write_32(uint32_t address, uint32_t value);
+    void mem_write_8(uint32_t address, uint8_t value);
     uint32_t mem_read_32(uint32_t address) const;
+    uint8_t mem_read_8(uint32_t address) const;
     void print_memory( uint32_t start, uint32_t length,
                        std::ostream &out = std::cout ) const;
 
@@ -57,7 +60,11 @@ class Memory
     /* these 2 functions allow to recover a specific state */
     void snapshot(int region);
     void reset(int region);
+
   private:
+
+    mem_region_t get_memory_region(uint32_t address) const;
+
     bool locked; /* if true, only reserved space can be accessed */
 
     mem_region_t MEM_REGIONS[5] = {
