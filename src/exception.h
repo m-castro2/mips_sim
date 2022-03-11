@@ -21,6 +21,8 @@
 #define CPU_EXCEPTION            256
 #define CPU_UNIMPL_EXCEPTION     257
 #define CPU_UNDEF_EXCEPTION      258
+#define CPU_SYSCALL_EXCEPTION    259
+#define CPU_REG_EXCEPTION        260
 
 namespace mips_sim
 {

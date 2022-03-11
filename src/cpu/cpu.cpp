@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "../utils.h"
+#include "../exception.h"
 
 #include <cassert>
 #include <sstream>
@@ -128,7 +129,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
     }
       break;
     default:
-      assert(0);
+      throw Exception::e(CPU_UNDEF_EXCEPTION, "Undefined ALU operation ", alu_op);
   }
 
   return alu_output;
@@ -164,7 +165,7 @@ uint32_t Cpu::alu_compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_
       alu_output = alu_input_b<<16;
       break;
     default:
-      assert(0);
+      throw Exception::e(CPU_UNDEF_EXCEPTION, "Undefined ALU operation ", alu_op);
   }
 
   return alu_output;
@@ -175,20 +176,20 @@ void Cpu::syscall( uint32_t value )
   switch(value)
   {
     case 1:
-      //TODO: print_integer $a0
+      /* print_integer $a0 */
       cout << "[SYSCALL] " << gpr[Utils::find_register_by_name("$a0")] << endl;
       break;
     case 2:
-      //TODO: print_float $f12
+      /* print_float $f12 */
       cout << "[SYSCALL] " << Utils::word_to_float(&fpr[12]) << endl;
       break;
     case 3:
-      //TODO: print_double $f12
+      /* print_double $f12 */
       cout << "[SYSCALL] " << Utils::word_to_double(&fpr[12]) << endl;
       break;
     case 4:
-      //TODO: print_string $a0
       {
+        /* print_string $a0 */
         uint32_t address = gpr[Utils::find_register_by_name("$a0")];
         uint32_t alloc_length = memory->get_allocated_length(address);
         stringstream ss;
@@ -220,10 +221,24 @@ void Cpu::syscall( uint32_t value )
       ready = false;
       break;
     case 41:
-      //TODO: random_integer $a0(seed) $a0
+      {
+        /* random_integer $a0(seed) --> $a0 */
+        srand(gpr[Utils::find_register_by_name("$a0")]);
+        int rvalue = rand();
+        cout << "[SYSCALL] Random integer: " << rvalue << endl;
+        gpr[Utils::find_register_by_name("$a0")] = static_cast<uint32_t>(rvalue);
+      }
       break;
     case 42:
-      //TODO: random_int_range $a0(seed), $a1(upper bound) $a0
+      {
+        /* random_integer < $a1, $a0(seed) --> $a0 */
+        int rvalue, ulimit;
+        srand(gpr[Utils::find_register_by_name("$a0")]);
+        ulimit = static_cast<int>(gpr[Utils::find_register_by_name("$a1")]);
+        rvalue = rand() % ulimit;
+        cout << "[SYSCALL] Random integer below " << ulimit << ": " << rvalue << endl;
+        gpr[Utils::find_register_by_name("$a0")] = static_cast<uint32_t>(rvalue);
+      }
       break;
     case 43:
       //TODO: random_float $a0(seed) $f0
@@ -232,9 +247,7 @@ void Cpu::syscall( uint32_t value )
       //TODO: random_double $a0(seed) $f0
       break;
     default:
-      //TODO: Exception
-      cout << "Undefined syscall " << value << endl;
-      assert(0);
+      throw Exception::e(CPU_SYSCALL_EXCEPTION, "Undefined syscall", value);
   }
 }
 
@@ -321,7 +334,8 @@ uint32_t Cpu::read_fp_register( size_t reg_index) const
 
 void Cpu::write_register( size_t reg_index, uint32_t value)
 {
-  assert(reg_index != 0); // cannot write $0
+  if (reg_index == 0)
+    throw Exception::e(CPU_REG_EXCEPTION, "Cannot write register $0");
   assert(reg_index < 32);
 
   gpr[reg_index] = value;
@@ -357,8 +371,10 @@ double Cpu::read_register_d( size_t reg_index ) const
 
 void Cpu::write_register_d( size_t reg_index, double value )
 {
+  if (reg_index % 2 == 1)
+    throw Exception::e(CPU_REG_EXCEPTION, "Invalid register for double precision");
+
   assert(reg_index < 32);
-  assert(reg_index % 2 == 0);
 
   Utils::double_to_word(value, &fpr[reg_index]);
 }
