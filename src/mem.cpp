@@ -75,30 +75,61 @@ void Memory::lock() { locked = true; }
 
 void Memory::unlock() { locked = false; }
 
-void Memory::allocate_space(uint32_t address, uint32_t size)
+uint32_t Memory::allocate_space(uint32_t size, uint32_t address)
 {
-    for (size_t i = 0; i < MEM_NREGIONS; i++)
+  mem_region_t mem_region;
+  uint32_t alloc_address = address;
+
+  if (alloc_address)
+  {
+    bool locked_state = locked;
+
+    /* check for collision with another block */
+    for (mem_region_t region : allocated_regions)
     {
-      if (address >= MEM_REGIONS[i].start &&
-              (address) < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
+      if (alloc_address >= region.start &&
+          alloc_address < (region.start + region.size))
       {
-        if ((address + size) < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
-        {
-          allocated_regions.push_back({address, size, nullptr});
-        }
-        else
-        {
-          stringstream ss;
-          ss << "Memory allocation beyond the region limit: Address "
-             << Utils::hex32(address) << " / size " << size << " Bytes";
-          throw Exception::e(MEMORY_ALLOC_EXCEPTION, ss.str());
-        }
-        return;
+        throw Exception::e(MEMORY_ALLOC_EXCEPTION,
+                           "Memory allocation overlaps another region",
+                           alloc_address);
       }
     }
-    throw Exception::e(MEMORY_ALLOC_EXCEPTION,
-                       "Invalid memory space allocation",
-                        address);
+    /* temporary unlock memory for allocation */
+    locked = false;
+    mem_region = get_memory_region(address);
+    locked = locked_state;
+  }
+  else
+  {
+    /* select next free space */
+    mem_region = MEM_REGIONS[MEM_DATA_REGION];
+    alloc_address = MEM_DATA_START;
+
+    /* select last free address */
+    for (mem_region_t region : allocated_regions)
+    {
+      if (get_memory_region(region.start).start == MEM_DATA_START)
+      {
+        uint32_t end_address = region.start + region.size;
+        alloc_address = (alloc_address < end_address)?end_address:alloc_address;
+      }
+    }
+  }
+
+  if ((alloc_address + size) < (mem_region.start + mem_region.size))
+  {
+    allocated_regions.push_back({alloc_address, size, nullptr});
+  }
+  else
+  {
+    stringstream ss;
+    ss << "Memory allocation beyond the region limit: Address "
+       << Utils::hex32(alloc_address) << " / size " << size << " Bytes";
+    throw Exception::e(MEMORY_ALLOC_EXCEPTION, ss.str());
+  }
+
+  return alloc_address;
 }
 
 uint32_t Memory::get_allocated_length(uint32_t address) const
@@ -114,6 +145,16 @@ uint32_t Memory::get_allocated_length(uint32_t address) const
   throw Exception::e(MEMORY_ALLOC_EXCEPTION,
                      "Unallocated memory address",
                       address);
+}
+
+bool Memory::address_aligned( uint32_t address ) const
+{
+  return Utils::address_align_4(address) == address;
+}
+
+uint32_t Memory::align_address( uint32_t address ) const
+{
+  return Utils::address_align_4(address);
 }
 
 mem_region_t Memory::get_memory_region(uint32_t address) const

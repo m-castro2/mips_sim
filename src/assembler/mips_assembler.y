@@ -270,8 +270,7 @@ instruction:
           type = MEM_TYPE_STRING;
           assert(values.size() == 1);
           /* round up to word size */
-          mem_pos += values[0].length()
-                  + ((values[0].length()%4)?(4-values[0].length()%4):0);
+          mem_pos += Utils::address_align_4(values[0].length());
         }
         else if (!strcmp($2, "space"))
         {
@@ -318,6 +317,7 @@ namespace mips_sim
 static void setup_memory(shared_ptr<Memory> memory)
 {
   uint32_t next_address;
+  uint32_t alloc_address;
   uint32_t words_to_mem[2];
 
   memory->lock();
@@ -325,8 +325,9 @@ static void setup_memory(shared_ptr<Memory> memory)
   next_address = MEM_DATA_START;
   for (Memsection memsection : memsections)
   {
-    memory->allocate_space(next_address,
-                           memsection.length);
+    alloc_address = memory->allocate_space(memsection.length);
+    assert(alloc_address == next_address);
+
     /* copy data */
     for (string s : memsection.values)
     {
@@ -372,8 +373,9 @@ static void setup_memory(shared_ptr<Memory> memory)
   }
 
   /* process code memory */
-  memory->allocate_space(MEM_TEXT_START,
-                         static_cast<uint32_t>((instructions.size()+4) * 4));
+  alloc_address = memory->allocate_space(static_cast<uint32_t>((instructions.size()+4) * 4),
+                                         MEM_TEXT_START);
+  assert(alloc_address == MEM_TEXT_START);
 
   next_address = MEM_TEXT_START;
   for (Instruction instruction : instructions)

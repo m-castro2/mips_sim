@@ -12,6 +12,8 @@ class Utils
 public:
   static bool file_exists(const std::string & filename);
 
+  static uint32_t address_align_4(uint32_t address);
+  
   static std::string hex32(const uint32_t value, const int length=8);
   static void float_to_word(const float f, OUT uint32_t word[]);
   static void double_to_word(const double f, OUT uint32_t word[]);

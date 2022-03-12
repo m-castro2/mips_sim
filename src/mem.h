@@ -7,8 +7,8 @@
 #include <iostream>
 #include <vector>
 
-#define MEM_DATA_REGION  0
-#define MEM_TEXT_REGION  1
+#define MEM_TEXT_REGION  0
+#define MEM_DATA_REGION  1
 #define MEM_STACK_REGION 2
 #define MEM_KDATA_REGION 3
 #define MEM_KTEXT_REGION 4
@@ -45,8 +45,15 @@ class Memory
     void lock( void );
     void unlock( void );
 
-    void allocate_space(uint32_t address, uint32_t size);
+    /**
+     * if address = 0, sets the new block contiguously in data memory
+     * returns address of allocated block
+     */
+    uint32_t allocate_space(uint32_t size, uint32_t address = 0);
     uint32_t get_allocated_length(uint32_t address) const;
+
+    bool address_aligned( uint32_t address ) const;
+    uint32_t align_address( uint32_t address ) const;
 
     void mem_write_32(uint32_t address, uint32_t value);
     void mem_write_8(uint32_t address, uint8_t value);

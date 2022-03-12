@@ -22,6 +22,13 @@ bool Utils::file_exists (const string & filename)
   return f.good();
 }
 
+uint32_t Utils::address_align_4( uint32_t address )
+{
+  uint32_t padding = (address & 3)?(4 - (address & 3)):0;
+
+  return address + padding;
+}
+
 string Utils::hex32(const uint32_t value, const int length)
 {
   stringstream ss;

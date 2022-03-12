@@ -201,22 +201,78 @@ void Cpu::syscall( uint32_t value )
       }
       break;
     case 5:
-      //TODO: read_integer $v0
+      {
+        /* read_integer -> $v0 */
+        //TODO: Fails in CLI mode
+        int readvalue;
+        cout << "[SYSCALL] Input an integer value: ";
+        cin >> readvalue;
+        gpr[Utils::find_register_by_name("$v0")] = static_cast<uint32_t>(readvalue);
+      }
       break;
     case 6:
-      //TODO: read_float $f0
+      {
+        /* read_float -> $f0 */
+        //TODO: Fails in CLI mode
+        float readvalue;
+        cout << "[SYSCALL] Input a float value: ";
+        cin >> readvalue;
+        Utils::float_to_word(readvalue, &fpr[Utils::find_register_by_name("$f0")]);
+      }
       break;
     case 7:
-      //TODO: read_double $f0
+      {
+        /* read_double -> $f0 */
+        //TODO: Fails in CLI mode
+        double readvalue;
+        cout << "[SYSCALL] Input a double value: ";
+        cin >> readvalue;
+        Utils::double_to_word(readvalue, &fpr[Utils::find_register_by_name("$f0")]);
+      }
       break;
     case 8:
-      //TODO: read_string $a0(str), $a1(chars to read)
+      {
+        /* read_string -> $a0 of up to $a1 chars ma*/
+        //TODO: Fails in CLI mode
+        string readvalue;
+        uint32_t address = gpr[Utils::find_register_by_name("$a0")];
+        uint32_t max_length = gpr[Utils::find_register_by_name("$a1")];
+        uint32_t str_len;
+
+        cout << "[SYSCALL] Input a string value [max_length=" << max_length << "]: ";
+        cin >> readvalue;
+        str_len = static_cast<uint32_t>(readvalue.length());
+
+        if (str_len > max_length)
+          str_len = max_length;
+
+        for (uint32_t i=0; i<str_len; i++)
+        {
+          memory->mem_write_8(address + i, static_cast<uint8_t>(readvalue[i]));
+        }
+
+        //gpr[Utils::find_register_by_name("$a1")] = static_cast<uint32_t>(str_len);
+      }
       break;
     case 9:
-      //TODO: sbrk $a0(bytes to allocate) $v0(address)
+      {
+        /* allocate $a0 Bytes in data memory. Returns address in $v0 */
+        uint32_t block_size = gpr[Utils::find_register_by_name("$a0")];
+        uint32_t address;
+
+        /* align block size with memory */
+        block_size = memory->align_address(block_size);
+
+        address = memory->allocate_space(block_size);
+
+        cout << "[SYSCALL] " << block_size << " Bytes allocated at " << Utils::hex32(address) << endl;
+
+        gpr[Utils::find_register_by_name("$v0")] = address;
+      }
       break;
     case 10:
       //TODO: Send stop signal or something
+      /* exit program */
       cout << "[SYSCALL] Program done." << endl;
       ready = false;
       break;
@@ -241,10 +297,22 @@ void Cpu::syscall( uint32_t value )
       }
       break;
     case 43:
-      //TODO: random_float $a0(seed) $f0
+      {
+        /* random_float $a0(seed) --> $f0 */
+        srand(gpr[Utils::find_register_by_name("$a0")]);
+        float rvalue = rand() / 0x7FFFFFFF;
+        cout << "[SYSCALL] Random float: " << rvalue << endl;
+        Utils::float_to_word(rvalue, &fpr[Utils::find_register_by_name("$f0")]);
+      }
       break;
     case 44:
-      //TODO: random_double $a0(seed) $f0
+      {
+        /* random_double $a0(seed) --> $f0 */
+        srand(gpr[Utils::find_register_by_name("$a0")]);
+        double rvalue = rand() / 0x7FFFFFFF;
+        cout << "[SYSCALL] Random float: " << rvalue << endl;
+        Utils::double_to_word(rvalue, &fpr[Utils::find_register_by_name("$f0")]);
+      }
       break;
     default:
       throw Exception::e(CPU_SYSCALL_EXCEPTION, "Undefined syscall", value);

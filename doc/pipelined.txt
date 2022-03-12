@@ -34,3 +34,19 @@ Signals:
                 1: Conditional branch
                 2: J branch [TODO]
   CTRL_DIR      Not used
+
+
+Syscalls: 1: Print integer $a0
+          2: Print float $f12
+          3: Print double $f12
+          4: Print string addr($a0)
+          5: Input integer -> $v0
+          6: Input float -> $f0
+          7: Input double -> $f0
+          8: Input chars_to_read <- $a1, string -> addr($a0)
+          9: Allocate $a0 Bytes in data memory. Returns address in $v0
+          10: Exit program
+          41: Random_integer $a0(seed) --> $a0
+          42: Random_integer < $a1, $a0(seed) --> $a0
+          43: Random_float $a0(seed) --> $f0
+          44: Random_double $a0(seed) --> $f0
