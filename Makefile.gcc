@@ -26,9 +26,11 @@ all: $(OBJFILES)
 
 src/assembler/mips_scanner.cpp: src/assembler/mips_assembler.l
 	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
+	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
 
 src/assembler/mips_parser.cpp: src/assembler/mips_assembler.y
 	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
+	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
 
 src/assembler/%.o: src/assembler/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"

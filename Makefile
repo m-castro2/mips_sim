@@ -10,8 +10,8 @@ CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++14 -m64 -Wno-weak-vtables
 
 CPPLIBS =
 
-OBJFILES = src/assembler/mips_scanner.o \
-           src/assembler/mips_parser.o \
+OBJFILES = src/assembler/mips_parser.o \
+           src/assembler/mips_scanner.o \
            src/cpu/control_unit.o \
 	         src/cpu/cpu.o \
 					 src/cpu/cpu_multi.o \
@@ -28,10 +28,12 @@ all: $(OBJFILES)
 	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(CPPLIBS) -lpthread
 	@echo $(INSTALLDIR)
 
-src/assembler/mips_scanner.cpp: src/assembler/mips_assembler.l
+src/assembler/mips_parser.cpp: src/assembler/mips_assembler.y
+	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
 	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
 
-src/assembler/mips_parser.cpp: src/assembler/mips_assembler.y
+src/assembler/mips_scanner.cpp: src/assembler/mips_assembler.l
+	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
 	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
 
 src/assembler/%.o: src/assembler/%.cpp $(DEPS)
