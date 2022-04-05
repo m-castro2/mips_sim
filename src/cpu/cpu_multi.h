@@ -3,6 +3,8 @@
 
 #include "cpu.h"
 
+#define X -1
+
 namespace mips_sim
 {
 
@@ -100,4 +102,6 @@ class CpuMulti : public Cpu
 };
 
 } /* namespace */
+
+#undef X
 #endif

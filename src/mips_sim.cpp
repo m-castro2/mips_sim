@@ -17,6 +17,11 @@
 #include <memory>
 #include <vector>
 
+#ifdef _QT
+#include "interface/qt/mips_sim_gui.h"
+#include <QApplication>
+#endif
+
 #define MODE_RUN_BATCH       1
 #define MODE_RUN_INTERACTIVE 2
 #define MODE_RUN_HEX         3
@@ -79,8 +84,17 @@ int main(int argc, char * argv[])
   }
   else
   {
+#ifdef _QT
+    /* QT GUI Interface */
+    QApplication a(argc, argv);
+    MipsSimGui w;
+    w.show();
+    return a.exec();
+#else
+    /* Command Line Interface */
     MipsCli mips_cli;
     mips_cli.launch();
+#endif
   }
 
   return EXIT_SUCCESS;

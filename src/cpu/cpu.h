@@ -9,6 +9,14 @@
 #include <vector>
 #include <iostream>
 
+#define SPECIAL_PC       0
+#define SPECIAL_STATUS   1
+#define SPECIAL_HI       2
+#define SPECIAL_LO       3
+#define SPECIAL_EPC      4
+#define SPECIAL_BADVADDR 5
+#define SPECIAL_CAUSE    6
+
 #define ERROR_UNSUPPORTED_OPERATION    101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
 
@@ -45,6 +53,9 @@ public:
   uint32_t get_cycle( void ) const;
   bool run_to_cycle( uint32_t cycle, std::ostream &out = std::cout );
 
+  uint32_t read_special_register(int id) const;
+
+  const std::vector<uint32_t> & get_loaded_instructions();
 protected:
 
   uint32_t alu_compute_op(uint32_t alu_input_a,
@@ -74,6 +85,7 @@ protected:
   /* special registers */
   uint32_t HI, LO;
   uint32_t PC;
+  uint32_t STATUS, EPC, CAUSE, BADVADDR;
 
   /* stall cycles */
   int execution_stall;

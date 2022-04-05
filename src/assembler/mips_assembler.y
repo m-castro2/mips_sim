@@ -373,7 +373,7 @@ static void setup_memory(shared_ptr<Memory> memory)
   }
 
   /* process code memory */
-  alloc_address = memory->allocate_space(static_cast<uint32_t>((instructions.size()+4) * 4),
+  alloc_address = memory->allocate_space(static_cast<uint32_t>((instructions.size()+2) * 4),
                                          MEM_TEXT_START);
   assert(alloc_address == MEM_TEXT_START);
 

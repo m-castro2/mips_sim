@@ -21,6 +21,9 @@ Memory::Memory( void )
     MEM_REGIONS[i].mem = static_cast<uint8_t *>(malloc(MEM_REGIONS[i].size));
     memset(MEM_REGIONS[i].mem, 0, MEM_REGIONS[i].size);
   }
+
+  /* reserve for stack */
+  allocate_space(MEM_STACK_SIZE, MEM_STACK_START);
 }
 
 void Memory::clear( void )
@@ -117,7 +120,7 @@ uint32_t Memory::allocate_space(uint32_t size, uint32_t address)
     }
   }
 
-  if ((alloc_address + size) < (mem_region.start + mem_region.size))
+  if ((alloc_address + size) <= (mem_region.start + mem_region.size))
   {
     allocated_regions.push_back({alloc_address, size, nullptr});
   }
@@ -174,6 +177,7 @@ mem_region_t Memory::get_memory_region(uint32_t address) const
       }
     }
   }
+
 
   if (valid_address)
   {

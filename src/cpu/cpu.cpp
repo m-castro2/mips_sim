@@ -40,11 +40,18 @@ void Cpu::reset( bool reset_data_memory, bool reset_text_memory )
   memset(gpr, 0, 32 * sizeof(int));
   memset(fpr, 0, 32 * sizeof(int));
 
+  /* stack pointer */
+  gpr[Utils::find_register_by_name("$sp")] =
+    static_cast<uint32_t>(MEM_STACK_START) + MEM_STACK_SIZE;
+
   if (reset_data_memory)
     memory->reset(MEM_DATA_REGION);
 
   if (reset_text_memory)
     memory->reset(MEM_TEXT_REGION);
+
+  loaded_instructions.clear();
+  loaded_instructions.push_back(0); /* start with a nop instruction */
 }
 
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
@@ -423,6 +430,19 @@ float Cpu::read_register_f( size_t reg_index ) const
   return Utils::word_to_float(&fpr[reg_index]);
 }
 
+uint32_t Cpu::read_special_register(int id) const {
+  switch (id)
+  {
+    case SPECIAL_PC:
+      return PC;
+    case SPECIAL_HI:
+      return HI;
+    case SPECIAL_LO:
+      return LO;
+  }
+  return UNDEF32;
+}
+
 void Cpu::write_register_f( size_t reg_index, float value )
 {
   assert(reg_index < 32);
@@ -464,26 +484,33 @@ uint32_t Cpu::get_cycle( void ) const
 
 bool Cpu::run_to_cycle( uint32_t target_cycle, ostream &out)
 {
-  assert(target_cycle > 0);
+  assert(target_cycle >= 0);
 
   ostream nullostream(nullptr);
 
   /* reset CPU and memory */
   reset( true, true );
 
-  while(cycle < (target_cycle-1) && ready)
+  if (target_cycle > 0)
   {
-    if (!next_cycle(nullostream))
-      return false;
+    while(cycle < (target_cycle-1) && ready)
+    {
+      if (!next_cycle(nullostream))
+        return false;
+    }
+    next_cycle(out);
   }
-  next_cycle(out);
-
   return true;
 }
 
 void Cpu::print_diagram( ostream &out ) const
 {
   out << "Diagram not implemented" << endl;
+}
+
+const vector<uint32_t> & Cpu::get_loaded_instructions()
+{
+  return loaded_instructions;
 }
 
 } /* namespace */

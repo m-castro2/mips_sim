@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define MAX_DIAGRAM_SIZE 400
+
 namespace mips_sim
 {
   constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
@@ -54,11 +56,17 @@ namespace mips_sim
 
     loaded_instruction_index = 1;
     loaded_instructions.push_back(PC);
+
+    diagram = new uint32_t*[MAX_DIAGRAM_SIZE];
+    for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
+      diagram[i] = new uint32_t[MAX_DIAGRAM_SIZE];
   }
 
   CpuPipelined::~CpuPipelined()
   {
-
+    for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
+      delete diagram[i];
+    delete diagram;
   }
 
   bool CpuPipelined::process_branch(uint32_t instruction_code,
@@ -111,6 +119,7 @@ namespace mips_sim
     out << "   *** PC: 0x" << Utils::hex32(PC) << endl;
     out << "   *** " << cur_instr_name << " : 0x"
         << Utils::hex32(instruction_code) << endl;
+    current_state[STAGE_IF] = PC;
 
     /* increase PC */
     if (pc_write)
@@ -208,6 +217,7 @@ namespace mips_sim
         << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
         << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
         << endl;
+    current_state[STAGE_ID] = pc_value-4;
 
     if (instruction.code == 0)
     {
@@ -432,6 +442,7 @@ namespace mips_sim
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(addr_i) << 16 >> 16);
 
     out << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
+    current_state[STAGE_EX] = pc_value-4;
 
     /* forwarding unit */
     if (cpu_has_forwarding_unit)
@@ -510,6 +521,7 @@ namespace mips_sim
     uint32_t branch_taken     = seg_regs[EX_MEM].data[SR_ALUZERO];
 
     out << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
+    current_state[STAGE_MEM] = pc_value-4;
 
     if (cpu_branch_stage == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
     {
@@ -577,6 +589,7 @@ namespace mips_sim
     uint32_t alu_output       = seg_regs[MEM_WB].data[SR_ALUOUTPUT];
 
     out << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
+    current_state[STAGE_WB] = pc_value-4;
 
     switch (control_unit->test(microinstruction, SIG_MEM2REG))
     {
@@ -635,6 +648,11 @@ namespace mips_sim
     return true;
   }
 
+  void CpuPipelined::get_current_state(uint32_t * cs)
+  {
+    memcpy(cs, current_state, STAGE_COUNT*sizeof(uint32_t));
+  }
+
   size_t CpuPipelined::get_current_instruction(size_t stage) const
   {
     assert(stage <= STAGE_WB);
@@ -665,18 +683,11 @@ namespace mips_sim
     stage_id(out);
     stage_if(out);
 
-    //cout << setw(4) << cycle << " ";
     for (size_t stage_id = 0; stage_id < STAGE_COUNT; ++stage_id)
     {
       size_t iindex = get_current_instruction(stage_id);
-      //uint32_t ipc = loaded_instructions[iindex];
-      //uint32_t icode = ipc?memory->mem_read_32(ipc):0;
-
       diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
-
-      //cout << setw(25) << Utils::decode_instruction(icode);
     }
-    //cout << endl;
 
     /* update segmentation registers */
     memcpy(seg_regs, next_seg_regs, sizeof(seg_regs));
@@ -696,6 +707,11 @@ namespace mips_sim
     }
 
     return ready;
+  }
+
+  const uint32_t * const * CpuPipelined::get_diagram( void ) const
+  {
+    return diagram;
   }
 
   void CpuPipelined::print_diagram( ostream &out ) const
@@ -725,7 +741,7 @@ namespace mips_sim
         {
           if (runstate)
             runstate = 2;
-          cout << setw(4) << " ";
+          out << setw(4) << " ";
         }
       out << endl;
     }
@@ -757,7 +773,11 @@ namespace mips_sim
 
     memset(seg_regs, 0, sizeof(seg_regs));
     memset(next_seg_regs, 0, sizeof(next_seg_regs));
-    memset(diagram, 0, sizeof(diagram));
+
+    for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
+     memset(diagram[i], 0, MAX_DIAGRAM_SIZE * sizeof(uint32_t));
+
+    memset(current_state, -1, STAGE_COUNT*sizeof(uint32_t));
 
     pc_write = true;
     flush_pipeline = 0;
@@ -767,9 +787,8 @@ namespace mips_sim
     pc_register_jump      = 0;
     pc_instruction_jump   = 0;
 
-    loaded_instruction_index = 1;
-    loaded_instructions.clear();
     loaded_instructions.push_back(PC);
+    loaded_instruction_index = 1;
   }
 
   void CpuPipelined::enable_hazard_detection_unit(bool enabled)

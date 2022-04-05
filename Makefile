@@ -1,14 +1,35 @@
-CC = clang++
+CC := clang++
+MOC := moc
+UIC := uic
 
 INSTALLDIR = $(PWD)
 
-CPPFLAGS = -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++14 \
-           -Wno-exit-time-destructors -Wno-global-constructors \
-					 -Wno-unused-macros \
-           -m64 -pipe
+ifeq ($(CC), clang++)
+  CPPFLAGS = -D_QT -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++14 \
+             -Wno-exit-time-destructors -Wno-global-constructors \
+             -Wno-unused-macros \
+             -m64 -pipe
+else
+  CPPFLAGS = -D_QT -g -O3 -Wpedantic -Wall -Wno-padded -std=c++14 \
+             -m64 -pipe
+endif
+
 CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++14 -m64 -Wno-weak-vtables
 
 CPPLIBS =
+QTLIBS = -L/usr/lib/x86_64-linux-gnu -lQt5Widgets -lQt5Gui -lQt5Core
+QTINCLUDE := -fPIC \
+	-Iinclude/ \
+	-I$(INC_DIR) \
+	-Iinclude/qcustomplot \
+	-I/usr/include/x86_64-linux-gnu/qt5 \
+	-I/usr/include/x86_64-linux-gnu/qt5/QtWidgets \
+	-I/usr/include/x86_64-linux-gnu/qt5/QtCore \
+	-I/usr/include/x86_64-linux-gnu/qt5/QtGui
+QTOBJFILES = src/interface/qt/mips_sim_gui.o \
+             src/interface/qt/moc_mips_sim_gui.o
+QTFILES = src/interface/qt/ui_mips_sim_gui.h \
+          src/interface/qt/moc_mips_sim_gui.cpp
 
 OBJFILES = src/assembler/mips_parser.o \
            src/assembler/mips_scanner.o \
@@ -24,8 +45,8 @@ OBJFILES = src/assembler/mips_parser.o \
 DEPS =
 
 
-all: $(OBJFILES)
-	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(CPPLIBS) -lpthread
+all: $(OBJFILES) $(QTOBJFILES) $(QTFILES)
+	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(QTOBJFILES) $(CPPLIBS) $(QTLIBS) -lpthread
 	@echo $(INSTALLDIR)
 
 src/assembler/mips_parser.cpp: src/assembler/mips_assembler.y
@@ -40,13 +61,26 @@ src/assembler/%.o: src/assembler/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"
 	$(CC) -c -o $@ $<
 
+src/interface/qt/%.o: src/interface/qt/%.cpp src/interface/qt/ui_mips_sim_gui.h
+	@mkdir -p "$(@D)"
+	$(CC) $(QTINCLUDE) $(CLICPPFLAGS) -c -o $@ $<
+
+src/interface/qt/moc_mips_sim_gui.cpp: src/interface/qt/mips_sim_gui.h
+	$(MOC) $(INCLUDE) $< -o $@
+
+src/interface/qt/moc_text_browser_stream.cpp: src/interface/qt/text_browser_stream.h
+	$(MOC) $(INCLUDE) $< -o $@
+
 src/interface/%.o: src/interface/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"
 	$(CC) $(CLICPPFLAGS) -c -o $@ $<
 
+src/interface/qt/ui_mips_sim_gui.h: src/interface/qt/mips_sim_gui.ui
+	$(UIC) $< -o $@
+
 src/mips_sim.o: src/mips_sim.cpp $(DEPS)
 	@mkdir -p "$(@D)"
-	$(CC) $(CLICPPFLAGS) -c -o $@ $<
+	$(CC) -D_QT $(CLICPPFLAGS) $(QTINCLUDE) -c -o $@ $<
 
 src/%.o: src/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"

@@ -339,7 +339,7 @@ namespace mips_sim
 
     try
     {
-      cpu->run_to_cycle(cpu->get_cycle()-1);
+      cpu->run_to_cycle(cpu->get_cycle()-1, out);
     }
     catch(int e)
     {

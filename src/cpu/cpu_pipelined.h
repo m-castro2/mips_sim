@@ -42,6 +42,8 @@
 
 #include "cpu.h"
 
+#define X -1
+
 namespace mips_sim
 {
 
@@ -122,6 +124,9 @@ class CpuPipelined : public Cpu
                  bool has_hazard_detection_unit = true);
     virtual ~CpuPipelined() override;
 
+    void get_current_state(uint32_t *);
+    const uint32_t * const * get_diagram( void ) const;
+
     virtual bool next_cycle( std::ostream & = std::cout ) override;
     virtual void print_diagram( std::ostream & = std::cout ) const override;
     virtual void print_status( std::ostream & = std::cout ) const override;
@@ -149,7 +154,8 @@ class CpuPipelined : public Cpu
     uint32_t pc_register_jump;
 
     uint32_t loaded_instruction_index;
-    uint32_t diagram[400][400] = {};
+    uint32_t **diagram;
+    uint32_t current_state[STAGE_COUNT] = {UNDEF32,UNDEF32,UNDEF32,UNDEF32,UNDEF32};
 
     /* configuration */
     int  cpu_branch_type;
@@ -187,4 +193,6 @@ class CpuPipelined : public Cpu
 };
 
 } /* namespace */
+
+#undef X
 #endif

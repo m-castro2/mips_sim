@@ -7,7 +7,6 @@
 #include <string>
 #include <iostream>
 
-#define X -1
 #define MAX_MICROINSTRUCTIONS 32
 
 namespace mips_sim
