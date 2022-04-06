@@ -29,7 +29,13 @@ bool Cpu::is_ready( void ) const
 
 void Cpu::reset( bool reset_data_memory, bool reset_text_memory )
 {
-  PC = MEM_TEXT_START;
+  PC       = MEM_TEXT_START;
+  HI       = 0;
+  LO       = 0;
+  STATUS   = 0;
+  EPC      = 0;
+  CAUSE    = 0;
+  BADVADDR = 0;
 
   cycle = 0;
   mi_index = 0;

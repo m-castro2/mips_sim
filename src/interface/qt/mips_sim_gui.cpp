@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <cassert>
 
 using namespace std;
 using namespace mips_sim;
@@ -201,20 +202,47 @@ void MipsSimGui::set_diagram_labels()
       }
     }
 
+    //for (size_t j=current_cycle; j>min_cycle; j--)
+    for (int j=MAX_DIA_CYCLES-1; j>=0; j--)
+    {
+      if (j > (MAX_DIA_CYCLES - (current_cycle - min_cycle) - 1))
+        dcycle_labels[j]->setText(QString::number(j - MAX_DIA_CYCLES + current_cycle + 1));
+      else
+        dcycle_labels[j]->setText("");
+    }
+
+    for (instruction_info_t instruction : instructions)
+    {
+        instruction.lblName->setStyleSheet("");
+    }
+
     for (size_t i=0; i<instr_count; i++)
     {
       diagram_info_t dinfo;
+      uint32_t word;
+      string color_style = "background-color: " + colors[instr_ids[i] % MAX_COLORS];
+
       dinfo.pc_address = instruct_pcs[instr_ids[i]];
 
-      uint32_t word = mem->mem_read_32(dinfo.pc_address);
+      word = mem->mem_read_32(dinfo.pc_address);
 
       dinfo.lblName = new QLabel(ui->frameDiagram);
-      dinfo.lblName->setMinimumSize(QSize(400, 15));
-      dinfo.lblName->setMaximumSize(QSize(16777215, 15));
+      dinfo.lblName->setMinimumSize(QSize(260, 15));
+      dinfo.lblName->setMaximumSize(QSize(260, 15));
       dinfo.lblName->setFont(font);
+      dinfo.lblName->setStyleSheet(QString::fromStdString(color_style));
       string iname = "[" + Utils::hex32(dinfo.pc_address) + "] " + Utils::decode_instruction(word);
       dinfo.lblName->setText(iname.c_str());
-      layout->addWidget(dinfo.lblName, i, 0, 1, 1);
+      layout->addWidget(dinfo.lblName, i+1, 0, 1, 1);
+
+      /* update instruction */
+      for (instruction_info_t instruction : instructions)
+      {
+        if (instruction.pc_address == instruct_pcs[instr_ids[i]])
+        {
+          instruction.lblName->setStyleSheet(QString::fromStdString("background-color: " + colors[instr_ids[i] % MAX_COLORS]));
+        }
+      }
 
       for (size_t j=current_cycle; j>min_cycle; j--)
       {
@@ -233,9 +261,12 @@ void MipsSimGui::set_diagram_labels()
             instr_stage->setStyleSheet("background-color: yellow");
           }
           else
+          {
             instr_stage->setText(stage_names[diagram[instr_ids[i]][j] - 1].c_str());
+            instr_stage->setStyleSheet(QString::fromStdString(color_style));
+          }
 
-          layout->addWidget(instr_stage, i, j-min_cycle, 1, 1);
+          layout->addWidget(instr_stage, i+1, MAX_DIA_CYCLES-(current_cycle-min_cycle) + (j-min_cycle), 1, 1);
 
           dinfo.lblStages.push_back(instr_stage);
         }
@@ -252,8 +283,14 @@ MipsSimGui::MipsSimGui(QWidget *parent)
 {
     mem = shared_ptr<Memory>(new Memory());
     file_loaded = false;
+
     cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
     cpu->print_status(cout);
+
+    //TODO For Testing
+    // CpuPipelined & cpupipe = dynamic_cast<CpuPipelined &>(*cpu);
+    // cpupipe.enable_forwarding_unit(false);
+    // cpupipe.set_branch_type(BRANCH_DELAYED);
 
     ui->setupUi(this);
 
@@ -326,6 +363,21 @@ MipsSimGui::MipsSimGui(QWidget *parent)
             dregtext[i]->setFrameShape(QFrame::StyledPanel);
             dregslayout->addWidget(dregtext[i], row/2, col+1, 1, 1);
         }
+    }
+
+    QGridLayout * layout = static_cast<QGridLayout *>(ui->frameDiagram->layout());
+
+    for (size_t j=0; j<MAX_DIA_CYCLES; j++)
+    {
+        QLabel * dcycle_label = new QLabel(ui->frameDiagram);
+        dcycle_label->setMinimumSize(QSize(30, 15));
+        dcycle_label->setMaximumSize(QSize(30, 15));
+        dcycle_label->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        dcycle_label->setFont(font);
+        dcycle_label->setText(QString::number(j)); // (if) (id) ... ?
+        layout->addWidget(dcycle_label, 0, j + 1, 1, 1);
+
+        dcycle_labels.push_back(dcycle_label);
     }
 
     set_cpu_labels();

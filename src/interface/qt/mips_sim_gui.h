@@ -16,7 +16,14 @@
 #include <QLabel>
 #include <QLineEdit>
 
-#define DIA_CYCLES 5
+#define MAX_DIA_CYCLES 10
+#define MAX_COLORS      5
+
+// static std::string colors[MAX_COLORS] = {"ForestGreen", "DarkRed", "DarkBlue",
+//                                          "Chocolate", "SaddleBrown", "Indigo",
+//                                          "BlueViolet"};
+static std::string colors[MAX_COLORS] = {"#FFBEBC", "#85E3FF", "#AFF8D8",
+                                         "#FFFFD1", "#FFCCF9"};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MipsSimGui; }
@@ -63,6 +70,7 @@ private:
     std::vector<QLabel *> dmem_labels;
 
     std::vector<diagram_info_t> diagram_lines;
+    std::vector<QLabel *> dcycle_labels;
 
     std::string asm_filename;
     bool file_loaded;
