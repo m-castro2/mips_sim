@@ -21,6 +21,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QScrollArea>
+#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
@@ -74,14 +75,18 @@ public:
     QVBoxLayout *verticalLayout_7;
     QFrame *frameProcessor;
     QVBoxLayout *verticalLayout;
+    QFrame *frame;
+    QVBoxLayout *verticalLayout_8;
     QFrame *frameDiagram;
     QGridLayout *gridLayout_2;
+    QSpacerItem *verticalSpacer;
     QLabel *label_4;
     QScrollArea *scrollDiagram;
     QWidget *scrollAreaWidgetContents;
     QVBoxLayout *verticalLayout_2;
     QFrame *frameTMem;
     QGridLayout *gridLayout;
+    QSpacerItem *verticalSpacer_2;
     QFrame *frameButtons;
     QHBoxLayout *buttonsLayout;
     QPushButton *btnReset;
@@ -332,14 +337,31 @@ public:
         frameProcessor->setFrameShadow(QFrame::Raised);
         verticalLayout = new QVBoxLayout(frameProcessor);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
-        frameDiagram = new QFrame(frameProcessor);
+        frame = new QFrame(frameProcessor);
+        frame->setObjectName(QString::fromUtf8("frame"));
+        frame->setMinimumSize(QSize(0, 250));
+        frame->setFrameShape(QFrame::StyledPanel);
+        frame->setFrameShadow(QFrame::Raised);
+        verticalLayout_8 = new QVBoxLayout(frame);
+        verticalLayout_8->setSpacing(0);
+        verticalLayout_8->setObjectName(QString::fromUtf8("verticalLayout_8"));
+        verticalLayout_8->setContentsMargins(0, 0, 0, 0);
+        frameDiagram = new QFrame(frame);
         frameDiagram->setObjectName(QString::fromUtf8("frameDiagram"));
+        frameDiagram->setMinimumSize(QSize(0, 0));
         frameDiagram->setMaximumSize(QSize(550, 16777215));
-        frameDiagram->setFrameShape(QFrame::StyledPanel);
+        frameDiagram->setFrameShape(QFrame::NoFrame);
         gridLayout_2 = new QGridLayout(frameDiagram);
         gridLayout_2->setObjectName(QString::fromUtf8("gridLayout_2"));
 
-        verticalLayout->addWidget(frameDiagram);
+        verticalLayout_8->addWidget(frameDiagram);
+
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        verticalLayout_8->addItem(verticalSpacer);
+
+
+        verticalLayout->addWidget(frame);
 
         label_4 = new QLabel(frameProcessor);
         label_4->setObjectName(QString::fromUtf8("label_4"));
@@ -352,9 +374,11 @@ public:
         scrollDiagram->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName(QString::fromUtf8("scrollAreaWidgetContents"));
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 452, 533));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 452, 275));
         verticalLayout_2 = new QVBoxLayout(scrollAreaWidgetContents);
+        verticalLayout_2->setSpacing(0);
         verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
         frameTMem = new QFrame(scrollAreaWidgetContents);
         frameTMem->setObjectName(QString::fromUtf8("frameTMem"));
         frameTMem->setMinimumSize(QSize(0, 200));
@@ -362,6 +386,10 @@ public:
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
 
         verticalLayout_2->addWidget(frameTMem);
+
+        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        verticalLayout_2->addItem(verticalSpacer_2);
 
         scrollDiagram->setWidget(scrollAreaWidgetContents);
 

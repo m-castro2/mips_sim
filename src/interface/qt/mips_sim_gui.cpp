@@ -508,7 +508,9 @@ void MipsSimGui::on_actionLoad_file_triggered()
           instr_label->setMinimumSize(QSize(400, 15));
           instr_label->setMaximumSize(QSize(400, 15));
           instr_label->setFont(font);
-          string iname = "[" + Utils::hex32(mem_addr) + "] " + Utils::decode_instruction(word);
+          string iname = "[" + Utils::hex32(mem_addr) + "] "
+                             + Utils::hex32(word) + "  "
+                             + Utils::decode_instruction(word);
           instr_label->setText(iname.c_str());
           static_cast<QGridLayout *>(ui->frameTMem->layout())->addWidget(instr_label, instr_index, 0, 1, 1);
           iinfo.lblName = instr_label;
@@ -550,15 +552,25 @@ bool MipsSimGui::load_file( const string & filename, ostream & out )
 {
   if (!Utils::file_exists(filename))
   {
-    cerr << "[error] file " << filename << " does not exist" << endl;
+    QMessageBox msgBox;
+    msgBox.setText("Error loading file");
+    msgBox.setInformativeText(QString::fromStdString("File " + filename + " does not exist"));
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.exec();
     return false;
   }
 
   try {
     if (assemble_file(filename.c_str(), mem) != 0)
     {
-      cerr << "[error] failed parsing the input file" << endl;
-      return 1;
+      QMessageBox msgBox;
+      msgBox.setText("Error loading file");
+      msgBox.setInformativeText("Error parsing the input file");
+      msgBox.setStandardButtons(QMessageBox::Ok);
+      msgBox.setDefaultButton(QMessageBox::Ok);
+      msgBox.exec();
+      return false;
     }
 
     out << "File read OK" << endl;
@@ -569,6 +581,12 @@ bool MipsSimGui::load_file( const string & filename, ostream & out )
   }
   catch(int e)
   {
+    QMessageBox msgBox;
+    msgBox.setText("Error loading file");
+    msgBox.setInformativeText(QString::fromStdString("Exception: " + err_msg));
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.exec();
     cerr << "EXCEPTION " << e << ": " << err_msg;
     if (err_v)
       cerr << " [0x" << Utils::hex32(err_v) << "]";
