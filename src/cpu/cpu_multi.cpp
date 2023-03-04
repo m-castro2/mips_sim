@@ -203,28 +203,28 @@ namespace mips_sim
               cop0_output = cop0_input_a + cop0_input_b;
             else if (instruction.cop == 1)
               cop1_output = cop1_input_a + cop1_input_b;
-            execution_stall = FP_ADD_DELAY;
+            execution_stall = status["fp-add-delay"];
             break;
           case SUBOP_FPSUB:
             if (instruction.cop == 0)
               cop0_output = cop0_input_a - cop0_input_b;
             else if (instruction.cop == 1)
               cop1_output = cop1_input_a - cop1_input_b;
-            execution_stall = FP_ADD_DELAY;
+            execution_stall = status["fp-add-delay"];
             break;
           case SUBOP_FPMUL:
             if (instruction.cop == 0)
               cop0_output = cop0_input_a * cop0_input_b;
             else if (instruction.cop == 1)
               cop1_output = cop1_input_a * cop1_input_b;
-            execution_stall = MULT_DELAY;
+            execution_stall = status["mult-delay"];
             break;
           case SUBOP_FPDIV:
             if (instruction.cop == 0)
               cop0_output = cop0_input_a / cop0_input_b;
             else if (instruction.cop == 1)
               cop1_output = cop1_input_a / cop1_input_b;
-            execution_stall = DIV_DELAY;
+            execution_stall = status["div-delay"];
             break;
           default:
             cerr << "Undefined FP operation: " << instruction.code << endl;
@@ -406,9 +406,9 @@ namespace mips_sim
   void CpuMulti::print_status( ostream &out ) const
   {
     out << "Multicycle CPU" << endl;
-    out << "  Multiplication delay: " << MULT_DELAY << " cycles"  << endl;
-    out << "  Division delay: " << DIV_DELAY << " cycles" << endl;
-    out << "  Floating Point Add delay: " << FP_ADD_DELAY << " cycles" << endl;
+    out << "  Multiplication delay: " << status.at("mult-delay") << " cycles"  << endl;
+    out << "  Division delay: " << status.at("div-delay") << " cycles" << endl;
+    out << "  Floating Point Add delay: " << status.at("fp-add-delay") << " cycles" << endl;
   }
 
 } /* namespace */

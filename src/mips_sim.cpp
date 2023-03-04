@@ -23,9 +23,10 @@
 #endif
 
 #define MODE_RUN_BATCH       1
-#define MODE_RUN_INTERACTIVE 2
-#define MODE_RUN_HEX         3
-#define MODE_ASSEMBLE        4
+#define MODE_RUN_HEX         2
+#define MODE_ASSEMBLE        3
+#define MODE_RUN_CLI         4
+#define MODE_RUN_GUI         5
 
 #define CPU_MULTICYCLE 1
 #define CPU_PIPELINED  2
@@ -43,6 +44,18 @@ string err_msg;
 uint32_t load_program(string program_filename, Memory & memory);
 int run_batch(string input_file, int run_mode, int cpu_mode, ostream & outstream);
 
+void print_help(const char * cmd)
+{
+#ifdef _QT
+  cerr << "GUI mode:" << endl;
+  cerr << "  Call " << cmd << endl;
+#endif
+  cerr << "Command Line Interface:" << endl;
+  cerr << "  Call " << cmd << " cli" << endl;
+  cerr << "Batch mode:" << endl;
+  cerr << "  Call " << cmd << " {run|runhex|asm} filename [multi|pipe]" << endl;
+}
+
 int main(int argc, char * argv[])
 {
   string input_file, output_file;
@@ -50,11 +63,10 @@ int main(int argc, char * argv[])
 
   if (argc > 1)
   {
-    /* batch mode */
-    if (argc < 3)
+    /* help */
+    if (!strcmp(argv[1], "help"))
     {
-      cerr << "Call " << argv[0] << "{run|runhex|asm} filename [multi|pipe]" << endl;
-      return 0;
+      print_help(argv[0]);
     }
 
     if (!strcmp(argv[1], "asm"))
@@ -63,12 +75,26 @@ int main(int argc, char * argv[])
       run_mode = MODE_RUN_BATCH;
     else if (!strcmp(argv[1], "runhex"))
       run_mode = MODE_RUN_HEX;
+    else if (!strcmp(argv[1], "cli"))
+      run_mode = MODE_RUN_CLI;
     else
     {
       cerr << "Undefined run mode: " << argv[1] << endl;
+      print_help(argv[0]);
       return EXIT_FAILURE;
     }
+  }
+  else
+  {
+#ifdef _QT
+    run_mode = MODE_RUN_GUI;
+#else
+    run_mode = MODE_RUN_CLI;
+#endif
+  }
 
+  if (run_mode == MODE_ASSEMBLE || run_mode == MODE_RUN_BATCH || run_mode == MODE_RUN_HEX)
+  {
     cpu_mode = CPU_PIPELINED; /* default mode */
     if (argc >= 4)
     {
@@ -85,16 +111,28 @@ int main(int argc, char * argv[])
   else
   {
 #ifdef _QT
-    /* QT GUI Interface */
-    QApplication a(argc, argv);
-    MipsSimGui w;
-    w.show();
-    return a.exec();
-#else
-    /* Command Line Interface */
-    MipsCli mips_cli;
-    mips_cli.launch();
+    if (run_mode == MODE_RUN_GUI)
+    {
+      /* QT GUI Interface */
+      QApplication a(argc, argv);
+      MipsSimGui w;
+      w.show();
+      return a.exec();
+    }
+    else
 #endif
+    if (run_mode == MODE_RUN_CLI)
+    {
+      /* Command Line Interface */
+      MipsCli mips_cli;
+      mips_cli.launch();
+    }
+    else
+    {
+      cerr << "Undefined run mode: " << argv[1] << endl;
+      print_help(argv[0]);
+      return EXIT_FAILURE;
+    }
   }
 
   return EXIT_SUCCESS;

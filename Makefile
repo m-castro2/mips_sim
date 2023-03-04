@@ -27,9 +27,13 @@ QTINCLUDE := -fPIC \
 	-I/usr/include/x86_64-linux-gnu/qt5/QtCore \
 	-I/usr/include/x86_64-linux-gnu/qt5/QtGui
 QTOBJFILES = src/interface/qt/mips_sim_gui.o \
-             src/interface/qt/moc_mips_sim_gui.o
+             src/interface/qt/mips_sim_settings.o \
+             src/interface/qt/moc_mips_sim_gui.o \
+             src/interface/qt/moc_mips_sim_settings.o
 QTFILES = src/interface/qt/ui_mips_sim_gui.h \
-          src/interface/qt/moc_mips_sim_gui.cpp
+          src/interface/qt/moc_mips_sim_gui.cpp \
+          src/interface/qt/ui_mips_sim_settings.h \
+          src/interface/qt/moc_mips_sim_settings.cpp
 
 OBJFILES = src/assembler/mips_parser.o \
            src/assembler/mips_scanner.o \
@@ -68,6 +72,9 @@ src/interface/qt/%.o: src/interface/qt/%.cpp src/interface/qt/ui_mips_sim_gui.h
 src/interface/qt/moc_mips_sim_gui.cpp: src/interface/qt/mips_sim_gui.h
 	$(MOC) $(INCLUDE) $< -o $@
 
+src/interface/qt/moc_mips_sim_settings.cpp: src/interface/qt/mips_sim_settings.h
+	$(MOC) $(INCLUDE) $< -o $@
+
 src/interface/qt/moc_text_browser_stream.cpp: src/interface/qt/text_browser_stream.h
 	$(MOC) $(INCLUDE) $< -o $@
 
@@ -76,6 +83,9 @@ src/interface/%.o: src/interface/%.cpp $(DEPS)
 	$(CC) $(CLICPPFLAGS) -c -o $@ $<
 
 src/interface/qt/ui_mips_sim_gui.h: src/interface/qt/mips_sim_gui.ui
+	$(UIC) $< -o $@
+	
+src/interface/qt/ui_mips_sim_settings.h: src/interface/qt/mips_sim_settings.ui
 	$(UIC) $< -o $@
 
 src/mips_sim.o: src/mips_sim.cpp $(DEPS)

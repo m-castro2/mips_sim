@@ -24,6 +24,8 @@
 #define CPU_SYSCALL_EXCEPTION    259
 #define CPU_REG_EXCEPTION        260
 
+#define OVERFLOW_EXCEPTION       320
+
 namespace mips_sim
 {
 

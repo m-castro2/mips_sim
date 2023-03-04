@@ -1,5 +1,6 @@
 #include "mips_sim_gui.h"
 #include "ui_mips_sim_gui.h"
+#include "mips_sim_settings.h"
 #include "../../assembler/mips_assembler.h"
 #include "../../cpu/cpu_multi.h"
 #include "../../cpu/cpu_pipelined.h"
@@ -23,7 +24,7 @@ void MipsSimGui::set_dmem_labels()
   uint32_t start = MEM_DATA_START;
   uint32_t length = MEM_DATA_SIZE;
   QLabel * dmem_label = nullptr;
-  int lines = 0;
+  size_t lines = 0;
   stringstream out;
 
   try
@@ -99,7 +100,9 @@ void MipsSimGui::set_cpu_labels()
   double d;
   uint32_t pc_value = cpu->read_special_register(SPECIAL_PC);
 
+  ui->actionSettings->setEnabled(file_loaded);
   ui->btnReset->setEnabled(file_loaded);
+  
   if (!file_loaded)
   {
     ui->btnPrev->setEnabled(false);
@@ -138,7 +141,6 @@ void MipsSimGui::set_cpu_labels()
   uint32_t cpu_state[5];
   CpuPipelined & cpupipe = dynamic_cast<CpuPipelined &>(*cpu);
 
-  cpupipe.enable_hazard_detection_unit(true);
   cpupipe.get_current_state(cpu_state);
 
   for (instruction_info_t instruction : instructions)
@@ -202,10 +204,9 @@ void MipsSimGui::set_diagram_labels()
       }
     }
 
-    //for (size_t j=current_cycle; j>min_cycle; j--)
     for (int j=MAX_DIA_CYCLES-1; j>=0; j--)
     {
-      if (j > (MAX_DIA_CYCLES - (current_cycle - min_cycle) - 1))
+      if ((size_t)j > (MAX_DIA_CYCLES - (current_cycle - min_cycle) - 1))
         dcycle_labels[j]->setText(QString::number(j - MAX_DIA_CYCLES + current_cycle + 1));
       else
         dcycle_labels[j]->setText("");
@@ -240,7 +241,8 @@ void MipsSimGui::set_diagram_labels()
       {
         if (instruction.pc_address == instruct_pcs[instr_ids[i]])
         {
-          instruction.lblName->setStyleSheet(QString::fromStdString("background-color: " + colors[instr_ids[i] % MAX_COLORS]));
+          instruction.lblName->setStyleSheet(QString::fromStdString(
+            "background-color: " + colors[instr_ids[i] % MAX_COLORS]));
         }
       }
 
@@ -266,7 +268,11 @@ void MipsSimGui::set_diagram_labels()
             instr_stage->setStyleSheet(QString::fromStdString(color_style));
           }
 
-          layout->addWidget(instr_stage, i+1, MAX_DIA_CYCLES-(current_cycle-min_cycle) + (j-min_cycle), 1, 1);
+          layout->addWidget(instr_stage,
+                            i+1,
+                            MAX_DIA_CYCLES-(current_cycle-min_cycle) + (j-min_cycle),
+                            1,
+                            1);
 
           dinfo.lblStages.push_back(instr_stage);
         }
@@ -274,6 +280,14 @@ void MipsSimGui::set_diagram_labels()
 
       diagram_lines.push_back(dinfo);
     }
+  }
+  else
+  {
+    /* clear instruction colors */
+    for (instruction_info_t instruction : instructions)
+      instruction.lblName->setStyleSheet("");
+    for (int j=MAX_DIA_CYCLES-1; j>=0; j--)
+        dcycle_labels[j]->setText("");
   }
 }
 
@@ -287,6 +301,8 @@ MipsSimGui::MipsSimGui(QWidget *parent)
     cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
     cpu->print_status(cout);
 
+    settings_window = new MipsSimSettings( this );
+    
     //TODO For Testing
     // CpuPipelined & cpupipe = dynamic_cast<CpuPipelined &>(*cpu);
     // cpupipe.enable_forwarding_unit(false);
@@ -385,7 +401,32 @@ MipsSimGui::MipsSimGui(QWidget *parent)
 
 MipsSimGui::~MipsSimGui()
 {
+    delete settings_window;
     delete ui;
+}
+
+void MipsSimGui::handle_exception(int e)
+{
+  QMessageBox msgBox;
+  msgBox.setWindowTitle("Exception caught!");
+  if (err_v)
+    msgBox.setText(QString::fromStdString("Exception at [0x" + Utils::hex32(err_v)) + "]");
+  else
+    msgBox.setText(QString::fromStdString("Exception " + e));
+  msgBox.setStyleSheet("QLabel{min-width: 400px;}");
+  msgBox.setInformativeText(QString::fromStdString(err_msg));
+  msgBox.setStandardButtons(QMessageBox::Ok);
+  msgBox.setDefaultButton(QMessageBox::Ok);
+  msgBox.exec();
+  
+  /* move to previous cycle */
+  cpu->run_to_cycle(cpu->get_cycle()-1, cout);
+  set_cpu_labels();
+  
+  cerr << "EXCEPTION " << e << ": " << err_msg;
+  if (err_v)
+    cerr << " [0x" << Utils::hex32(err_v) << "]";
+  cerr << endl;
 }
 
 void MipsSimGui::on_btnRun_clicked()
@@ -400,11 +441,7 @@ void MipsSimGui::on_btnRun_clicked()
   }
   catch(int e)
   {
-    set_cpu_labels();
-    cerr << "EXCEPTION " << e << ": " << err_msg;
-    if (err_v)
-      cerr << " [0x" << Utils::hex32(err_v) << "]";
-    cerr << endl;
+    handle_exception(e);
   }
 }
 
@@ -417,10 +454,7 @@ void MipsSimGui::on_btnNext_clicked()
   }
   catch(int e)
   {
-    cerr << "EXCEPTION " << e << ": " << err_msg;
-    if (err_v)
-      cerr << " [0x" << Utils::hex32(err_v) << "]";
-    cerr << endl;
+    handle_exception(e);
   }
 }
 
@@ -433,10 +467,7 @@ void MipsSimGui::on_btnPrev_clicked()
   }
   catch(int e)
   {
-    cerr << "EXCEPTION " << e << ": " << err_msg;
-    if (err_v)
-      cerr << " [0x" << Utils::hex32(err_v) << "]";
-    cerr << endl;
+    handle_exception(e);
   }
 }
 
@@ -454,6 +485,8 @@ void MipsSimGui::on_actionLoad_file_triggered()
                                                    "",
                                                    filters);
 
+  if(!file_name.isEmpty()&& !file_name.isNull())
+  {
     const std::string filename = file_name.toStdString();
     file_loaded = load_file(filename, cout);
     if (file_loaded)
@@ -532,6 +565,12 @@ void MipsSimGui::on_actionLoad_file_triggered()
     }
     else
       cout << "Error loading file" << endl;
+  }
+}
+
+void MipsSimGui::on_actionSettings_triggered()
+{
+  settings_window->exec();
 }
 
 void MipsSimGui::on_actionExit_triggered()
@@ -595,4 +634,20 @@ bool MipsSimGui::load_file( const string & filename, ostream & out )
   }
 
   return true;
+}
+
+const map<string, int> MipsSimGui::get_cpu_status( void ) const
+{
+  assert(cpu);
+  return cpu->get_status();
+}
+
+void MipsSimGui::set_cpu_status( std::map<std::string, int> new_status )
+{
+  assert(cpu);
+  if (cpu->set_status(new_status, true))
+  {
+    cpu->reset(true, true);
+    set_cpu_labels();
+  }
 }

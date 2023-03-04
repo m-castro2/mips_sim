@@ -5,6 +5,7 @@
 #include "../global_defs.h"
 #include "../mem.h"
 
+#include <map>
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -20,10 +21,9 @@
 #define ERROR_UNSUPPORTED_OPERATION    101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
 
-//TODO: Change into config file
-#define FP_ADD_DELAY 2
-#define MULT_DELAY 4
-#define DIV_DELAY  6
+#define DEFAULT_FP_ADD_DELAY 2
+#define DEFAULT_MULT_DELAY   4
+#define DEFAULT_DIV_DELAY    6
 
 namespace mips_sim
 {
@@ -46,6 +46,9 @@ public:
 
   virtual void reset( bool reset_data_memory = true,
                       bool reset_text_memory = true );
+                      
+  virtual const std::map<std::string, int> get_status() const;
+  virtual bool set_status(std::map<std::string, int> new_status, bool merge = false);
 
   virtual bool next_cycle( std::ostream &out = std::cout );
   virtual void print_diagram( std::ostream &out = std::cout ) const;
@@ -56,6 +59,7 @@ public:
   uint32_t read_special_register(int id) const;
 
   const std::vector<uint32_t> & get_loaded_instructions();
+  
 protected:
 
   uint32_t alu_compute_op(uint32_t alu_input_a,
@@ -91,6 +95,7 @@ protected:
   int execution_stall;
 
   std::vector<uint32_t> loaded_instructions;
+  std::map<std::string, int> status;
 
 private:
 

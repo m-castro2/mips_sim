@@ -40,6 +40,12 @@
 #define BRANCH_NON_TAKEN 1 /* fixed non taken */
 #define BRANCH_DELAYED   2 /* delayed branch */
 
+/* proper keys */
+#define KEY_BRANCH_TYPE           "branch-type"
+#define KEY_BRANCH_STAGE          "branch-stage"
+#define KEY_FORWARDING_UNIT       "has-forwarding-unit"
+#define KEY_HAZARD_DETECTION_UNIT "has-hazard-detection-unit"
+
 #include "cpu.h"
 
 #define X -1
@@ -137,6 +143,7 @@ class CpuPipelined : public Cpu
     void enable_forwarding_unit( bool );
     void set_branch_stage( int );
     void set_branch_type( int );
+    
   private:
 
     bool pc_write; /* if false, blocks pipeline */
@@ -156,12 +163,6 @@ class CpuPipelined : public Cpu
     uint32_t loaded_instruction_index;
     uint32_t **diagram;
     uint32_t current_state[STAGE_COUNT] = {UNDEF32,UNDEF32,UNDEF32,UNDEF32,UNDEF32};
-
-    /* configuration */
-    int  cpu_branch_type;
-    int  cpu_branch_stage;
-    bool cpu_has_forwarding_unit;
-    bool cpu_has_hazard_detection_unit;
 
     void stage_if( std::ostream &out = std::cout );
     void stage_id( std::ostream &out = std::cout );

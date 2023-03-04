@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mips_sim_gui.ui'
 **
-** Created by: Qt User Interface Compiler version 5.12.8
+** Created by: Qt User Interface Compiler version 5.15.3
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -34,6 +34,8 @@ class Ui_MipsSimGui
 public:
     QAction *actionExit;
     QAction *actionLoad_file;
+    QAction *actionSettings;
+    QAction *actionAbout;
     QWidget *centralwidget;
     QVBoxLayout *verticalLayout_3;
     QFrame *mainFrame;
@@ -96,6 +98,7 @@ public:
     QLabel *lblCycles;
     QMenuBar *menubar;
     QMenu *menuFile;
+    QMenu *menuHelp;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MipsSimGui)
@@ -113,6 +116,10 @@ public:
         actionExit->setObjectName(QString::fromUtf8("actionExit"));
         actionLoad_file = new QAction(MipsSimGui);
         actionLoad_file->setObjectName(QString::fromUtf8("actionLoad_file"));
+        actionSettings = new QAction(MipsSimGui);
+        actionSettings->setObjectName(QString::fromUtf8("actionSettings"));
+        actionAbout = new QAction(MipsSimGui);
+        actionAbout->setObjectName(QString::fromUtf8("actionAbout"));
         centralwidget = new QWidget(MipsSimGui);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         centralwidget->setEnabled(true);
@@ -448,14 +455,19 @@ public:
         menubar->setGeometry(QRect(0, 0, 1068, 22));
         menuFile = new QMenu(menubar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
+        menuHelp = new QMenu(menubar);
+        menuHelp->setObjectName(QString::fromUtf8("menuHelp"));
         MipsSimGui->setMenuBar(menubar);
         statusbar = new QStatusBar(MipsSimGui);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MipsSimGui->setStatusBar(statusbar);
 
         menubar->addAction(menuFile->menuAction());
+        menubar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionLoad_file);
+        menuFile->addAction(actionSettings);
         menuFile->addAction(actionExit);
+        menuHelp->addAction(actionAbout);
 
         retranslateUi(MipsSimGui);
 
@@ -467,42 +479,51 @@ public:
 
     void retranslateUi(QMainWindow *MipsSimGui)
     {
-        MipsSimGui->setWindowTitle(QApplication::translate("MipsSimGui", "MipsSimGui", nullptr));
-        actionExit->setText(QApplication::translate("MipsSimGui", "Exit", nullptr));
-#ifndef QT_NO_TOOLTIP
-        actionExit->setToolTip(QApplication::translate("MipsSimGui", "Exit Mips Simulator", nullptr));
-#endif // QT_NO_TOOLTIP
-#ifndef QT_NO_SHORTCUT
-        actionExit->setShortcut(QApplication::translate("MipsSimGui", "Ctrl+Q", nullptr));
-#endif // QT_NO_SHORTCUT
-        actionLoad_file->setText(QApplication::translate("MipsSimGui", "Load file", nullptr));
-#ifndef QT_NO_SHORTCUT
-        actionLoad_file->setShortcut(QApplication::translate("MipsSimGui", "Ctrl+O", nullptr));
-#endif // QT_NO_SHORTCUT
-        lblStatusid->setText(QApplication::translate("MipsSimGui", "Status =", nullptr));
-        lblHIid->setText(QApplication::translate("MipsSimGui", "HI     =", nullptr));
-        lblStatusValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        lblLOid->setText(QApplication::translate("MipsSimGui", "LO       =", nullptr));
-        lblEPCValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        lblEPCid->setText(QApplication::translate("MipsSimGui", "EPC      =", nullptr));
-        lblBadVAddrid->setText(QApplication::translate("MipsSimGui", "BadVAddr =", nullptr));
-        lblLOValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        lblPCid->setText(QApplication::translate("MipsSimGui", "PC     =", nullptr));
-        lblCauseid->setText(QApplication::translate("MipsSimGui", "Cause =", nullptr));
-        lblPCValue->setText(QApplication::translate("MipsSimGui", "00400000", nullptr));
-        lblCauseValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        lblHIValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        lblBadVAddrValue->setText(QApplication::translate("MipsSimGui", "00000000", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MipsSimGui", "Single precision FP", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MipsSimGui", "Double precision FP", nullptr));
-        label_3->setText(QApplication::translate("MipsSimGui", "Data memory", nullptr));
-        label_4->setText(QApplication::translate("MipsSimGui", "Instructions memory", nullptr));
-        btnReset->setText(QApplication::translate("MipsSimGui", "Reset", nullptr));
-        btnPrev->setText(QApplication::translate("MipsSimGui", "Prev Cycle", nullptr));
-        btnNext->setText(QApplication::translate("MipsSimGui", "Next Cycle", nullptr));
-        btnRun->setText(QApplication::translate("MipsSimGui", "Run", nullptr));
-        lblCycles->setText(QApplication::translate("MipsSimGui", "0", nullptr));
-        menuFile->setTitle(QApplication::translate("MipsSimGui", "File", nullptr));
+        MipsSimGui->setWindowTitle(QCoreApplication::translate("MipsSimGui", "MipsSimGui", nullptr));
+        actionExit->setText(QCoreApplication::translate("MipsSimGui", "Exit", nullptr));
+#if QT_CONFIG(tooltip)
+        actionExit->setToolTip(QCoreApplication::translate("MipsSimGui", "Exit MIPS Simulator", nullptr));
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(shortcut)
+        actionExit->setShortcut(QCoreApplication::translate("MipsSimGui", "Ctrl+Q", nullptr));
+#endif // QT_CONFIG(shortcut)
+        actionLoad_file->setText(QCoreApplication::translate("MipsSimGui", "Load file", nullptr));
+#if QT_CONFIG(shortcut)
+        actionLoad_file->setShortcut(QCoreApplication::translate("MipsSimGui", "Ctrl+O", nullptr));
+#endif // QT_CONFIG(shortcut)
+        actionSettings->setText(QCoreApplication::translate("MipsSimGui", "Settings", nullptr));
+#if QT_CONFIG(tooltip)
+        actionSettings->setToolTip(QCoreApplication::translate("MipsSimGui", "Configure MIPS Simulator", nullptr));
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(shortcut)
+        actionSettings->setShortcut(QCoreApplication::translate("MipsSimGui", "Ctrl+S", nullptr));
+#endif // QT_CONFIG(shortcut)
+        actionAbout->setText(QCoreApplication::translate("MipsSimGui", "About", nullptr));
+        lblStatusid->setText(QCoreApplication::translate("MipsSimGui", "Status =", nullptr));
+        lblHIid->setText(QCoreApplication::translate("MipsSimGui", "HI     =", nullptr));
+        lblStatusValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        lblLOid->setText(QCoreApplication::translate("MipsSimGui", "LO       =", nullptr));
+        lblEPCValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        lblEPCid->setText(QCoreApplication::translate("MipsSimGui", "EPC      =", nullptr));
+        lblBadVAddrid->setText(QCoreApplication::translate("MipsSimGui", "BadVAddr =", nullptr));
+        lblLOValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        lblPCid->setText(QCoreApplication::translate("MipsSimGui", "PC     =", nullptr));
+        lblCauseid->setText(QCoreApplication::translate("MipsSimGui", "Cause =", nullptr));
+        lblPCValue->setText(QCoreApplication::translate("MipsSimGui", "00400000", nullptr));
+        lblCauseValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        lblHIValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        lblBadVAddrValue->setText(QCoreApplication::translate("MipsSimGui", "00000000", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MipsSimGui", "Single precision FP", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab_2), QCoreApplication::translate("MipsSimGui", "Double precision FP", nullptr));
+        label_3->setText(QCoreApplication::translate("MipsSimGui", "Data memory", nullptr));
+        label_4->setText(QCoreApplication::translate("MipsSimGui", "Instructions memory", nullptr));
+        btnReset->setText(QCoreApplication::translate("MipsSimGui", "Reset", nullptr));
+        btnPrev->setText(QCoreApplication::translate("MipsSimGui", "Prev Cycle", nullptr));
+        btnNext->setText(QCoreApplication::translate("MipsSimGui", "Next Cycle", nullptr));
+        btnRun->setText(QCoreApplication::translate("MipsSimGui", "Run", nullptr));
+        lblCycles->setText(QCoreApplication::translate("MipsSimGui", "0", nullptr));
+        menuFile->setTitle(QCoreApplication::translate("MipsSimGui", "File", nullptr));
+        menuHelp->setTitle(QCoreApplication::translate("MipsSimGui", "Help", nullptr));
     } // retranslateUi
 
 };

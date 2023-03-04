@@ -16,6 +16,11 @@ Cpu::Cpu(shared_ptr<Memory> _memory, shared_ptr<ControlUnit> _control_unit)
   loaded_instructions.reserve(400);
   loaded_instructions.push_back(0); /* start with a nop instruction */
 
+  /* set default status */
+  status["fp-add-delay"] = DEFAULT_FP_ADD_DELAY;
+  status["mult-delay"]   = DEFAULT_MULT_DELAY;
+  status["div-delay"]    = DEFAULT_DIV_DELAY;
+  
   /* reset CPU but no memory */
   reset(false, false);
 }
@@ -58,6 +63,31 @@ void Cpu::reset( bool reset_data_memory, bool reset_text_memory )
 
   loaded_instructions.clear();
   loaded_instructions.push_back(0); /* start with a nop instruction */
+}
+
+const map<string, int> Cpu::get_status() const
+{
+  return status;
+}
+
+bool Cpu::set_status(map<string, int> new_status, bool merge)
+{
+  if (!merge)
+  {
+    if (new_status.size() != status.size() && !merge)
+      return false;
+  
+    status = new_status;
+  }
+  else
+  {
+    for (const auto& entry : new_status)
+    {
+      status[entry.first] = entry.second;
+    }
+  }
+    
+  return true;
 }
 
 uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
@@ -111,7 +141,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
       //TODO: Update HI/LO after stall
       HI = (v >> 32) & 0xFFFFFFFF;
       LO = v & 0xFFFFFFFF;
-      execution_stall = MULT_DELAY;
+      execution_stall = status["mult-delay"];
     }
       break;
     case SUBOP_MULTU:
@@ -120,7 +150,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
       //TODO: Update HI/LO after stall
       HI = (v >> 32) & 0xFFFFFFFF;
       LO = v & 0xFFFFFFFF;
-      execution_stall = MULT_DELAY;
+      execution_stall = status["mult-delay"];
     }
       break;
     case SUBOP_DIV:
@@ -129,7 +159,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
       /* HI = div, LO = mod */
       HI = static_cast<uint32_t>(static_cast<int32_t>(alu_input_a) / static_cast<int32_t>(alu_input_b));
       LO = static_cast<uint32_t>(static_cast<int32_t>(alu_input_a) % static_cast<int32_t>(alu_input_b));
-      execution_stall = DIV_DELAY;
+      execution_stall = status["div-delay"];
     }
       break;
     case SUBOP_DIVU:
@@ -138,7 +168,7 @@ uint32_t Cpu::alu_compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
       /* HI = div, LO = mod */
       HI = alu_input_a / alu_input_b;
       LO = alu_input_a % alu_input_b;
-      execution_stall = DIV_DELAY;
+      execution_stall = status["div-delay"];
     }
       break;
     default:

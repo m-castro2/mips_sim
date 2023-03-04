@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <QDialog>
 #include <QMainWindow>
 #include <QTextStream>
 #include <QFont>
@@ -50,6 +51,9 @@ public:
     MipsSimGui(QWidget *parent = nullptr);
     ~MipsSimGui();
 
+    const std::map<std::string, int> get_cpu_status( void ) const;
+    void set_cpu_status( std::map<std::string, int> new_status );
+    
 private slots:
     void on_btnRun_clicked();
     void on_btnNext_clicked();
@@ -57,7 +61,8 @@ private slots:
     void on_btnReset_clicked();
     void on_actionLoad_file_triggered();
     void on_actionExit_triggered();
-
+    void on_actionSettings_triggered();
+    
 private:
     Ui::MipsSimGui *ui;
 
@@ -82,5 +87,9 @@ private:
     void set_dmem_labels();
     void set_tmem_labels();
     void set_diagram_labels();
+    
+    void handle_exception(int e);
+    
+    QDialog * settings_window;
 };
 #endif // MIPSSIMGUI_H
