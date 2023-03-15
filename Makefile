@@ -5,27 +5,27 @@ UIC := uic
 INSTALLDIR = $(PWD)
 
 ifeq ($(CC), clang++)
-  CPPFLAGS = -D_QT -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++14 \
+  CPPFLAGS = -D_QT -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++17 \
              -Wno-exit-time-destructors -Wno-global-constructors \
              -Wno-unused-macros \
              -m64 -pipe
 else
-  CPPFLAGS = -D_QT -g -O3 -Wpedantic -Wall -Wno-padded -std=c++14 \
+  CPPFLAGS = -D_QT -g -O3 -Wpedantic -Wall -Wno-padded -std=c++17 \
              -m64 -pipe
 endif
 
-CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++14 -m64 -Wno-weak-vtables
+CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++17 -m64 -Wno-weak-vtables
 
 CPPLIBS =
 QTLIBS = -L/usr/lib/x86_64-linux-gnu -lQt5Widgets -lQt5Gui -lQt5Core
 QTINCLUDE := -fPIC \
-	-Iinclude/ \
-	-I$(INC_DIR) \
-	-Iinclude/qcustomplot \
-	-I/usr/include/x86_64-linux-gnu/qt5 \
-	-I/usr/include/x86_64-linux-gnu/qt5/QtWidgets \
-	-I/usr/include/x86_64-linux-gnu/qt5/QtCore \
-	-I/usr/include/x86_64-linux-gnu/qt5/QtGui
+  -Iinclude/ \
+  -I$(INC_DIR) \
+  -Iinclude/qcustomplot \
+  -I/usr/include/x86_64-linux-gnu/qt5 \
+  -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets \
+  -I/usr/include/x86_64-linux-gnu/qt5/QtCore \
+  -I/usr/include/x86_64-linux-gnu/qt5/QtGui
 QTOBJFILES = src/interface/qt/mips_sim_gui.o \
              src/interface/qt/mips_sim_settings.o \
              src/interface/qt/moc_mips_sim_gui.o \
@@ -37,14 +37,16 @@ QTFILES = src/interface/qt/ui_mips_sim_gui.h \
 
 OBJFILES = src/assembler/mips_parser.o \
            src/assembler/mips_scanner.o \
-           src/cpu/control_unit.o \
-	         src/cpu/cpu.o \
-					 src/cpu/cpu_multi.o \
-					 src/cpu/cpu_pipelined.o \
-					 src/interface/mipscli.o \
-	         src/mem.o \
-		       src/utils.o \
-	         src/mips_sim.o
+           src/cpu/component/alu.o \
+           src/cpu/component/control_unit.o \
+           src/cpu/component/registers_bank.o \
+           src/cpu/cpu.o \
+           src/cpu/cpu_multi.o \
+           src/cpu/cpu_pipelined.o \
+           src/interface/mipscli.o \
+           src/mem.o \
+           src/utils.o \
+           src/mips_sim.o
 
 DEPS =
 

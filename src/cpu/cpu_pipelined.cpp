@@ -57,7 +57,7 @@ namespace mips_sim
     pc_instruction_jump   = 0;
 
     loaded_instruction_index = 1;
-    loaded_instructions.push_back(PC);
+    loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
 
     diagram = new uint32_t*[MAX_DIAGRAM_SIZE];
     for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
@@ -105,23 +105,24 @@ namespace mips_sim
     seg_reg_t next_seg_reg = {};
     uint32_t instruction_code;
     string cur_instr_name;
+    uint32_t current_pc = sr_bank->get(SPECIAL_PC);
 
-    if (PC != loaded_instructions[loaded_instruction_index])
+    if (current_pc != loaded_instructions[loaded_instruction_index])
     {
       loaded_instruction_index++;
-      loaded_instructions.push_back(PC);
+      loaded_instructions.push_back(current_pc);
     }
 
     out << "IF stage" << endl;
 
     /* fetch instruction */
-    instruction_code = memory->mem_read_32(PC);
+    instruction_code = memory->mem_read_32(current_pc);
 
     cur_instr_name = Utils::decode_instruction(instruction_code);
-    out << "   *** PC: 0x" << Utils::hex32(PC) << endl;
+    out << "   *** PC: 0x" << Utils::hex32(current_pc) << endl;
     out << "   *** " << cur_instr_name << " : 0x"
         << Utils::hex32(instruction_code) << endl;
-    current_state[STAGE_IF] = PC;
+    current_state[STAGE_IF] = current_pc;
 
     /* increase PC */
     if (pc_write)
@@ -129,26 +130,28 @@ namespace mips_sim
       switch(pc_src_signal)
       {
         case 0:
-          PC += 4; break;
+          current_pc += 4; break;
         case 1:
           out << "   !!! Conditional branch taken >> 0x"
              << Utils::hex32(pc_conditional_branch) << endl;
-          PC = pc_conditional_branch; break;
+          current_pc = pc_conditional_branch; break;
         case 2:
           out << "   !!! Register jump taken >> 0x"
              << Utils::hex32(pc_register_jump) << endl;
-          PC = pc_register_jump; break;
+          current_pc = pc_register_jump; break;
         case 3:
           out << "   !!! Unconditional jump taken >> 0x"
              << Utils::hex32(pc_instruction_jump) << endl;
-          PC = pc_instruction_jump; break;
+          current_pc = pc_instruction_jump; break;
         default:
           assert(0);
       }
 
+      sr_bank->set(SPECIAL_PC, current_pc);
+
       /* next instruction */
       next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-      next_seg_reg.data[SR_PC] = PC;
+      next_seg_reg.data[SR_PC] = current_pc;
 
       next_seg_reg.data[SR_IID] = loaded_instruction_index;
 
@@ -328,7 +331,7 @@ namespace mips_sim
             flush_pipeline = 1;
 
             if (!branch_taken)
-              PC = pc_value-4;
+              sr_bank->set(SPECIAL_PC, pc_value-4);
           }
         }
 
@@ -449,6 +452,11 @@ namespace mips_sim
 
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(addr_i) << 16 >> 16);
 
+    /* temporary data */
+    uint32_t hi_reg, lo_reg;
+    int stall_cycles;
+    bool hi_lo_updated = false;
+
     out << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
     current_state[STAGE_EX] = pc_value-4;
 
@@ -465,27 +473,52 @@ namespace mips_sim
     alu_input_b = control_unit->test(microinstruction, SIG_ALUSRC)
                   ? addr_i32
                   : rt_value;
-
-    switch (control_unit->test(microinstruction, SIG_ALUOP))
+    try
     {
-      case 0:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                       static_cast<uint8_t>(shamt), SUBOP_ADDU);
-        break;
-      case 1:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                       static_cast<uint8_t>(shamt), SUBOP_SUBU);
-        break;
-      case 2:
-        if (opcode == OP_RTYPE)
-          alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                         static_cast<uint8_t>(shamt), funct);
-        else
-          alu_output = alu_compute_op(alu_input_a, alu_input_b, opcode);
-        break;
-      default:
-        std::cerr << "Undefined ALU operation" << std::endl;
-        assert(0);
+      switch (control_unit->test(microinstruction, SIG_ALUOP))
+      {
+        case 0:
+          alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                        static_cast<uint8_t>(shamt), SUBOP_ADDU,
+                                        &hi_reg, &lo_reg, &stall_cycles);
+          hi_lo_updated = true;
+              
+          break;
+        case 1:
+          alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                        static_cast<uint8_t>(shamt), SUBOP_SUBU,
+                                        &hi_reg, &lo_reg, &stall_cycles);
+          hi_lo_updated = true;
+          break;
+        case 2:
+          if (opcode == OP_RTYPE)
+          {
+            alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                          static_cast<uint8_t>(shamt), funct,
+                                          &hi_reg, &lo_reg, &stall_cycles);
+            hi_lo_updated = true;
+          }
+          else
+            alu_output = alu->compute_op(alu_input_a, alu_input_b, opcode);
+          break;
+        default:
+          std::cerr << "Undefined ALU operation" << std::endl;
+          assert(0);
+      }
+    }
+    catch(int e)
+    {
+      if (e == SYSCALL_EXCEPTION)
+        syscall(gpr_bank->get("$v0"));
+      else
+        throw Exception::e(e, err_msg, err_v);
+    }
+
+    if (hi_lo_updated)
+    {
+      sr_bank->set(SPECIAL_HI, hi_reg);
+      sr_bank->set(SPECIAL_LO, lo_reg);
+      execution_stall = stall_cycles;
     }
 
     out << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
@@ -540,7 +573,7 @@ namespace mips_sim
         flush_pipeline = 3;
 
         if (!branch_taken)
-          PC = pc_value-4;
+          sr_bank->set(SPECIAL_PC, pc_value-4);
       }
 
       if (branch_taken)
@@ -715,7 +748,7 @@ namespace mips_sim
 
     if (next_pc != 0)
     {
-      PC = next_pc;
+      sr_bank->set(SPECIAL_PC, next_pc);
       next_pc = 0;
     }
 
@@ -803,7 +836,7 @@ namespace mips_sim
     pc_register_jump      = 0;
     pc_instruction_jump   = 0;
 
-    loaded_instructions.push_back(PC);
+    loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
     loaded_instruction_index = 1;
   }
 

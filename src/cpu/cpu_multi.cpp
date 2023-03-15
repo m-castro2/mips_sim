@@ -1,8 +1,10 @@
 #include "cpu_multi.h"
+#include "../utils.h"
+#include "../exception.h"
+
 #include <cassert>
 #include <iostream>
 #include <iomanip>
-#include "../utils.h"
 
 using namespace std;
 
@@ -65,6 +67,10 @@ namespace mips_sim
 
     uint32_t word_read = 0;
 
+    uint32_t hi_reg, lo_reg;
+    int stall_cycles;
+    bool hi_lo_updated = false;
+
     if (execution_stall > 0)
     {
       execution_stall--;
@@ -77,7 +83,7 @@ namespace mips_sim
               << Utils::hex32(microinstruction) << endl;
     if (mi_index > 0)
     {
-      out << "   PC: [" << Utils::hex32(PC)
+      out << "   PC: [" << sr_bank->hex32_get(SPECIAL_PC)
                 << "] A_REG: [" << Utils::hex32(A_REG)
                 << "]    B_REG: [" << Utils::hex32(B_REG) << "]" << endl;
       if (instruction.fp_op)
@@ -107,7 +113,7 @@ namespace mips_sim
     }
     else
     {
-      loaded_instructions.push_back(PC);
+      loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
       icycle = 0;
     }
 
@@ -117,7 +123,7 @@ namespace mips_sim
     {
       uint32_t address;
       if (control_unit->test(microinstruction, SIG_IOD) == 0)
-        address = PC;
+        address = sr_bank->get(SPECIAL_PC);
       else
         address = ALU_OUT_REG[0];
       out << "  -Read memory address: 0x" << Utils::hex32(address) << endl;
@@ -146,7 +152,7 @@ namespace mips_sim
 
     /* ALU */
     if (control_unit->test(microinstruction, SIG_SELALUA) == 0)
-        alu_input_a = PC;
+        alu_input_a = sr_bank->get(SPECIAL_PC);
     else if (control_unit->test(microinstruction, SIG_SELALUA) == 1)
         alu_input_a = A_REG;
     else
@@ -169,73 +175,96 @@ namespace mips_sim
     else
         assert(0);
 
-    switch (control_unit->test(microinstruction, SIG_ALUOP))
+    try
     {
-      case 0:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                       instruction.shamt, SUBOP_ADDU);
-        break;
-      case 1:
-        alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                       instruction.shamt, SUBOP_SUBU);
-        break;
-      case 2:
-        if (instruction.opcode == OP_RTYPE)
-        {
-          alu_output = alu_compute_subop(alu_input_a, alu_input_b,
-                                         instruction.shamt, instruction.funct);
-        }
-        else
-        {
-          alu_output = alu_compute_op(alu_input_a, alu_input_b, instruction.opcode);
-        }
-        break;
-      case 3:
-        //TODO
-        cop0_input_a = Utils::word_to_float(FA_REG);
-        cop0_input_b = Utils::word_to_float(FB_REG);
-        cop1_input_a = Utils::word_to_double(FA_REG);
-        cop1_input_b = Utils::word_to_double(FB_REG);
-        switch(instruction.funct)
-        {
-          case SUBOP_FPADD:
-            if (instruction.cop == 0)
-              cop0_output = cop0_input_a + cop0_input_b;
-            else if (instruction.cop == 1)
-              cop1_output = cop1_input_a + cop1_input_b;
-            execution_stall = status["fp-add-delay"];
-            break;
-          case SUBOP_FPSUB:
-            if (instruction.cop == 0)
-              cop0_output = cop0_input_a - cop0_input_b;
-            else if (instruction.cop == 1)
-              cop1_output = cop1_input_a - cop1_input_b;
-            execution_stall = status["fp-add-delay"];
-            break;
-          case SUBOP_FPMUL:
-            if (instruction.cop == 0)
-              cop0_output = cop0_input_a * cop0_input_b;
-            else if (instruction.cop == 1)
-              cop1_output = cop1_input_a * cop1_input_b;
-            execution_stall = status["mult-delay"];
-            break;
-          case SUBOP_FPDIV:
-            if (instruction.cop == 0)
-              cop0_output = cop0_input_a / cop0_input_b;
-            else if (instruction.cop == 1)
-              cop1_output = cop1_input_a / cop1_input_b;
-            execution_stall = status["div-delay"];
-            break;
-          default:
-            cerr << "Undefined FP operation: " << instruction.code << endl;
-            assert(0);
-        }
-        break;
-      default:
+      switch (control_unit->test(microinstruction, SIG_ALUOP))
       {
-        cerr << "Undefined ALU operation" << endl;
-        assert(0);
+        case 0:
+          alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                        instruction.shamt, SUBOP_ADDU,
+                                        &hi_reg, &lo_reg, &stall_cycles);
+          hi_lo_updated = true;
+          break;
+        case 1:
+          alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                        instruction.shamt, SUBOP_SUBU,
+                                        &hi_reg, &lo_reg, &stall_cycles);
+          hi_lo_updated = true;
+          break;
+        case 2:
+          if (instruction.opcode == OP_RTYPE)
+          {
+            alu_output = alu->compute_subop(alu_input_a, alu_input_b,
+                                          instruction.shamt, instruction.funct,
+                                          &hi_reg, &lo_reg, &stall_cycles);
+            hi_lo_updated = true;
+          }
+          else
+          {
+            alu_output = alu->compute_op(alu_input_a, alu_input_b, instruction.opcode);
+          }
+          break;
+        case 3:
+          //TODO
+          cop0_input_a = Utils::word_to_float(FA_REG);
+          cop0_input_b = Utils::word_to_float(FB_REG);
+          cop1_input_a = Utils::word_to_double(FA_REG);
+          cop1_input_b = Utils::word_to_double(FB_REG);
+          switch(instruction.funct)
+          {
+            case SUBOP_FPADD:
+              if (instruction.cop == 0)
+                cop0_output = cop0_input_a + cop0_input_b;
+              else if (instruction.cop == 1)
+                cop1_output = cop1_input_a + cop1_input_b;
+              execution_stall = status["fp-add-delay"];
+              break;
+            case SUBOP_FPSUB:
+              if (instruction.cop == 0)
+                cop0_output = cop0_input_a - cop0_input_b;
+              else if (instruction.cop == 1)
+                cop1_output = cop1_input_a - cop1_input_b;
+              execution_stall = status["fp-add-delay"];
+              break;
+            case SUBOP_FPMUL:
+              if (instruction.cop == 0)
+                cop0_output = cop0_input_a * cop0_input_b;
+              else if (instruction.cop == 1)
+                cop1_output = cop1_input_a * cop1_input_b;
+              execution_stall = status["mult-delay"];
+              break;
+            case SUBOP_FPDIV:
+              if (instruction.cop == 0)
+                cop0_output = cop0_input_a / cop0_input_b;
+              else if (instruction.cop == 1)
+                cop1_output = cop1_input_a / cop1_input_b;
+              execution_stall = status["div-delay"];
+              break;
+            default:
+              cerr << "Undefined FP operation: " << instruction.code << endl;
+              assert(0);
+          }
+          break;
+        default:
+        {
+          cerr << "Undefined ALU operation" << endl;
+          assert(0);
+        }
       }
+    }
+    catch(int e)
+    {
+      if (e == SYSCALL_EXCEPTION)
+        syscall(gpr_bank->get("$v0"));
+      else
+        throw Exception::e(e, err_msg, err_v);
+    }
+
+    if (hi_lo_updated)
+    {
+      sr_bank->set(SPECIAL_HI, hi_reg);
+      sr_bank->set(SPECIAL_LO, lo_reg);
+      execution_stall = stall_cycles;
     }
 
     if (control_unit->test(microinstruction, SIG_ALUOP) == 3)
@@ -281,7 +310,7 @@ namespace mips_sim
         else if (control_unit->test(microinstruction, SIG_MEM2REG) == 1)
           writedata = MEM_DATA_REG;
         else if (control_unit->test(microinstruction, SIG_MEM2REG) == 2)
-          writedata = PC;
+          writedata = sr_bank->get(SPECIAL_PC);
         else
           assert(0);
 
@@ -322,20 +351,23 @@ namespace mips_sim
         switch (control_unit->test(microinstruction, SIG_PCSRC))
         {
         case 0:
-          PC = alu_output;
-          out << "PC write [ALU]: 0x" << Utils::hex32(PC) << endl;
+          sr_bank->set(SPECIAL_PC, alu_output);
+          out << "PC write [ALU]: 0x" << sr_bank->hex32_get(SPECIAL_PC) << endl;
           break;
         case 1:
-          PC = ALU_OUT_REG[0];
-          out << "PC write [ALU_OUT]: 0x" << Utils::hex32(PC) << endl;
+          sr_bank->set(SPECIAL_PC, ALU_OUT_REG[0]);
+          out << "PC write [ALU_OUT]: 0x" << sr_bank->hex32_get(SPECIAL_PC) << endl;
           break;
         case 2:
-          PC = (PC & 0xF0000000) + (instruction.addr_j << 2);
-          out << "PC write [J]: 0x" << Utils::hex32(PC) << endl;
+        {
+          uint32_t new_pc = (sr_bank->get(SPECIAL_PC) & 0xF0000000) + (instruction.addr_j << 2);
+          sr_bank->set(SPECIAL_PC, new_pc);
+          out << "PC write [J]: 0x" << Utils::hex32(new_pc) << endl;
+        }
           break;
         case 3:
-          PC = A_REG;
-          out << "PC write [REG]: 0x" << Utils::hex32(PC) << endl;
+          sr_bank->set(SPECIAL_PC, A_REG);
+          out << "PC write [REG]: 0x" << sr_bank->hex32_get(SPECIAL_PC) << endl;
           break;
         default:
           assert(0);

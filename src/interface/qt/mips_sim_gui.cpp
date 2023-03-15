@@ -493,7 +493,6 @@ void MipsSimGui::on_actionLoad_file_triggered()
     {
       uint32_t start = MEM_TEXT_START;
       uint32_t length = MEM_TEXT_SIZE;
-      int instr_index;
 
       asm_filename = filename;
 
@@ -514,18 +513,6 @@ void MipsSimGui::on_actionLoad_file_triggered()
       }
       instructions.clear();
       dmem_labels.clear();
-//
-// for (size_t j = 0; j < DIA_CYCLES; j++)
-// {
-//       QLabel * instr_stage;
-//       instr_stage = new QLabel(ui->frameTMem);
-//       instr_stage->setMinimumSize(QSize(30, 15));
-//       instr_stage->setMaximumSize(QSize(30, 15));
-//       instr_stage->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-//       instr_stage->setFont(font);
-//       instr_stage->setText(QString::number(j));
-//       static_cast<QGridLayout *>(ui->frameTMem->layout())->addWidget(instr_stage, 0, j+1, 1, 1);
-// }
 
       for (uint32_t mem_addr=start, instr_index=1; mem_addr<start+length; mem_addr+=4, instr_index++)
       {
@@ -535,7 +522,6 @@ void MipsSimGui::on_actionLoad_file_triggered()
         try {
           uint32_t word = mem->mem_read_32(mem_addr);
           QLabel * instr_label;
-          QLabel * instr_stage;
 
           instr_label = new QLabel(ui->frameTMem);
           instr_label->setMinimumSize(QSize(400, 15));

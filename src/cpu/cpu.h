@@ -1,7 +1,9 @@
 #ifndef MIPS_SIM_CPU_H
 #define MIPS_SIM_CPU_H
 
-#include "control_unit.h"
+#include "component/alu.h"
+#include "component/control_unit.h"
+#include "component/registers_bank.h"
 #include "../global_defs.h"
 #include "../mem.h"
 
@@ -10,13 +12,13 @@
 #include <vector>
 #include <iostream>
 
-#define SPECIAL_PC       0
-#define SPECIAL_STATUS   1
-#define SPECIAL_HI       2
-#define SPECIAL_LO       3
-#define SPECIAL_EPC      4
-#define SPECIAL_BADVADDR 5
-#define SPECIAL_CAUSE    6
+#define SPECIAL_PC       "pc"
+#define SPECIAL_STATUS   "status"
+#define SPECIAL_HI       "hi"
+#define SPECIAL_LO       "lo"
+#define SPECIAL_EPC      "epc"
+#define SPECIAL_BADVADDR "badvaddr"
+#define SPECIAL_CAUSE    "cause"
 
 #define ERROR_UNSUPPORTED_OPERATION    101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
@@ -39,10 +41,12 @@ public:
   void print_registers( std::ostream &out = std::cout ) const;
   void print_int_registers( std::ostream &out = std::cout ) const;
   void print_fp_registers( std::ostream &out = std::cout ) const;
+
   uint32_t read_register( size_t reg_index) const;
   uint32_t read_fp_register( size_t reg_index) const;
   float read_register_f( size_t reg_index) const;
   double read_register_d( size_t reg_index) const;
+  uint32_t read_special_register(std::string reg_name) const;
 
   virtual void reset( bool reset_data_memory = true,
                       bool reset_text_memory = true );
@@ -56,20 +60,9 @@ public:
   uint32_t get_cycle( void ) const;
   bool run_to_cycle( uint32_t cycle, std::ostream &out = std::cout );
 
-  uint32_t read_special_register(int id) const;
-
   const std::vector<uint32_t> & get_loaded_instructions();
   
 protected:
-
-  uint32_t alu_compute_op(uint32_t alu_input_a,
-                          uint32_t alu_input_b,
-                          uint32_t alu_op) const;
-
-  uint32_t alu_compute_subop(uint32_t alu_input_a,
-                             uint32_t alu_input_b,
-                             uint8_t shift_amount,
-                             uint32_t alu_subop);
 
   void syscall( uint32_t value );
 
@@ -86,22 +79,19 @@ protected:
   size_t mi_index;
   bool ready;
 
-  /* special registers */
-  uint32_t HI, LO;
-  uint32_t PC;
-  uint32_t STATUS, EPC, CAUSE, BADVADDR;
-
-  /* stall cycles */
+    /* stall cycles */
   int execution_stall;
 
   std::vector<uint32_t> loaded_instructions;
   std::map<std::string, int> status;
 
-private:
+  /* components */
+  std::unique_ptr<Alu> alu;
+  std::shared_ptr<GPRegistersBank> gpr_bank; /* general purpose registers */
+  std::shared_ptr<FPRegistersBank> fpr_bank; /* floating point registers */
+  std::shared_ptr<SpecialRegistersBank> sr_bank;  /* special registers */
 
-  /* register banks */
-  uint32_t gpr[32];
-  uint32_t fpr[32];
+private:
 
   std::string register_str(size_t reg_id, bool fp,
                            bool show_value, bool show_double) const;
