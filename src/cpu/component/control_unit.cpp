@@ -104,17 +104,23 @@ uint32_t ControlUnit::get_microinstruction(size_t index) const
 
 ctrl_dir_t ControlUnit::find_ctrl_dir_entry(uint8_t opcode, uint8_t subopcode) const
 {
-  for (size_t i=0; uc_ctrl_dir[i].opcode != UNDEF8; ++i)
+  size_t i;
+  for (i=0; uc_ctrl_dir[i].opcode != UNDEF8; ++i)
   {
     if (uc_ctrl_dir[i].opcode == opcode
        && (subopcode == UNDEF8 || uc_ctrl_dir[i].subopcode == UNDEF8
            || uc_ctrl_dir[i].subopcode == subopcode))
     {
-        return uc_ctrl_dir[i];
+        break;
     }
   }
+  
+  if (uc_ctrl_dir[i].jump1 == UNDEF32 && uc_ctrl_dir[i].jump2 == UNDEF32 && uc_ctrl_dir[i].jump4 == UNDEF32)
+  {
+    throw Exception::e(CTRL_UNDEF_EXCEPTION, "Undefined CtrlDir entry");
+  }
 
-  throw Exception::e(CTRL_UNDEF_EXCEPTION, "Undefined CtrlDir entry");
+  return uc_ctrl_dir[i];
 }
 
 size_t ControlUnit::get_next_microinstruction_index(size_t index,
@@ -123,49 +129,63 @@ size_t ControlUnit::get_next_microinstruction_index(size_t index,
 {
   assert(ctrl_dir_set);
 
-  //int jump_type = (uc_microcode[index] >> 28) & 0xF;
-  size_t jump_type = test(uc_microcode[static_cast<size_t>(index)], SIG_CTRLDIR);
+  size_t jump_type;
   size_t mi_index = index;
   ctrl_dir_t ctrl_dir_entry;
 
-  switch (jump_type)
+  if (index == UNDEF32)
   {
-    case 0:
-      mi_index = 0;
-      break;
-    case 1:
-      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
-      mi_index = ctrl_dir_entry.jump1;
-
-      if (mi_index == UNDEF32)
-      {
-        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 1 not supported:", opcode);
-      }
-      break;
-    case 2:
-      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
-      mi_index = ctrl_dir_entry.jump2;
-
-      if (mi_index == UNDEF32)
-      {
-        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 2 not supported:", opcode);
-      }
-      break;
-    case 3:
-      /* next */
-      mi_index++;
-      break;
-    case 4:
-      ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
-      mi_index = ctrl_dir_entry.jump4;
-
-      if (mi_index == UNDEF32)
-      {
-        throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 3 not supported:", opcode);
-      }
-      //TODO: Check overflow
-      break;
+    /* search entire table */
+    ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
+    mi_index = ctrl_dir_entry.jump1;
+    
+    assert(mi_index != UNDEF32);
   }
+  else
+  {
+    cout << "THERE " << endl;
+    /* search depending on microinstruction jump type */
+    jump_type = test(uc_microcode[static_cast<size_t>(index)], SIG_CTRLDIR);
+    switch (jump_type)
+    {
+      case 0:
+        mi_index = 0;
+        break;
+      case 1:
+        ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
+        mi_index = ctrl_dir_entry.jump1;
+
+        if (mi_index == UNDEF32)
+        {
+          throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 1 not supported:", opcode);
+        }
+        break;
+      case 2:
+        ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
+        mi_index = ctrl_dir_entry.jump2;
+
+        if (mi_index == UNDEF32)
+        {
+          throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 2 not supported:", opcode);
+        }
+        break;
+      case 3:
+        /* next */
+        mi_index++;
+        break;
+      case 4:
+        ctrl_dir_entry = find_ctrl_dir_entry(opcode, subopcode);
+        mi_index = ctrl_dir_entry.jump4;
+
+        if (mi_index == UNDEF32)
+        {
+          throw Exception::e(CTRL_BAD_JUMP_EXCEPTION, "CtrlDir operation level 3 not supported:", opcode);
+        }
+        //TODO: Check overflow
+        break;
+    }
+  }
+
   return mi_index;
 }
 

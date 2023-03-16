@@ -14,7 +14,7 @@ namespace mips_sim
 {
   constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
   constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
-  constexpr op_microcode_t CpuPipelined::op_select[];
+  constexpr ctrl_dir_t CpuPipelined::uc_ctrl_dir[];
 
   CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory,
                              std::shared_ptr<ControlUnit> _control_unit,
@@ -27,7 +27,7 @@ namespace mips_sim
             std::shared_ptr<ControlUnit>(
               new ControlUnit(CpuPipelined::uc_signal_bits,
                               CpuPipelined::uc_microcode_matrix,
-                              nullptr))
+                              CpuPipelined::uc_ctrl_dir))
          )
   {
 
@@ -237,20 +237,10 @@ namespace mips_sim
     }
     else
     {
-      /* this loop eventually finishes: last entry is {UNDEF8,UNDEF8} */
-      for (size_t i=0; ; ++i)
-      {
-        if (instruction.opcode == op_select[i].opcode
-            || op_select[i].opcode == UNDEF8)
-        {
-          if (instruction.funct == op_select[i].subopcode
-              || op_select[i].subopcode == UNDEF8)
-          {
-            mi_index = op_select[i].microinstruction_index;
-            break;
-          }
-        }
-      }
+      mi_index = control_unit->get_next_microinstruction_index(UNDEF32,
+                                                               instruction.opcode,
+                                                               instruction.funct);
+
 
       microinstruction = control_unit->get_microinstruction(mi_index);
       out << "   Microinstruction: [" << mi_index << "]: 0x"

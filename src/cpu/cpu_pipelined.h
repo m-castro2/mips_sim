@@ -95,30 +95,30 @@ class CpuPipelined : public Cpu
       {0} // end
     };
 
-    static constexpr op_microcode_t op_select[] =
+    static constexpr ctrl_dir_t uc_ctrl_dir[] =
     {
-      {OP_RTYPE, SUBOP_JR,       2},
-      {OP_RTYPE, SUBOP_JALR,     4},
-      {OP_RTYPE, SUBOP_SYSCALL, 12},
-      {OP_RTYPE, UNDEF8,         0},
-      {OP_J,     UNDEF8,         1},
-      {OP_JAL,   UNDEF8,         3},
-      {OP_BNE,   UNDEF8,         5},
-      {OP_BEQ,   UNDEF8,         5},
-      {OP_LW,    UNDEF8,         6},
-      {OP_LWC1,  UNDEF8,        10},
-      {OP_SW,    UNDEF8,         7},
-      {OP_SWC1,  UNDEF8,        11},
-      {OP_FTYPE, SUBOP_FPADD,    9},
-      {OP_FTYPE, SUBOP_FPSUB,    9},
-      {OP_FTYPE, SUBOP_FPMUL,    9},
-      {OP_FTYPE, SUBOP_FPDIV,    9},
-      {OP_FTYPE, SUBOP_FPCEQ,    8},
-      {OP_FTYPE, SUBOP_FPCLE,    8},
-      {OP_FTYPE, SUBOP_FPCLT,    8},
-      {OP_FTYPE, UNDEF8     ,    5}, // bc1t / bc1f
-      {UNDEF8,   UNDEF8,         8}   // I type
-
+    // OPCODE    SUBOP         JUMP1    JUMP2    JUMP4 
+      {OP_RTYPE, SUBOP_JR,       2, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_JALR,     4, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_SYSCALL, 12, UNDEF32, UNDEF32},
+      {OP_RTYPE, UNDEF8,         0, UNDEF32, UNDEF32},
+      {OP_J,     UNDEF8,         1, UNDEF32, UNDEF32},
+      {OP_JAL,   UNDEF8,         3, UNDEF32, UNDEF32},
+      {OP_BEQ,   UNDEF8,         5, UNDEF32, UNDEF32},
+      {OP_BNE,   UNDEF8,         5, UNDEF32, UNDEF32},
+      {OP_LW,    UNDEF8,         6, UNDEF32, UNDEF32},
+      {OP_LWC1,  UNDEF8,        10, UNDEF32, UNDEF32},
+      {OP_SW,    UNDEF8,         7, UNDEF32, UNDEF32},
+      {OP_SWC1,  UNDEF8,        11, UNDEF32, UNDEF32},      
+      {OP_FTYPE, SUBOP_FPADD,    9, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPSUB,    9, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPMUL,    9, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPDIV,    9, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPCEQ,    8, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPCLE,    8, UNDEF32, UNDEF32},
+      {OP_FTYPE, SUBOP_FPCLT,    8, UNDEF32, UNDEF32},
+      {OP_FTYPE, UNDEF8,         5, UNDEF32, UNDEF32}, // bc1t / bc1f
+      {UNDEF8,   UNDEF8,         8, UNDEF32, UNDEF32}  // I type
     };
 
     //CpuPipelined(std::shared_ptr<Memory>);

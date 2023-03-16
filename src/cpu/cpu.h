@@ -86,7 +86,7 @@ protected:
   std::map<std::string, int> status;
 
   /* components */
-  std::unique_ptr<Alu> alu;
+  std::unique_ptr<Alu> alu; /* Arithmetic Logic Unit */
   std::shared_ptr<GPRegistersBank> gpr_bank; /* general purpose registers */
   std::shared_ptr<FPRegistersBank> fpr_bank; /* floating point registers */
   std::shared_ptr<SpecialRegistersBank> sr_bank;  /* special registers */
