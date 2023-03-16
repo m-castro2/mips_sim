@@ -66,7 +66,19 @@ uint32_t Alu::compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
     case SUBOP_SLL:
       alu_output = alu_input_b << shift_amount; break;
     case SUBOP_SRL:
+      /* parameters are unsigned, thus this op should work correctly */
       alu_output = alu_input_b >> shift_amount; break;
+    case SUBOP_SRA:
+      /* we assume arithmetic shift is the default compiler behavior */
+      alu_output = static_cast<uint32_t>(static_cast<int32_t>(alu_input_b) >> shift_amount); break;
+    case SUBOP_SLLV:
+      alu_output = alu_input_a << alu_input_b; break;
+    case SUBOP_SRLV:
+      /* parameters are unsigned, thus this op should work correctly */
+      alu_output = alu_input_a >> alu_input_b; break;
+    case SUBOP_SRAV:
+      /* we assume arithmetic shift is the default compiler behavior */
+      alu_output = static_cast<uint32_t>(static_cast<int32_t>(alu_input_a) >> alu_input_b); break;
     case SUBOP_AND:
       alu_output = alu_input_a & alu_input_b; break;
     case SUBOP_OR:
@@ -101,6 +113,7 @@ uint32_t Alu::compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
       assert(HI && LO && execution_stall);
       uint64_t v = static_cast<uint64_t>(static_cast<int32_t>(alu_input_a) *
                                          static_cast<int32_t>(alu_input_b));
+
       //TODO: Update HI/LO after stall
       *HI = (v >> 32) & 0xFFFFFFFF;
       *LO = v & 0xFFFFFFFF;

@@ -170,6 +170,7 @@ string Utils::decode_instruction(const instruction_t instruction)
   instruction_index = find_instruction(instruction);
 
   ss << instructions_def[instruction_index].opname;
+
   if (instructions_def[instruction_index].opname.find_last_of('.') != string::npos)
   {
     if (instruction.cop == 0)
@@ -183,11 +184,18 @@ string Utils::decode_instruction(const instruction_t instruction)
   ss << " ";
   if (instructions_def[instruction_index].format == FORMAT_R)
   {
-    if (instruction.funct == SUBOP_JR || instruction.funct == SUBOP_JALR)
+    if ((instruction.funct == SUBOP_MULT) || (instruction.funct == SUBOP_MULTU) ||
+        (instruction.funct == SUBOP_DIV)  || (instruction.funct == SUBOP_DIVU))
+    {
+      ss << registers_def[instruction.rs].regname_int << ", ";
+      ss << registers_def[instruction.rt].regname_int << ", ";
+    }
+    else if (instruction.funct == SUBOP_JR || instruction.funct == SUBOP_JALR)
     {
       ss << registers_def[instruction.rs].regname_int;
     }
-    else if (instruction.funct == SUBOP_SLL || instruction.funct == SUBOP_SRL)
+    else if (instruction.funct == SUBOP_SLL || instruction.funct == SUBOP_SRL ||
+             instruction.funct == SUBOP_SRA)
     {
       ss << registers_def[instruction.rd].regname_int << ", ";
       ss << registers_def[instruction.rt].regname_int << ", ";
@@ -301,6 +309,7 @@ uint32_t Utils::encode_instruction(const instruction_t instruction)
       instcode |= instruction.funct;
     }
   }
+  
   return instcode;
 }
 
@@ -363,7 +372,25 @@ uint32_t Utils::assemble_instruction(const string & instruction_str)
     {
       instruction.funct = static_cast<uint8_t>(instruction_def.subopcode);
 
-      if (instruction.funct == SUBOP_JR)
+      if ((instruction.funct == SUBOP_MULT) || (instruction.funct == SUBOP_MULTU) ||
+          (instruction.funct == SUBOP_DIV)  || (instruction.funct == SUBOP_DIVU))
+      {
+        tok = strtok(nullptr, ", ");
+        instruction.rs = find_register_by_name(tok);
+        tok = strtok(nullptr, ", ");
+        instruction.rt = find_register_by_name(tok);
+      }
+      else if ((instruction.funct == SUBOP_SLL) || (instruction.funct == SUBOP_SRL) ||
+               (instruction.funct == SUBOP_SRA))
+      {
+        tok = strtok(nullptr, ", ");
+        instruction.rd = find_register_by_name(tok);
+        tok = strtok(nullptr, ", ");
+        instruction.rt = find_register_by_name(tok);
+        tok = strtok(nullptr, ", ");
+        instruction.shamt = static_cast<uint8_t>(atoi(tok));
+      }
+      else if (instruction.funct == SUBOP_JR)
       {
         tok = strtok(nullptr, ", ");
         instruction.rs = find_register_by_name(tok);

@@ -70,15 +70,17 @@ extern int yydebug;
     IOPCODE = 271,                 /* IOPCODE  */
     JOPCODE = 272,                 /* JOPCODE  */
     ROPCODE = 273,                 /* ROPCODE  */
-    FOPCODE = 274,                 /* FOPCODE  */
-    F2ROPCODE = 275,               /* F2ROPCODE  */
-    FBROPCODE = 276,               /* FBROPCODE  */
-    IMOPCODE = 277,                /* IMOPCODE  */
-    FMOPCODE = 278,                /* FMOPCODE  */
-    INTVALUE = 279,                /* INTVALUE  */
-    FLOATVALUE = 280,              /* FLOATVALUE  */
-    TEXTVALUE = 281,               /* TEXTVALUE  */
-    EOL = 282                      /* EOL  */
+    R1OPCODE = 274,                /* R1OPCODE  */
+    R2OPCODE = 275,                /* R2OPCODE  */
+    FOPCODE = 276,                 /* FOPCODE  */
+    F2ROPCODE = 277,               /* F2ROPCODE  */
+    FBROPCODE = 278,               /* FBROPCODE  */
+    IMOPCODE = 279,                /* IMOPCODE  */
+    FMOPCODE = 280,                /* FMOPCODE  */
+    INTVALUE = 281,                /* INTVALUE  */
+    FLOATVALUE = 282,              /* FLOATVALUE  */
+    TEXTVALUE = 283,               /* TEXTVALUE  */
+    EOL = 284                      /* EOL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -92,7 +94,7 @@ union YYSTYPE
   uint32_t ival;
   char * tval;
 
-#line 96 "src/assembler/mips_parser.hpp"
+#line 98 "src/assembler/mips_parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

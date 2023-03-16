@@ -142,21 +142,20 @@ const register_format_t registers_def[]
 
 const instruction_format_t instructions_def[]
 {
-  {        0,         0,     "nop",     1, FORMAT_R },
   { OP_RTYPE, SUBOP_ADD,     "add",     4, FORMAT_R },
-  { OP_RTYPE, SUBOP_SLL ,    "sll",     4, FORMAT_R },
-  { OP_RTYPE, SUBOP_SRL ,    "srl",     4, FORMAT_R },
-  { OP_RTYPE, SUBOP_SRA ,    "sra",     4, FORMAT_R },
+  { OP_RTYPE, SUBOP_SLL ,    "sll",     3, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRL ,    "srl",     3, FORMAT_R },
+  { OP_RTYPE, SUBOP_SRA ,    "sra",     3, FORMAT_R },
   { OP_RTYPE, SUBOP_SLLV,    "sllv",    4, FORMAT_R },
   { OP_RTYPE, SUBOP_SRLV,    "srlv",    4, FORMAT_R },
   { OP_RTYPE, SUBOP_SRAV,    "srav",    4, FORMAT_R },
   { OP_RTYPE, SUBOP_JR  ,    "jr",      2, FORMAT_R },
   { OP_RTYPE, SUBOP_JALR,    "jalr",    2, FORMAT_R },
   { OP_RTYPE, SUBOP_SYSCALL, "syscall", 1, FORMAT_R },
-  { OP_RTYPE, SUBOP_MULT,    "mult",    4, FORMAT_R },
-  { OP_RTYPE, SUBOP_MULTU,   "multu",   4, FORMAT_R },
-  { OP_RTYPE, SUBOP_DIV,     "div",     4, FORMAT_R },
-  { OP_RTYPE, SUBOP_DIVU,    "divu",    4, FORMAT_R },
+  { OP_RTYPE, SUBOP_MULT,    "mult",    3, FORMAT_R },
+  { OP_RTYPE, SUBOP_MULTU,   "multu",   3, FORMAT_R },
+  { OP_RTYPE, SUBOP_DIV,     "div",     3, FORMAT_R },
+  { OP_RTYPE, SUBOP_DIVU,    "divu",    3, FORMAT_R },
   { OP_RTYPE, SUBOP_ADD,     "add",     4, FORMAT_R },
   { OP_RTYPE, SUBOP_ADDU,    "addu",    4, FORMAT_R },
   { OP_RTYPE, SUBOP_SUB,     "sub",     4, FORMAT_R },
@@ -205,6 +204,7 @@ const instruction_format_t instructions_def[]
   { OP_FTYPE, SUBOP_FPCEQ,  "c.eq.",    3, FORMAT_F },
   { OP_FTYPE, 0,            "bc1t",     2, FORMAT_F }, // Special case
   { OP_FTYPE, 0,            "bc1f",     2, FORMAT_F }, // Special case
+  {        0,         0,     "nop",     1, FORMAT_R }
 };
 
 #endif

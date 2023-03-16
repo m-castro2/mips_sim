@@ -92,6 +92,7 @@ class CpuPipelined : public Cpu
       {X, 0, X, 1, 0, X, 0, 1, 0, 1, X, X, 1, 0, 0, X}, // 10 LWC1
       {X, 0, X, 0, 1, X, 0, 1, 0, 0, X, X, 1, 0, 0, X}, // 11 SWC1
       {X, 0, X, 0, 0, X, 0, 0, 0, 0, X, X, 0, 2, 0, X}, // 12 SYSCALL
+      {X, 0, X, 0, 0, X, 0, 0, 1, 0, X, X, 0, 2, 0, X}, // 13 MULT/DIV/
       {0} // end
     };
 
@@ -101,6 +102,10 @@ class CpuPipelined : public Cpu
       {OP_RTYPE, SUBOP_JR,       2, UNDEF32, UNDEF32},
       {OP_RTYPE, SUBOP_JALR,     4, UNDEF32, UNDEF32},
       {OP_RTYPE, SUBOP_SYSCALL, 12, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_MULT,    13, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_DIV,     13, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_MULTU,   13, UNDEF32, UNDEF32},
+      {OP_RTYPE, SUBOP_DIVU,    13, UNDEF32, UNDEF32},
       {OP_RTYPE, UNDEF8,         0, UNDEF32, UNDEF32},
       {OP_J,     UNDEF8,         1, UNDEF32, UNDEF32},
       {OP_JAL,   UNDEF8,         3, UNDEF32, UNDEF32},

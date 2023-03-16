@@ -143,7 +143,6 @@ size_t ControlUnit::get_next_microinstruction_index(size_t index,
   }
   else
   {
-    cout << "THERE " << endl;
     /* search depending on microinstruction jump type */
     jump_type = test(uc_microcode[static_cast<size_t>(index)], SIG_CTRLDIR);
     switch (jump_type)

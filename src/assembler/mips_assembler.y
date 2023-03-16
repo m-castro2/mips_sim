@@ -99,6 +99,8 @@
 %token <tval> IOPCODE
 %token <tval> JOPCODE
 %token <tval> ROPCODE
+%token <tval> R1OPCODE
+%token <tval> R2OPCODE
 %token <tval> FOPCODE
 %token <tval> F2ROPCODE
 %token <tval> FBROPCODE
@@ -133,6 +135,22 @@ instruction:
 		{
       stringstream ss;
       ss << $1 << " $" << $2 << ", $" << $4 << ", $" << $6;
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, false, false, 0, ""});
+      free($1);
+		}
+  | R1OPCODE REGISTER COMMA REGISTER COMMA INTVALUE
+		{
+      stringstream ss;
+      ss << $1 << " $" << $2 << ", $" << $4 << ", " << $6;
+      uint32_t instcode = Utils::assemble_instruction(ss.str());
+      instructions.push_back({instcode, line, false, false, 0, ""});
+      free($1);
+		}
+  | R2OPCODE REGISTER COMMA REGISTER
+		{
+      stringstream ss;
+      ss << $1 << " $" << $2 << ", $" << $4;
       uint32_t instcode = Utils::assemble_instruction(ss.str());
       instructions.push_back({instcode, line, false, false, 0, ""});
       free($1);

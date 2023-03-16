@@ -39,6 +39,7 @@ class CpuMulti : public Cpu
       {1, 3, X, X, X, X, X, 0, X, X, X, X, X, X, X, 0}, // 16 Jr
       {1, 3, X, X, X, X, 2, 0, 2, 1, X, X, X, X, X, 0}, // 17 Jalr
       {X, X, X, X, X, X, X, 0, X, X, 1, 0, X, 3, X, 4}, // 18 Fformat2
+      {X, X, X, X, X, X, 0, 0, 1, 0, X, X, X, X, X, 0}, // 19 Mul/Div
       {0} // end
     };
 
@@ -47,6 +48,10 @@ class CpuMulti : public Cpu
     /* OPCODE    SUBOP         JUMP1    JUMP2    JUMP4 */
       {OP_RTYPE, SUBOP_JR,     16,      UNDEF32,  7},
       {OP_RTYPE, SUBOP_JALR,   17,      UNDEF32,  7},
+      {OP_RTYPE, SUBOP_MULT,    6,      UNDEF32, 19},
+      {OP_RTYPE, SUBOP_MULTU,   6,      UNDEF32, 19},
+      {OP_RTYPE, SUBOP_DIV,     6,      UNDEF32, 19},
+      {OP_RTYPE, SUBOP_DIVU,    6,      UNDEF32, 19},
       {OP_RTYPE, UNDEF8,        6,      UNDEF32,  7},
       {OP_FTYPE, UNDEF8,       18,      UNDEF32,  7},
       {OP_J,     UNDEF8,        9,      UNDEF32, UNDEF32},

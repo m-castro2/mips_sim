@@ -25,7 +25,9 @@ LABELJUMP ([a-zA-Z][0-9A-zA-Z]+)
 LABELTAG ([a-zA-Z][0-9A-zA-Z]+:)
 
 DATA_TAG (".word"|".float"|".double"|".space"|".asciiz")
-R_INSTRUCTION("add"|"sub"|"mul"|"div"|"and"|"or"|"xor"|"nor"|"slt"|"sll"|"srl"|"sra")
+R_INSTRUCTION("add"|"sub"|"and"|"or"|"xor"|"nor"|"slt"|"sllv"|"srlv"|"srav")
+R1_INSTRUCTION("sll"|"srl"|"sra")
+R2_INSTRUCTION("mult"|"div"|"multu"|"divu")
 LUI_INSTRUCTION ("lui")
 I_INSTRUCTION ("addi"|"subi"|"andi"|"ori"|"xori"|"bne"|"beq")
 I_MEM_INSTRUCTION ("lw"|"sw"|"lh"|"sh"|"lb"|"sb")
@@ -49,6 +51,8 @@ SYSCALL_INSTRUCTION ("syscall")
 {F_TWOREG}	    	    { yylval.tval = strdup(yytext); return F2ROPCODE; }
 {F_BRANCH}	    	    { yylval.tval = strdup(yytext); return FBROPCODE; }
 {R_INSTRUCTION}	 	    { yylval.tval = strdup(yytext); return ROPCODE; }
+{R1_INSTRUCTION}	 	  { yylval.tval = strdup(yytext); return R1OPCODE; }
+{R2_INSTRUCTION}	 	  { yylval.tval = strdup(yytext); return R2OPCODE; }
 {J_INSTRUCTION}		    { yylval.tval = strdup(yytext); return JOPCODE; }
 {LA_INSTRUCTION}	    { return LAOPCODE; }
 {I_INSTRUCTION}		    { yylval.tval = strdup(yytext); return IOPCODE; }

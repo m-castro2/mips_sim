@@ -67,7 +67,8 @@ namespace mips_sim
 
     uint32_t word_read = 0;
 
-    uint32_t hi_reg, lo_reg;
+    uint32_t hi_reg = sr_bank->get(SPECIAL_HI),
+             lo_reg = sr_bank->get(SPECIAL_LO);
     int stall_cycles;
     bool hi_lo_updated = false;
 
@@ -110,6 +111,8 @@ namespace mips_sim
       else
         out << setw(26) << "ALU_OUT: [" << Utils::hex32(ALU_OUT_REG[0]) << "] ";
       out << "MEM_DATA: [" << Utils::hex32(MEM_DATA_REG) << "]" << endl;
+      out << setw(26) << "HI: [" << Utils::hex32(sr_bank->get(SPECIAL_HI))
+          << "]       LO: [" << Utils::hex32(sr_bank->get(SPECIAL_LO)) << "] " << endl;
     }
     else
     {

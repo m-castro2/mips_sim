@@ -443,7 +443,8 @@ namespace mips_sim
     uint32_t addr_i32 = static_cast<uint32_t>(static_cast<int>(addr_i) << 16 >> 16);
 
     /* temporary data */
-    uint32_t hi_reg, lo_reg;
+    uint32_t hi_reg = sr_bank->get(SPECIAL_HI),
+             lo_reg = sr_bank->get(SPECIAL_LO);
     int stall_cycles;
     bool hi_lo_updated = false;
 
