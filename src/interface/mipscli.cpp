@@ -4,7 +4,7 @@
 #include "cli/loopscheduler.h"
 #include "../assembler/mips_assembler.h"
 #include "../cpu/cpu_multi.h"
-#include "../cpu/cpu_flex.h"
+#include "../cpu/cpu_pipelined.h"
 #include "../utils.h"
 #include "../exception.h"
 
@@ -181,7 +181,7 @@ namespace mips_sim
       if (match(cpu_type, "pipelined"))
         cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
       else
-        cpu = unique_ptr<Cpu>(new CpuFlex(mem));
+        assert(0);
       cpu->print_status(out);
 
       remove_cpu_handlers();
