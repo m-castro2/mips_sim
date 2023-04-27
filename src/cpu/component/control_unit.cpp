@@ -201,6 +201,18 @@ uint32_t ControlUnit::get_signal_bitmask( signal_t const signals[], size_t count
   return bitmask;
 }
 
+uint32_t ControlUnit::get_signal_bitmask_static(std::initializer_list<signal_t> signals)
+{
+  uint32_t bitmask = 0;
+
+  for (auto signal : signals)
+  {
+    bitmask |= uc_signals[signal];
+  }
+  
+  return bitmask;
+} 
+
 vector<uint32_t> ControlUnit::build_microcode(const int v[][SIGNAL_COUNT],
                                               const uint32_t signals[SIGNAL_COUNT])
 {

@@ -42,6 +42,7 @@ F_TWOREG ("mov.s"|"c.lt.s"|"c.le.s"|"c.eq.s"|"c.ne.s"|"c.ge.s"|"c.gt.s"|"c.lt.d"
 F_BRANCH ("bc1t"|"bc1f")
 
 SYSCALL_INSTRUCTION ("syscall")
+NOP_INSTRUCTION ("nop")
 
 %%
 ".text"               { return TEXT_SECTION; }
@@ -60,6 +61,7 @@ SYSCALL_INSTRUCTION ("syscall")
 {F_MEM_INSTRUCTION}	  { yylval.tval = strdup(yytext); return FMOPCODE; }
 {LUI_INSTRUCTION}		  { return LUIOPCODE; }
 {SYSCALL_INSTRUCTION} { return SYSCALL; }
+{NOP_INSTRUCTION}	    { return NOPCODE; }
 
 {REGISTER}	{ yylval.ival = Utils::find_register_by_name(yytext);
               return REGISTER; }

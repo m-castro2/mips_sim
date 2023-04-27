@@ -279,9 +279,9 @@ void Cpu::print_registers( ostream &out ) const
   for (size_t i=0; i<16; ++i)
   {
     out << "|" << register_str(i, false, true, false);
-    out << " |" << register_str(i+8, false, true, false);
+    out << " |" << register_str(i+16, false, true, false);
     out << " | " << register_str(i, true, true, !(i%2));
-    out << " | " << register_str(i+8, true, true, !(i%2));
+    out << " | " << register_str(i+16, true, true, !(i%2));
     out << " |" << endl;
   }
   out << setw(134) << setfill('-') << " " << endl;
