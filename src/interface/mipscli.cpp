@@ -39,7 +39,7 @@ namespace mips_sim
     rootMenu -> Insert(
             "set_cpu",
             [this](std::ostream& out, std::string type){ set_cpu(type, out); },
-            "Set cpu [multicycle|pipelined]" );
+            "Set cpu [multicycle|pipelined|flex]" );
     rootMenu -> Insert(
             "load",
             [this](std::ostream& out, std::string filename)
@@ -84,7 +84,7 @@ namespace mips_sim
     cpuMenu -> Insert(
             "set",
             [this](std::ostream& out, std::string type){ set_cpu(type, out); },
-            "Set CPU [multicycle|pipelined]" );
+            "Set CPU [multicycle|pipelined|flex]" );
     cpu_menu = cpuMenu.get();
     rootMenu -> Insert( move(cpuMenu) );
 
@@ -102,9 +102,21 @@ namespace mips_sim
             [this](std::ostream& out) { prev_cycle( out ); },
             "Previous cycle" );
     runMenu -> Insert(
+            "goto",
+            [this](std::ostream& out, uint32_t cycle_number) { goto_cycle(out, cycle_number); },
+            "Go to a specific cycle" );
+    runMenu -> Insert(
             "reset",
             [this](std::ostream& out) { reset_cpu( out ); },
             "Reset to first cycle" );
+    runMenu -> Insert(
+            "cpu_status",
+            [this](std::ostream& out)
+              {
+                assert(cpu != nullptr);
+                cpu->print_status(out);
+              },
+            "Print the CPU status" );
     runMenu -> Insert(
             "mem",
             [this](std::ostream& out) { show_memory( out ); },
@@ -134,7 +146,7 @@ namespace mips_sim
   {
     if (cpu == nullptr)
     {
-      out << "Cpu not ready. Call \'set_cpu\' multicycle|pipelined" << endl;
+      out << "Cpu not ready. Call \'set_cpu\' multicycle|pipelined|flex" << endl;
     }
     else
     {
@@ -164,9 +176,12 @@ namespace mips_sim
 
   bool MipsCli::set_cpu( const string & cpu_type, ostream & out )
   {
-    if (match(cpu_type, "pipelined"))
+    if (match(cpu_type, "pipelined") || match(cpu_type, "flex"))
     {
-      cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
+      if (match(cpu_type, "pipelined"))
+        cpu = unique_ptr<Cpu>(new CpuPipelined(mem));
+      else
+        assert(0);
       cpu->print_status(out);
 
       remove_cpu_handlers();
@@ -216,7 +231,7 @@ namespace mips_sim
     }
     else
     {
-      out << "[error] undefined CPU. Use \"multicycle\" or \"pipelined\"" << endl;
+      out << "[error] undefined CPU. Use \"multicycle\", \"pipelined\" or \"flex\"" << endl;
       return false;
     }
 
@@ -340,6 +355,29 @@ namespace mips_sim
     try
     {
       cpu->run_to_cycle(cpu->get_cycle()-1, out);
+    }
+    catch(int e)
+    {
+      cerr << "EXCEPTION " << e << ": " << err_msg;
+      if (err_v)
+        cerr << " [0x" << Utils::hex32(err_v) << "]";
+      cerr << endl;
+    }
+
+    return 0;
+  }
+
+  int MipsCli::goto_cycle( std::ostream &out, uint32_t cycle_number)
+  {
+    if (!ready())
+    {
+      cerr << "[error] CPU is not ready. Call \'status\' from main menu" << endl;
+      return 1;
+    }
+
+    try
+    {
+      cpu->run_to_cycle(cycle_number, out);
     }
     catch(int e)
     {

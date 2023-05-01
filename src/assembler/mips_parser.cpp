@@ -178,38 +178,39 @@ enum yysymbol_kind_t
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
   YYSYMBOL_COMMA = 3,                      /* COMMA  */
   YYSYMBOL_SYSCALL = 4,                    /* SYSCALL  */
-  YYSYMBOL_TEXT_SECTION = 5,               /* TEXT_SECTION  */
-  YYSYMBOL_DATA_SECTION = 6,               /* DATA_SECTION  */
-  YYSYMBOL_LAOPCODE = 7,                   /* LAOPCODE  */
-  YYSYMBOL_LUIOPCODE = 8,                  /* LUIOPCODE  */
-  YYSYMBOL_OBRACKET = 9,                   /* OBRACKET  */
-  YYSYMBOL_CBRACKET = 10,                  /* CBRACKET  */
-  YYSYMBOL_DATATAG = 11,                   /* DATATAG  */
-  YYSYMBOL_LABELTAG = 12,                  /* LABELTAG  */
-  YYSYMBOL_LABELJUMP = 13,                 /* LABELJUMP  */
-  YYSYMBOL_REGISTER = 14,                  /* REGISTER  */
-  YYSYMBOL_FREGISTER = 15,                 /* FREGISTER  */
-  YYSYMBOL_IOPCODE = 16,                   /* IOPCODE  */
-  YYSYMBOL_JOPCODE = 17,                   /* JOPCODE  */
-  YYSYMBOL_ROPCODE = 18,                   /* ROPCODE  */
-  YYSYMBOL_R1OPCODE = 19,                  /* R1OPCODE  */
-  YYSYMBOL_R2OPCODE = 20,                  /* R2OPCODE  */
-  YYSYMBOL_FOPCODE = 21,                   /* FOPCODE  */
-  YYSYMBOL_F2ROPCODE = 22,                 /* F2ROPCODE  */
-  YYSYMBOL_FBROPCODE = 23,                 /* FBROPCODE  */
-  YYSYMBOL_IMOPCODE = 24,                  /* IMOPCODE  */
-  YYSYMBOL_FMOPCODE = 25,                  /* FMOPCODE  */
-  YYSYMBOL_INTVALUE = 26,                  /* INTVALUE  */
-  YYSYMBOL_FLOATVALUE = 27,                /* FLOATVALUE  */
-  YYSYMBOL_TEXTVALUE = 28,                 /* TEXTVALUE  */
-  YYSYMBOL_EOL = 29,                       /* EOL  */
-  YYSYMBOL_YYACCEPT = 30,                  /* $accept  */
-  YYSYMBOL_program = 31,                   /* program  */
-  YYSYMBOL_instructions_sequence = 32,     /* instructions_sequence  */
-  YYSYMBOL_instruction = 33,               /* instruction  */
-  YYSYMBOL_data_sequence = 34,             /* data_sequence  */
-  YYSYMBOL_data_line = 35,                 /* data_line  */
-  YYSYMBOL_array_values = 36               /* array_values  */
+  YYSYMBOL_NOPCODE = 5,                    /* NOPCODE  */
+  YYSYMBOL_TEXT_SECTION = 6,               /* TEXT_SECTION  */
+  YYSYMBOL_DATA_SECTION = 7,               /* DATA_SECTION  */
+  YYSYMBOL_LAOPCODE = 8,                   /* LAOPCODE  */
+  YYSYMBOL_LUIOPCODE = 9,                  /* LUIOPCODE  */
+  YYSYMBOL_OBRACKET = 10,                  /* OBRACKET  */
+  YYSYMBOL_CBRACKET = 11,                  /* CBRACKET  */
+  YYSYMBOL_DATATAG = 12,                   /* DATATAG  */
+  YYSYMBOL_LABELTAG = 13,                  /* LABELTAG  */
+  YYSYMBOL_LABELJUMP = 14,                 /* LABELJUMP  */
+  YYSYMBOL_REGISTER = 15,                  /* REGISTER  */
+  YYSYMBOL_FREGISTER = 16,                 /* FREGISTER  */
+  YYSYMBOL_IOPCODE = 17,                   /* IOPCODE  */
+  YYSYMBOL_JOPCODE = 18,                   /* JOPCODE  */
+  YYSYMBOL_ROPCODE = 19,                   /* ROPCODE  */
+  YYSYMBOL_R1OPCODE = 20,                  /* R1OPCODE  */
+  YYSYMBOL_R2OPCODE = 21,                  /* R2OPCODE  */
+  YYSYMBOL_FOPCODE = 22,                   /* FOPCODE  */
+  YYSYMBOL_F2ROPCODE = 23,                 /* F2ROPCODE  */
+  YYSYMBOL_FBROPCODE = 24,                 /* FBROPCODE  */
+  YYSYMBOL_IMOPCODE = 25,                  /* IMOPCODE  */
+  YYSYMBOL_FMOPCODE = 26,                  /* FMOPCODE  */
+  YYSYMBOL_INTVALUE = 27,                  /* INTVALUE  */
+  YYSYMBOL_FLOATVALUE = 28,                /* FLOATVALUE  */
+  YYSYMBOL_TEXTVALUE = 29,                 /* TEXTVALUE  */
+  YYSYMBOL_EOL = 30,                       /* EOL  */
+  YYSYMBOL_YYACCEPT = 31,                  /* $accept  */
+  YYSYMBOL_program = 32,                   /* program  */
+  YYSYMBOL_instructions_sequence = 33,     /* instructions_sequence  */
+  YYSYMBOL_instruction = 34,               /* instruction  */
+  YYSYMBOL_data_sequence = 35,             /* data_sequence  */
+  YYSYMBOL_data_line = 36,                 /* data_line  */
+  YYSYMBOL_array_values = 37               /* array_values  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -535,21 +536,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  23
+#define YYFINAL  24
 /* YYLAST -- Last index in YYTABLE.  */
 #define YYLAST   101
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  30
+#define YYNTOKENS  31
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  30
+#define YYNRULES  31
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  87
+#define YYNSTATES  88
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   284
+#define YYMAXUTOK   285
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -591,17 +592,17 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28,    29
+      25,    26,    27,    28,    29,    30
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   118,   118,   119,   120,   123,   128,   134,   142,   150,
-     158,   166,   174,   182,   190,   198,   205,   213,   221,   229,
-     242,   250,   255,   263,   263,   266,   305,   309,   313,   317,
-     321
+       0,   119,   119,   120,   121,   124,   129,   135,   143,   151,
+     159,   167,   175,   183,   191,   199,   206,   214,   222,   230,
+     243,   251,   256,   261,   269,   269,   272,   311,   315,   319,
+     323,   327
 };
 #endif
 
@@ -618,10 +619,10 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "COMMA", "SYSCALL",
-  "TEXT_SECTION", "DATA_SECTION", "LAOPCODE", "LUIOPCODE", "OBRACKET",
-  "CBRACKET", "DATATAG", "LABELTAG", "LABELJUMP", "REGISTER", "FREGISTER",
-  "IOPCODE", "JOPCODE", "ROPCODE", "R1OPCODE", "R2OPCODE", "FOPCODE",
-  "F2ROPCODE", "FBROPCODE", "IMOPCODE", "FMOPCODE", "INTVALUE",
+  "NOPCODE", "TEXT_SECTION", "DATA_SECTION", "LAOPCODE", "LUIOPCODE",
+  "OBRACKET", "CBRACKET", "DATATAG", "LABELTAG", "LABELJUMP", "REGISTER",
+  "FREGISTER", "IOPCODE", "JOPCODE", "ROPCODE", "R1OPCODE", "R2OPCODE",
+  "FOPCODE", "F2ROPCODE", "FBROPCODE", "IMOPCODE", "FMOPCODE", "INTVALUE",
   "FLOATVALUE", "TEXTVALUE", "EOL", "$accept", "program",
   "instructions_sequence", "instruction", "data_sequence", "data_line",
   "array_values", YY_NULLPTR
@@ -648,15 +649,15 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      21,    26,    -9,    11,   -34,    23,    27,   -34,    38,    15,
-      39,    40,    41,    25,    42,     0,    44,    45,    -2,   -34,
-      48,    19,   -34,   -34,    53,    58,    59,   -34,   -34,    60,
-      61,    62,    63,    64,   -34,    65,    66,    -9,   -34,   -19,
-      26,   -34,    57,    46,    67,    68,    69,    70,    56,    71,
-      47,    49,    -9,    73,    74,   -34,   -34,    26,   -34,   -34,
-      75,    76,    77,   -34,    82,   -34,    78,    79,   -19,   -19,
-      -1,    80,    72,    81,    83,    85,   -34,   -34,   -34,   -34,
-     -34,   -34,   -34,    90,    91,   -34,   -34
+       2,    25,    -9,    10,   -34,   -34,    -3,    12,   -34,    16,
+      42,    37,    43,    44,     9,    24,     0,    45,    46,    -2,
+     -34,    29,    22,   -34,   -34,    58,    60,    61,   -34,   -34,
+      62,    63,    64,    65,    66,   -34,    67,    68,    -9,   -34,
+      26,    25,   -34,    59,    47,    57,    69,    70,    71,    72,
+      73,    48,    49,    -9,    74,    75,   -34,   -34,    25,   -34,
+     -34,    76,    77,    78,   -34,    79,   -34,    80,    81,    26,
+      26,    -1,    82,    56,    83,    85,    86,   -34,   -34,   -34,
+     -34,   -34,   -34,   -34,    84,    87,   -34,   -34
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -664,27 +665,27 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     0,    21,     0,     0,    22,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     4,     6,
-       0,     0,    24,     1,     0,     0,     0,    18,    20,     0,
-       0,     0,     0,     0,    12,     0,     0,     0,     5,     0,
-       0,    23,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     2,    28,    26,    30,    25,     3,    19,    15,
-       0,     0,     0,     9,     0,    11,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    29,    27,    14,    13,
-       7,     8,    10,     0,     0,    16,    17
+       0,     0,     0,     0,    21,    22,     0,     0,    23,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     4,
+       6,     0,     0,    25,     1,     0,     0,     0,    18,    20,
+       0,     0,     0,     0,     0,    12,     0,     0,     0,     5,
+       0,     0,    24,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     2,    29,    27,    31,    26,     3,    19,
+      15,     0,     0,     0,     9,     0,    11,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    30,    28,    14,
+      13,     7,     8,    10,     0,     0,    16,    17
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -34,   -34,    34,   -18,    52,   -20,   -33
+     -34,   -34,    51,   -19,    55,   -21,   -33
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     3,    18,    19,    21,    22,    56
+       0,     3,    19,    20,    22,    23,    57
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -692,56 +693,56 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      38,    41,     4,    20,    37,     5,     6,    53,    54,    55,
-       7,    23,    78,    34,     8,     9,    10,    11,    12,    13,
-      14,    15,    16,    17,    40,    79,     1,     2,    27,    28,
-       4,    20,    41,     5,     6,    76,    77,    24,     7,    38,
-      32,    25,     8,     9,    10,    11,    12,    13,    14,    15,
-      16,    17,    26,    29,    30,    31,    42,    33,    35,    39,
-      36,    43,    44,    45,    46,    47,    48,    49,    50,    51,
-      58,    64,    59,    66,    57,    67,    68,    69,    70,    71,
-      72,    60,    61,    62,    63,    73,    65,    74,    75,    52,
-       0,     0,     0,     0,    80,     0,    82,    83,    81,    84,
-      85,    86
+      39,    42,     4,     5,    21,    38,     6,     7,     1,     2,
+      24,     8,    25,    79,    35,     9,    10,    11,    12,    13,
+      14,    15,    16,    17,    18,    33,    80,    26,    41,     4,
+       5,    27,    42,     6,     7,    21,    77,    78,     8,    39,
+      34,    40,     9,    10,    11,    12,    13,    14,    15,    16,
+      17,    18,    30,    54,    55,    56,    28,    29,    31,    32,
+      36,    43,    37,    44,    45,    46,    47,    48,    49,    50,
+      51,    52,    61,    59,    60,    67,    68,    69,    70,    71,
+      72,    73,    74,    82,    62,    63,    64,     0,    65,    66,
+      75,    76,    58,    53,     0,    86,     0,    81,    87,    83,
+      84,    85
 };
 
 static const yytype_int8 yycheck[] =
 {
-      18,    21,     4,    12,     6,     7,     8,    26,    27,    28,
-      12,     0,    13,    13,    16,    17,    18,    19,    20,    21,
-      22,    23,    24,    25,     5,    26,     5,     6,    13,    14,
-       4,    12,    52,     7,     8,    68,    69,    14,    12,    57,
-      15,    14,    16,    17,    18,    19,    20,    21,    22,    23,
-      24,    25,    14,    14,    14,    14,     3,    15,    14,    11,
-      15,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-      13,    15,    26,    26,    40,    26,     3,     3,     3,     3,
-       3,    14,    14,    14,    14,     3,    15,     9,     9,    37,
-      -1,    -1,    -1,    -1,    14,    -1,    15,    14,    26,    14,
-      10,    10
+      19,    22,     4,     5,    13,     7,     8,     9,     6,     7,
+       0,    13,    15,    14,    14,    17,    18,    19,    20,    21,
+      22,    23,    24,    25,    26,    16,    27,    15,     6,     4,
+       5,    15,    53,     8,     9,    13,    69,    70,    13,    58,
+      16,    12,    17,    18,    19,    20,    21,    22,    23,    24,
+      25,    26,    15,    27,    28,    29,    14,    15,    15,    15,
+      15,     3,    16,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,    15,    14,    27,    27,    27,     3,     3,     3,
+       3,     3,     3,    27,    15,    15,    15,    -1,    16,    16,
+      10,    10,    41,    38,    -1,    11,    -1,    15,    11,    16,
+      15,    15
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     5,     6,    31,     4,     7,     8,    12,    16,    17,
-      18,    19,    20,    21,    22,    23,    24,    25,    32,    33,
-      12,    34,    35,     0,    14,    14,    14,    13,    14,    14,
-      14,    14,    15,    15,    13,    14,    15,     6,    33,    11,
-       5,    35,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,    34,    26,    27,    28,    36,    32,    13,    26,
-      14,    14,    14,    14,    15,    15,    26,    26,     3,     3,
-       3,     3,     3,     3,     9,     9,    36,    36,    13,    26,
-      14,    26,    15,    14,    14,    10,    10
+       0,     6,     7,    32,     4,     5,     8,     9,    13,    17,
+      18,    19,    20,    21,    22,    23,    24,    25,    26,    33,
+      34,    13,    35,    36,     0,    15,    15,    15,    14,    15,
+      15,    15,    15,    16,    16,    14,    15,    16,     7,    34,
+      12,     6,    36,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,    35,    27,    28,    29,    37,    33,    14,
+      27,    15,    15,    15,    15,    16,    16,    27,    27,     3,
+       3,     3,     3,     3,     3,    10,    10,    37,    37,    14,
+      27,    15,    27,    16,    15,    15,    11,    11
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    30,    31,    31,    31,    32,    32,    33,    33,    33,
-      33,    33,    33,    33,    33,    33,    33,    33,    33,    33,
-      33,    33,    33,    34,    34,    35,    36,    36,    36,    36,
-      36
+       0,    31,    32,    32,    32,    33,    33,    34,    34,    34,
+      34,    34,    34,    34,    34,    34,    34,    34,    34,    34,
+      34,    34,    34,    34,    35,    35,    36,    37,    37,    37,
+      37,    37
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -749,8 +750,8 @@ static const yytype_int8 yyr2[] =
 {
        0,     2,     4,     4,     2,     2,     1,     6,     6,     4,
        6,     4,     2,     6,     6,     4,     7,     7,     2,     4,
-       2,     1,     1,     2,     1,     3,     1,     3,     1,     3,
-       1
+       2,     1,     1,     1,     2,     1,     3,     1,     3,     1,
+       3,     1
 };
 
 
@@ -956,91 +957,91 @@ yydestruct (const char *yymsg,
     case YYSYMBOL_DATATAG: /* DATATAG  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 960 "src/assembler/mips_parser.cpp"
+#line 961 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_LABELTAG: /* LABELTAG  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 966 "src/assembler/mips_parser.cpp"
+#line 967 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_LABELJUMP: /* LABELJUMP  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 972 "src/assembler/mips_parser.cpp"
+#line 973 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_IOPCODE: /* IOPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 978 "src/assembler/mips_parser.cpp"
+#line 979 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_JOPCODE: /* JOPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 984 "src/assembler/mips_parser.cpp"
+#line 985 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_ROPCODE: /* ROPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 990 "src/assembler/mips_parser.cpp"
+#line 991 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_R1OPCODE: /* R1OPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 996 "src/assembler/mips_parser.cpp"
+#line 997 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_R2OPCODE: /* R2OPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1002 "src/assembler/mips_parser.cpp"
+#line 1003 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_FOPCODE: /* FOPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1008 "src/assembler/mips_parser.cpp"
+#line 1009 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_F2ROPCODE: /* F2ROPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1014 "src/assembler/mips_parser.cpp"
+#line 1015 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_FBROPCODE: /* FBROPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1020 "src/assembler/mips_parser.cpp"
+#line 1021 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_IMOPCODE: /* IMOPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1026 "src/assembler/mips_parser.cpp"
+#line 1027 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_FMOPCODE: /* FMOPCODE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1032 "src/assembler/mips_parser.cpp"
+#line 1033 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_FLOATVALUE: /* FLOATVALUE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1038 "src/assembler/mips_parser.cpp"
+#line 1039 "src/assembler/mips_parser.cpp"
         break;
 
     case YYSYMBOL_TEXTVALUE: /* TEXTVALUE  */
 #line 84 "src/assembler/mips_assembler.y"
             { free (((*yyvaluep).tval)); }
-#line 1044 "src/assembler/mips_parser.cpp"
+#line 1045 "src/assembler/mips_parser.cpp"
         break;
 
       default:
@@ -1308,23 +1309,23 @@ yyreduce:
   switch (yyn)
     {
   case 5: /* instructions_sequence: instructions_sequence instruction  */
-#line 124 "src/assembler/mips_assembler.y"
+#line 125 "src/assembler/mips_assembler.y"
     {
       line++;
     }
-#line 1316 "src/assembler/mips_parser.cpp"
+#line 1317 "src/assembler/mips_parser.cpp"
     break;
 
   case 6: /* instructions_sequence: instruction  */
-#line 129 "src/assembler/mips_assembler.y"
+#line 130 "src/assembler/mips_assembler.y"
     {
       line++;
     }
-#line 1324 "src/assembler/mips_parser.cpp"
+#line 1325 "src/assembler/mips_parser.cpp"
     break;
 
   case 7: /* instruction: ROPCODE REGISTER COMMA REGISTER COMMA REGISTER  */
-#line 135 "src/assembler/mips_assembler.y"
+#line 136 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-5].tval) << " $" << (yyvsp[-4].ival) << ", $" << (yyvsp[-2].ival) << ", $" << (yyvsp[0].ival);
@@ -1332,11 +1333,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-5].tval));
 		}
-#line 1336 "src/assembler/mips_parser.cpp"
+#line 1337 "src/assembler/mips_parser.cpp"
     break;
 
   case 8: /* instruction: R1OPCODE REGISTER COMMA REGISTER COMMA INTVALUE  */
-#line 143 "src/assembler/mips_assembler.y"
+#line 144 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-5].tval) << " $" << (yyvsp[-4].ival) << ", $" << (yyvsp[-2].ival) << ", " << (yyvsp[0].ival);
@@ -1344,11 +1345,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-5].tval));
 		}
-#line 1348 "src/assembler/mips_parser.cpp"
+#line 1349 "src/assembler/mips_parser.cpp"
     break;
 
   case 9: /* instruction: R2OPCODE REGISTER COMMA REGISTER  */
-#line 151 "src/assembler/mips_assembler.y"
+#line 152 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-3].tval) << " $" << (yyvsp[-2].ival) << ", $" << (yyvsp[0].ival);
@@ -1356,11 +1357,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-3].tval));
 		}
-#line 1360 "src/assembler/mips_parser.cpp"
+#line 1361 "src/assembler/mips_parser.cpp"
     break;
 
   case 10: /* instruction: FOPCODE FREGISTER COMMA FREGISTER COMMA FREGISTER  */
-#line 159 "src/assembler/mips_assembler.y"
+#line 160 "src/assembler/mips_assembler.y"
     {
       stringstream ss;
       ss << (yyvsp[-5].tval) << " $" << (yyvsp[-4].ival) << ", $" << (yyvsp[-2].ival) << ", $" << (yyvsp[0].ival);
@@ -1368,11 +1369,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-5].tval));
     }
-#line 1372 "src/assembler/mips_parser.cpp"
+#line 1373 "src/assembler/mips_parser.cpp"
     break;
 
   case 11: /* instruction: F2ROPCODE FREGISTER COMMA FREGISTER  */
-#line 167 "src/assembler/mips_assembler.y"
+#line 168 "src/assembler/mips_assembler.y"
     {
       stringstream ss;
       ss << (yyvsp[-3].tval) << " $" << (yyvsp[-2].ival) << ", $" << (yyvsp[0].ival);
@@ -1380,11 +1381,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-3].tval));
     }
-#line 1384 "src/assembler/mips_parser.cpp"
+#line 1385 "src/assembler/mips_parser.cpp"
     break;
 
   case 12: /* instruction: FBROPCODE LABELJUMP  */
-#line 175 "src/assembler/mips_assembler.y"
+#line 176 "src/assembler/mips_assembler.y"
     {
       stringstream ss;
       ss << (yyvsp[-1].tval) << " " << (yyvsp[0].tval);
@@ -1392,11 +1393,11 @@ yyreduce:
       instructions.push_back({instcode, line, true, true, 0, (yyvsp[0].tval)});
       free((yyvsp[-1].tval)); free((yyvsp[0].tval));
     }
-#line 1396 "src/assembler/mips_parser.cpp"
+#line 1397 "src/assembler/mips_parser.cpp"
     break;
 
   case 13: /* instruction: IOPCODE REGISTER COMMA REGISTER COMMA INTVALUE  */
-#line 183 "src/assembler/mips_assembler.y"
+#line 184 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-5].tval) << " $" << (yyvsp[-4].ival) << ", $" << (yyvsp[-2].ival) << ", " << (yyvsp[0].ival);
@@ -1404,11 +1405,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-5].tval));
 		}
-#line 1408 "src/assembler/mips_parser.cpp"
+#line 1409 "src/assembler/mips_parser.cpp"
     break;
 
   case 14: /* instruction: IOPCODE REGISTER COMMA REGISTER COMMA LABELJUMP  */
-#line 191 "src/assembler/mips_assembler.y"
+#line 192 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-5].tval) << " $" << (yyvsp[-4].ival) << ", $" << (yyvsp[-2].ival) << ", " << (yyvsp[0].tval);
@@ -1416,22 +1417,22 @@ yyreduce:
       instructions.push_back({instcode, line, true, true, 0, (yyvsp[0].tval)});
       free((yyvsp[-5].tval)); free((yyvsp[0].tval));
 		}
-#line 1420 "src/assembler/mips_parser.cpp"
+#line 1421 "src/assembler/mips_parser.cpp"
     break;
 
   case 15: /* instruction: LUIOPCODE REGISTER COMMA INTVALUE  */
-#line 199 "src/assembler/mips_assembler.y"
+#line 200 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << "lui $" << (yyvsp[-2].ival) << ", " << (yyvsp[0].ival);
       uint32_t instcode = Utils::assemble_instruction(ss.str());
       instructions.push_back({instcode, line, false, false, 0, ""});
 		}
-#line 1431 "src/assembler/mips_parser.cpp"
+#line 1432 "src/assembler/mips_parser.cpp"
     break;
 
   case 16: /* instruction: IMOPCODE REGISTER COMMA INTVALUE OBRACKET REGISTER CBRACKET  */
-#line 206 "src/assembler/mips_assembler.y"
+#line 207 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-6].tval) << " $" << (yyvsp[-5].ival) << ", " << (yyvsp[-3].ival) << "($" << (yyvsp[-1].ival) << ")";
@@ -1439,11 +1440,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-6].tval));
 		}
-#line 1443 "src/assembler/mips_parser.cpp"
+#line 1444 "src/assembler/mips_parser.cpp"
     break;
 
   case 17: /* instruction: FMOPCODE FREGISTER COMMA INTVALUE OBRACKET REGISTER CBRACKET  */
-#line 214 "src/assembler/mips_assembler.y"
+#line 215 "src/assembler/mips_assembler.y"
     {
       stringstream ss;
       ss << (yyvsp[-6].tval) << " $" << (yyvsp[-5].ival) << ", " << (yyvsp[-3].ival) << "($" << (yyvsp[-1].ival) << ")";
@@ -1451,11 +1452,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-6].tval));
     }
-#line 1455 "src/assembler/mips_parser.cpp"
+#line 1456 "src/assembler/mips_parser.cpp"
     break;
 
   case 18: /* instruction: JOPCODE LABELJUMP  */
-#line 222 "src/assembler/mips_assembler.y"
+#line 223 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-1].tval) << " " << (yyvsp[0].tval);
@@ -1463,11 +1464,11 @@ yyreduce:
       instructions.push_back({instcode, line, true, false, 0, (yyvsp[0].tval)});
       free((yyvsp[-1].tval)); free((yyvsp[0].tval));
 		}
-#line 1467 "src/assembler/mips_parser.cpp"
+#line 1468 "src/assembler/mips_parser.cpp"
     break;
 
   case 19: /* instruction: LAOPCODE REGISTER COMMA LABELJUMP  */
-#line 230 "src/assembler/mips_assembler.y"
+#line 231 "src/assembler/mips_assembler.y"
                 {
       /* decompose in lui & ori */
       stringstream ss1, ss2;
@@ -1480,11 +1481,11 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 2, (yyvsp[0].tval)});
       free((yyvsp[0].tval));
 		}
-#line 1484 "src/assembler/mips_parser.cpp"
+#line 1485 "src/assembler/mips_parser.cpp"
     break;
 
   case 20: /* instruction: JOPCODE REGISTER  */
-#line 243 "src/assembler/mips_assembler.y"
+#line 244 "src/assembler/mips_assembler.y"
                 {
       stringstream ss;
       ss << (yyvsp[-1].tval) << " $" << (yyvsp[0].ival);
@@ -1492,30 +1493,39 @@ yyreduce:
       instructions.push_back({instcode, line, false, false, 0, ""});
       free((yyvsp[-1].tval));
 		}
-#line 1496 "src/assembler/mips_parser.cpp"
+#line 1497 "src/assembler/mips_parser.cpp"
     break;
 
   case 21: /* instruction: SYSCALL  */
-#line 251 "src/assembler/mips_assembler.y"
+#line 252 "src/assembler/mips_assembler.y"
     {
       uint32_t instcode = Utils::assemble_instruction("syscall");
       instructions.push_back({instcode, line, false, false, 0, ""});
     }
-#line 1505 "src/assembler/mips_parser.cpp"
+#line 1506 "src/assembler/mips_parser.cpp"
     break;
 
-  case 22: /* instruction: LABELTAG  */
-#line 256 "src/assembler/mips_assembler.y"
+  case 22: /* instruction: NOPCODE  */
+#line 257 "src/assembler/mips_assembler.y"
+                {
+      uint32_t instcode = 0;
+      instructions.push_back({instcode, line, false, false, 0, ""});
+		}
+#line 1515 "src/assembler/mips_parser.cpp"
+    break;
+
+  case 23: /* instruction: LABELTAG  */
+#line 262 "src/assembler/mips_assembler.y"
     {
       labels.push_back({(yyvsp[0].tval), line});
       line--;
       free((yyvsp[0].tval));
     }
-#line 1515 "src/assembler/mips_parser.cpp"
+#line 1525 "src/assembler/mips_parser.cpp"
     break;
 
-  case 25: /* data_line: LABELTAG DATATAG array_values  */
-#line 267 "src/assembler/mips_assembler.y"
+  case 26: /* data_line: LABELTAG DATATAG array_values  */
+#line 273 "src/assembler/mips_assembler.y"
       {
         uint32_t last_pos = mem_pos;
         int type = 0;
@@ -1551,54 +1561,54 @@ yyreduce:
         memsections.push_back({(yyvsp[-2].tval), type, last_pos, mem_pos-last_pos, values});
         values.clear();
       }
-#line 1555 "src/assembler/mips_parser.cpp"
+#line 1565 "src/assembler/mips_parser.cpp"
     break;
 
-  case 26: /* array_values: FLOATVALUE  */
-#line 306 "src/assembler/mips_assembler.y"
+  case 27: /* array_values: FLOATVALUE  */
+#line 312 "src/assembler/mips_assembler.y"
       {
         values.push_back((yyvsp[0].tval));
       }
-#line 1563 "src/assembler/mips_parser.cpp"
+#line 1573 "src/assembler/mips_parser.cpp"
     break;
 
-  case 27: /* array_values: FLOATVALUE COMMA array_values  */
-#line 310 "src/assembler/mips_assembler.y"
+  case 28: /* array_values: FLOATVALUE COMMA array_values  */
+#line 316 "src/assembler/mips_assembler.y"
       {
         values.push_back((yyvsp[-2].tval));
       }
-#line 1571 "src/assembler/mips_parser.cpp"
+#line 1581 "src/assembler/mips_parser.cpp"
     break;
 
-  case 28: /* array_values: INTVALUE  */
-#line 314 "src/assembler/mips_assembler.y"
+  case 29: /* array_values: INTVALUE  */
+#line 320 "src/assembler/mips_assembler.y"
       {
         values.push_back(to_string((yyvsp[0].ival)));
       }
-#line 1579 "src/assembler/mips_parser.cpp"
+#line 1589 "src/assembler/mips_parser.cpp"
     break;
 
-  case 29: /* array_values: INTVALUE COMMA array_values  */
-#line 318 "src/assembler/mips_assembler.y"
+  case 30: /* array_values: INTVALUE COMMA array_values  */
+#line 324 "src/assembler/mips_assembler.y"
       {
         values.push_back(to_string((yyvsp[-2].ival)));
       }
-#line 1587 "src/assembler/mips_parser.cpp"
+#line 1597 "src/assembler/mips_parser.cpp"
     break;
 
-  case 30: /* array_values: TEXTVALUE  */
-#line 322 "src/assembler/mips_assembler.y"
+  case 31: /* array_values: TEXTVALUE  */
+#line 328 "src/assembler/mips_assembler.y"
       {
         string s = (yyvsp[0].tval);
         /* remove quotes */
         assert(s[0] == s[s.length()-1] && s[0] == '\"');
         values.push_back(s.substr(1, s.length()-2));
       }
-#line 1598 "src/assembler/mips_parser.cpp"
+#line 1608 "src/assembler/mips_parser.cpp"
     break;
 
 
-#line 1602 "src/assembler/mips_parser.cpp"
+#line 1612 "src/assembler/mips_parser.cpp"
 
       default: break;
     }
@@ -1791,7 +1801,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 328 "src/assembler/mips_assembler.y"
+#line 334 "src/assembler/mips_assembler.y"
 
 
 namespace mips_sim

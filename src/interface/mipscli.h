@@ -38,6 +38,7 @@ namespace mips_sim
     int reset_cpu( std::ostream & );
     int next_cycle( std::ostream & );
     int prev_cycle( std::ostream & );
+    int goto_cycle( std::ostream &, uint32_t );
     int show_memory( std::ostream & );
     int show_registers( std::ostream & );
     int show_diagram( std::ostream & );

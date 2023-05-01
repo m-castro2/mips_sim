@@ -14,6 +14,29 @@
 
 #define OUT
 
+#define REG_BANK_INT     0
+#define REG_BANK_FP      1
+#define REG_BANK_SPECIAL 2
+
+/* brahch processing options */
+#define BRANCH_FLUSH     0 /* flush pipeline */
+#define BRANCH_NON_TAKEN 1 /* fixed non taken */
+#define BRANCH_DELAYED   2 /* delayed branch */
+
+/* processor stages */
+#define STAGE_IF      0
+#define STAGE_ID      1
+#define STAGE_EX      2
+#define STAGE_MEM     3
+#define STAGE_WB      4
+#define STAGE_COUNT   5
+
+/* status keys */
+#define KEY_BRANCH_TYPE           "branch-type"
+#define KEY_BRANCH_STAGE          "branch-stage"
+#define KEY_FORWARDING_UNIT       "has-forwarding-unit"
+#define KEY_HAZARD_DETECTION_UNIT "has-hazard-detection-unit"
+
 typedef enum
 {
   SUBOP_SLL     = 0x0,
@@ -126,6 +149,12 @@ typedef struct {
     std::string regname_special;
 } register_format_t;
 
+typedef struct {
+    uint32_t id;
+    uint32_t pc;
+    uint32_t code;
+} running_instruction_t;
+
 const register_format_t registers_def[]
 {
   {  0, "$0", "$0",  "$f0", "pc" },    {  1, "$1", "$at", "$f1", "status" },
@@ -136,8 +165,8 @@ const register_format_t registers_def[]
   { 12, "$12", "$t4", "$f12", "" },    { 13, "$13", "$t5", "$f13", "" }, { 14, "$14", "$t6", "$f14", "" }, { 15, "$15", "$t7", "$f15", "" },
   { 16, "$16", "$s0", "$f16", "" },    { 17, "$17", "$s1", "$f17", "" }, { 18, "$18", "$s2", "$f18", "" }, { 19, "$19", "$s3", "$f19", "" },
   { 20, "$20", "$s4", "$f20", "" },    { 21, "$21", "$s5", "$f21", "" }, { 22, "$22", "$s6", "$f22", "" }, { 23, "$23", "$s7", "$f23", "" },
-  { 24, "$24", "$t8", "$f24", "" },    { 25, "$25", "$s9", "$f25", "" }, { 26, "$26", "$k0", "$f26", "" }, { 27, "$27", "$k1", "$f27", "" },
-  { 28, "$28", "$gp", "$f28", "" },    { 29, "$29", "$sp", "$f29", "" }, { 30, "$30", "$s8", "$f30", "" }, { 31, "$31", "$ra", "$f31", "" }
+  { 24, "$24", "$t8", "$f24", "" },    { 25, "$25", "$t9", "$f25", "" }, { 26, "$26", "$k0", "$f26", "" }, { 27, "$27", "$k1", "$f27", "" },
+  { 28, "$28", "$gp", "$f28", "" },    { 29, "$29", "$sp", "$f29", "" }, { 30, "$30", "$fp", "$f30", "" }, { 31, "$31", "$ra", "$f31", "" }
 };
 
 const instruction_format_t instructions_def[]
@@ -205,6 +234,11 @@ const instruction_format_t instructions_def[]
   { OP_FTYPE, 0,            "bc1t",     2, FORMAT_F }, // Special case
   { OP_FTYPE, 0,            "bc1f",     2, FORMAT_F }, // Special case
   {        0,         0,     "nop",     1, FORMAT_R }
+};
+
+/* segmentation register */
+struct seg_reg_t {
+  uint32_t data[32];
 };
 
 #endif

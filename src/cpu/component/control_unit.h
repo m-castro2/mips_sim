@@ -74,6 +74,8 @@ public:
 
   uint32_t get_signal_bitmask( signal_t const signal[], size_t count ) const;
 
+  uint32_t get_signal_bitmask_static(std::initializer_list<signal_t> signals);
+  
   void print_microcode( std::ostream &out = std::cout ) const;
 
   void print_microinstruction( size_t index, std::ostream &out = std::cout ) const;

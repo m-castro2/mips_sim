@@ -56,31 +56,32 @@ extern int yydebug;
     YYUNDEF = 257,                 /* "invalid token"  */
     COMMA = 258,                   /* COMMA  */
     SYSCALL = 259,                 /* SYSCALL  */
-    TEXT_SECTION = 260,            /* TEXT_SECTION  */
-    DATA_SECTION = 261,            /* DATA_SECTION  */
-    LAOPCODE = 262,                /* LAOPCODE  */
-    LUIOPCODE = 263,               /* LUIOPCODE  */
-    OBRACKET = 264,                /* OBRACKET  */
-    CBRACKET = 265,                /* CBRACKET  */
-    DATATAG = 266,                 /* DATATAG  */
-    LABELTAG = 267,                /* LABELTAG  */
-    LABELJUMP = 268,               /* LABELJUMP  */
-    REGISTER = 269,                /* REGISTER  */
-    FREGISTER = 270,               /* FREGISTER  */
-    IOPCODE = 271,                 /* IOPCODE  */
-    JOPCODE = 272,                 /* JOPCODE  */
-    ROPCODE = 273,                 /* ROPCODE  */
-    R1OPCODE = 274,                /* R1OPCODE  */
-    R2OPCODE = 275,                /* R2OPCODE  */
-    FOPCODE = 276,                 /* FOPCODE  */
-    F2ROPCODE = 277,               /* F2ROPCODE  */
-    FBROPCODE = 278,               /* FBROPCODE  */
-    IMOPCODE = 279,                /* IMOPCODE  */
-    FMOPCODE = 280,                /* FMOPCODE  */
-    INTVALUE = 281,                /* INTVALUE  */
-    FLOATVALUE = 282,              /* FLOATVALUE  */
-    TEXTVALUE = 283,               /* TEXTVALUE  */
-    EOL = 284                      /* EOL  */
+    NOPCODE = 260,                 /* NOPCODE  */
+    TEXT_SECTION = 261,            /* TEXT_SECTION  */
+    DATA_SECTION = 262,            /* DATA_SECTION  */
+    LAOPCODE = 263,                /* LAOPCODE  */
+    LUIOPCODE = 264,               /* LUIOPCODE  */
+    OBRACKET = 265,                /* OBRACKET  */
+    CBRACKET = 266,                /* CBRACKET  */
+    DATATAG = 267,                 /* DATATAG  */
+    LABELTAG = 268,                /* LABELTAG  */
+    LABELJUMP = 269,               /* LABELJUMP  */
+    REGISTER = 270,                /* REGISTER  */
+    FREGISTER = 271,               /* FREGISTER  */
+    IOPCODE = 272,                 /* IOPCODE  */
+    JOPCODE = 273,                 /* JOPCODE  */
+    ROPCODE = 274,                 /* ROPCODE  */
+    R1OPCODE = 275,                /* R1OPCODE  */
+    R2OPCODE = 276,                /* R2OPCODE  */
+    FOPCODE = 277,                 /* FOPCODE  */
+    F2ROPCODE = 278,               /* F2ROPCODE  */
+    FBROPCODE = 279,               /* FBROPCODE  */
+    IMOPCODE = 280,                /* IMOPCODE  */
+    FMOPCODE = 281,                /* FMOPCODE  */
+    INTVALUE = 282,                /* INTVALUE  */
+    FLOATVALUE = 283,              /* FLOATVALUE  */
+    TEXTVALUE = 284,               /* TEXTVALUE  */
+    EOL = 285                      /* EOL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -94,7 +95,7 @@ union YYSTYPE
   uint32_t ival;
   char * tval;
 
-#line 98 "src/assembler/mips_parser.hpp"
+#line 99 "src/assembler/mips_parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -8,8 +8,6 @@
 
 using namespace std;
 
-#define MAX_DIAGRAM_SIZE 500
-
 namespace mips_sim
 {
   constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
@@ -48,6 +46,13 @@ namespace mips_sim
     sigmask[EX_MEM] = control_unit->get_signal_bitmask(signals_ID, 7);
     sigmask[MEM_WB] = control_unit->get_signal_bitmask(signals_ID, 3);
 
+    diagram = new uint32_t*[MAX_DIAGRAM_SIZE];
+    for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
+    {
+      diagram[i] = new uint32_t[MAX_DIAGRAM_SIZE];
+      memset(diagram[i], 0, MAX_DIAGRAM_SIZE * sizeof(int));
+    }
+
     pc_write = true;
     flush_pipeline = 0;
     next_pc = 0;
@@ -58,17 +63,13 @@ namespace mips_sim
 
     loaded_instruction_index = 1;
     loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
-
-    diagram = new uint32_t*[MAX_DIAGRAM_SIZE];
-    for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
-      diagram[i] = new uint32_t[MAX_DIAGRAM_SIZE];
   }
 
   CpuPipelined::~CpuPipelined()
   {
     for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
-      delete diagram[i];
-    delete diagram;
+      delete[] diagram[i];
+    delete[] diagram;
   }
 
   bool CpuPipelined::process_branch(uint32_t instruction_code,

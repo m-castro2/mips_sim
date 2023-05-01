@@ -85,6 +85,7 @@
 
 %token COMMA
 %token SYSCALL
+%token NOPCODE
 %token TEXT_SECTION
 %token DATA_SECTION
 %token LAOPCODE
@@ -252,6 +253,11 @@ instruction:
       uint32_t instcode = Utils::assemble_instruction("syscall");
       instructions.push_back({instcode, line, false, false, 0, ""});
     }
+  |	NOPCODE
+		{
+      uint32_t instcode = 0;
+      instructions.push_back({instcode, line, false, false, 0, ""});
+		}
   | LABELTAG
     {
       labels.push_back({$1, line});

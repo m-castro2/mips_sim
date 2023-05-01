@@ -1,13 +1,7 @@
 #ifndef MIPS_SIM_CPU_PIPELINED_H
 #define MIPS_SIM_CPU_PIPELINED_H
 
-/* processor stages */
-#define STAGE_IF      0
-#define STAGE_ID      1
-#define STAGE_EX      2
-#define STAGE_MEM     3
-#define STAGE_WB      4
-#define STAGE_COUNT   5
+#include "cpu.h"
 
 /* segmentation register types */
 #define IF_ID  0
@@ -33,20 +27,12 @@
 #define SR_ALUOUTPUT   14
 #define SR_ALUZERO     15
 #define SR_RELBRANCH   16
-#define SR_WORDREAD    17
+#define SR_UJUMP       17
+#define SR_JUMPADDR    18
+#define SR_WORDREAD    19
+#define SR_V0          20
 
-/* brahch processing options */
-#define BRANCH_FLUSH     0 /* flush pipeline */
-#define BRANCH_NON_TAKEN 1 /* fixed non taken */
-#define BRANCH_DELAYED   2 /* delayed branch */
-
-/* proper keys */
-#define KEY_BRANCH_TYPE           "branch-type"
-#define KEY_BRANCH_STAGE          "branch-stage"
-#define KEY_FORWARDING_UNIT       "has-forwarding-unit"
-#define KEY_HAZARD_DETECTION_UNIT "has-hazard-detection-unit"
-
-#include "cpu.h"
+#define MAX_DIAGRAM_SIZE 500
 
 #define X -1
 
@@ -55,11 +41,6 @@ namespace mips_sim
 
   const std::string stage_names[] = {"IF",  "ID",  "EX", "MEM", "WB"};
 
-
-/* segmentation register */
-struct seg_reg_t {
-  uint32_t data[32];
-};
 
 struct op_microcode_t {
   uint8_t opcode;
@@ -144,11 +125,15 @@ class CpuPipelined : public Cpu
     virtual void reset( bool reset_data_memory = true,
                         bool reset_text_memory = true ) override;
 
-    void enable_hazard_detection_unit( bool );
-    void enable_forwarding_unit( bool );
-    void set_branch_stage( int );
-    void set_branch_type( int );
-    
+    virtual void enable_hazard_detection_unit( bool );
+    virtual void enable_forwarding_unit( bool );
+    virtual void set_branch_stage( int );
+    virtual void set_branch_type( int );
+  
+  protected:
+
+    uint32_t **diagram;
+
   private:
 
     bool pc_write; /* if false, blocks pipeline */
@@ -166,7 +151,6 @@ class CpuPipelined : public Cpu
     uint32_t pc_register_jump;
 
     uint32_t loaded_instruction_index;
-    uint32_t **diagram;
     uint32_t current_state[STAGE_COUNT] = {UNDEF32,UNDEF32,UNDEF32,UNDEF32,UNDEF32};
 
     void stage_if( std::ostream &out = std::cout );
