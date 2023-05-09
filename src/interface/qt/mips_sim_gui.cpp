@@ -7,14 +7,15 @@
 #include "../../utils.h"
 #include "../../exception.h"
 
-#include <QString>
-#include <QSpacerItem>
-#include <QFileDialog>
-#include <QMessageBox>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+
+#include <QtCore/QString>
+#include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
 
 using namespace std;
 using namespace mips_sim;

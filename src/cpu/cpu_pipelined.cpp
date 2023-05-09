@@ -427,7 +427,7 @@ namespace mips_sim
   {
     seg_reg_t next_seg_reg = {};
     uint32_t microinstruction = seg_regs[ID_EX].data[SR_SIGNALS];
-    uint32_t alu_input_a, alu_input_b, alu_output;
+    uint32_t alu_input_a, alu_input_b, alu_output = UNDEF32;
 
     /* get data from previous stage */
     uint32_t instruction_code = seg_regs[ID_EX].data[SR_INSTRUCTION];

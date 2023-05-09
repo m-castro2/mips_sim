@@ -17,15 +17,11 @@ endif
 CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++17 -m64 -Wno-weak-vtables
 
 CPPLIBS =
+
 QTLIBS = -L/usr/lib/x86_64-linux-gnu -lQt5Widgets -lQt5Gui -lQt5Core
+QT_INCLUDE_BASE = $(shell qmake -query QT_INSTALL_HEADERS)
 QTINCLUDE := -fPIC \
-  -Iinclude/ \
-  -I$(INC_DIR) \
-  -Iinclude/qcustomplot \
-  -I/usr/include/x86_64-linux-gnu/qt5 \
-  -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets \
-  -I/usr/include/x86_64-linux-gnu/qt5/QtCore \
-  -I/usr/include/x86_64-linux-gnu/qt5/QtGui
+             -I$(QT_INCLUDE_BASE)
 QTOBJFILES = src/interface/qt/mips_sim_gui.o \
              src/interface/qt/mips_sim_settings.o \
              src/interface/qt/moc_mips_sim_gui.o \

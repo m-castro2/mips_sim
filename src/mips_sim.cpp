@@ -19,7 +19,7 @@
 
 #ifdef _QT
 #include "interface/qt/mips_sim_gui.h"
-#include <QApplication>
+#include <QtWidgets/QApplication>
 #endif
 
 #define MODE_RUN_BATCH       1
