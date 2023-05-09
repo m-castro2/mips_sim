@@ -242,8 +242,7 @@ int run_batch(string input_file, int run_mode, int cpu_mode, ostream & outstream
 
   try
   {
-    for (size_t i = 0; cpu->is_ready() ; i++)
-    //for (size_t i = 0; i < 13 ; i++)
+    while (cpu->is_ready())
     {
       cpu->next_cycle(outstream);
     }

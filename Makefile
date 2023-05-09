@@ -6,7 +6,7 @@ INSTALLDIR = $(PWD)
 
 ifeq ($(CC), clang++)
   CPPFLAGS = -D_QT -g -O3 -Weverything -Wno-padded -Wno-c++98-compat -std=c++17 \
-             -Wno-exit-time-destructors -Wno-global-constructors \
+             -Wno-exit-time-destructors -Wno-global-constructors -Wno-unreachable-code-break \
              -Wno-unused-macros \
              -m64 -pipe
 else

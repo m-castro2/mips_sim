@@ -413,7 +413,7 @@ void MipsSimGui::handle_exception(int e)
   if (err_v)
     msgBox.setText(QString::fromStdString("Exception at [0x" + Utils::hex32(err_v)) + "]");
   else
-    msgBox.setText(QString::fromStdString("Exception " + e));
+    msgBox.setText(QString::fromStdString("Exception " + std::to_string(e)));
   msgBox.setStyleSheet("QLabel{min-width: 400px;}");
   msgBox.setInformativeText(QString::fromStdString(err_msg));
   msgBox.setStandardButtons(QMessageBox::Ok);
@@ -434,7 +434,7 @@ void MipsSimGui::on_btnRun_clicked()
 {
   try
   {
-    for (size_t i = 0; cpu->is_ready() ; i++)
+    while (cpu->is_ready())
     {
       cpu->next_cycle(cout);
     }
