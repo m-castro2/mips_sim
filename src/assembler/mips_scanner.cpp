@@ -592,7 +592,7 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 #line 1 "src/assembler/mips_assembler.l"
-#line 5 "src/assembler/mips_assembler.l"
+#line 6 "src/assembler/mips_assembler.l"
 #include "../utils.h"
 #include "mips_parser.hpp"
 
@@ -668,8 +668,6 @@ extern int yywrap ( void );
 #endif
 
 #ifndef YY_NO_UNPUT
-    
-    static void yyunput ( int c, char *buf_ptr  );
     
 #endif
 
@@ -825,9 +823,9 @@ YY_DECL
 		}
 
 	{
-#line 47 "src/assembler/mips_assembler.l"
+#line 48 "src/assembler/mips_assembler.l"
 
-#line 830 "src/assembler/mips_scanner.cpp"
+#line 828 "src/assembler/mips_scanner.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -886,104 +884,104 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 48 "src/assembler/mips_assembler.l"
+#line 49 "src/assembler/mips_assembler.l"
 { return TEXT_SECTION; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 49 "src/assembler/mips_assembler.l"
+#line 50 "src/assembler/mips_assembler.l"
 { return DATA_SECTION; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 50 "src/assembler/mips_assembler.l"
+#line 51 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext+1); return DATATAG; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 51 "src/assembler/mips_assembler.l"
+#line 52 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return FOPCODE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 52 "src/assembler/mips_assembler.l"
+#line 53 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return F2ROPCODE; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 53 "src/assembler/mips_assembler.l"
+#line 54 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return FBROPCODE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 54 "src/assembler/mips_assembler.l"
+#line 55 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return ROPCODE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 55 "src/assembler/mips_assembler.l"
+#line 56 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return R1OPCODE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 56 "src/assembler/mips_assembler.l"
+#line 57 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return R2OPCODE; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 57 "src/assembler/mips_assembler.l"
+#line 58 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return JOPCODE; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 58 "src/assembler/mips_assembler.l"
+#line 59 "src/assembler/mips_assembler.l"
 { return LAOPCODE; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 59 "src/assembler/mips_assembler.l"
+#line 60 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return IOPCODE; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 60 "src/assembler/mips_assembler.l"
+#line 61 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return IMOPCODE; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 61 "src/assembler/mips_assembler.l"
+#line 62 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return FMOPCODE; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 62 "src/assembler/mips_assembler.l"
+#line 63 "src/assembler/mips_assembler.l"
 { return LUIOPCODE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 63 "src/assembler/mips_assembler.l"
+#line 64 "src/assembler/mips_assembler.l"
 { return SYSCALL; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 64 "src/assembler/mips_assembler.l"
+#line 65 "src/assembler/mips_assembler.l"
 { return NOPCODE; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 66 "src/assembler/mips_assembler.l"
+#line 67 "src/assembler/mips_assembler.l"
 { yylval.ival = Utils::find_register_by_name(yytext);
               return REGISTER; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 68 "src/assembler/mips_assembler.l"
+#line 69 "src/assembler/mips_assembler.l"
 { yylval.ival = Utils::find_register_by_name(yytext);
                return FREGISTER; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 70 "src/assembler/mips_assembler.l"
+#line 71 "src/assembler/mips_assembler.l"
 {
               if (yytext[0] == '0' && yytext[1] == 'x')
               {
@@ -999,61 +997,61 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 82 "src/assembler/mips_assembler.l"
+#line 83 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return FLOATVALUE; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 83 "src/assembler/mips_assembler.l"
+#line 84 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return TEXTVALUE; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 84 "src/assembler/mips_assembler.l"
+#line 85 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); yylval.tval[strlen(yylval.tval)-1]='\0'; return LABELTAG; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 85 "src/assembler/mips_assembler.l"
+#line 86 "src/assembler/mips_assembler.l"
 { yylval.tval = strdup(yytext); return LABELJUMP; }
 	YY_BREAK
 case 25:
 /* rule 25 can match eol */
 YY_RULE_SETUP
-#line 86 "src/assembler/mips_assembler.l"
+#line 87 "src/assembler/mips_assembler.l"
 { /* Ignoring whitespaces and tabs */ }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 87 "src/assembler/mips_assembler.l"
+#line 88 "src/assembler/mips_assembler.l"
 { /* Ignore comments */ }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 88 "src/assembler/mips_assembler.l"
+#line 89 "src/assembler/mips_assembler.l"
 { return OBRACKET; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 89 "src/assembler/mips_assembler.l"
+#line 90 "src/assembler/mips_assembler.l"
 { return CBRACKET; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 90 "src/assembler/mips_assembler.l"
+#line 91 "src/assembler/mips_assembler.l"
 { return COMMA; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 91 "src/assembler/mips_assembler.l"
+#line 92 "src/assembler/mips_assembler.l"
 { cerr << "[parser] undefined symbol " << yytext << endl; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 92 "src/assembler/mips_assembler.l"
+#line 93 "src/assembler/mips_assembler.l"
 ECHO;
 	YY_BREAK
-#line 1056 "src/assembler/mips_scanner.cpp"
+#line 1054 "src/assembler/mips_scanner.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1388,43 +1386,6 @@ static int yy_get_next_buffer (void)
 }
 
 #ifndef YY_NO_UNPUT
-
-    static void yyunput (int c, char * yy_bp )
-{
-	char *yy_cp;
-    
-    yy_cp = (yy_c_buf_p);
-
-	/* undo effects of setting up yytext */
-	*yy_cp = (yy_hold_char);
-
-	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-		{ /* need to shift things up to make room */
-		/* +2 for EOB chars. */
-		int number_to_move = (yy_n_chars) + 2;
-		char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-		char *source =
-				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-
-		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-			*--dest = *--source;
-
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
-		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = (int) YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-
-		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-		}
-
-	*--yy_cp = (char) c;
-
-	(yytext_ptr) = yy_bp;
-	(yy_hold_char) = *yy_cp;
-	(yy_c_buf_p) = yy_cp;
-}
 
 #endif
 
@@ -2058,6 +2019,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 92 "src/assembler/mips_assembler.l"
+#line 93 "src/assembler/mips_assembler.l"
 
 

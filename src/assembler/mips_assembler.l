@@ -1,5 +1,6 @@
 %option header-file="src/assembler/mips_parser_lex.hpp"
 %option noyywrap
+%option nounput
 
 %{
 #include "../utils.h"

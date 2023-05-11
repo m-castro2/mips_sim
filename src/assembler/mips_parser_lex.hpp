@@ -469,7 +469,7 @@ extern int yylex (void);
 #undef yyTABLES_NAME
 #endif
 
-#line 92 "src/assembler/mips_assembler.l"
+#line 93 "src/assembler/mips_assembler.l"
 
 
 #line 475 "src/assembler/mips_parser_lex.hpp"
