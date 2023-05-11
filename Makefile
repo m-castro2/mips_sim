@@ -15,8 +15,10 @@ else
 endif
 
 CLICPPFLAGS = -g -O3 -Wall -Wno-padded -std=c++17 -m64 -Wno-weak-vtables
+FLEXFLAGS =
+BISONFLAGS = -Wall -d
 
-CPPLIBS =
+CPPLIBS = 
 
 QTLIBS = -L/usr/lib/x86_64-linux-gnu -lQt5Widgets -lQt5Gui -lQt5Core
 QT_INCLUDE_BASE = $(shell qmake -query QT_INSTALL_HEADERS)
@@ -48,20 +50,18 @@ DEPS =
 
 
 all: $(OBJFILES) $(QTOBJFILES) $(QTFILES)
-	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(QTOBJFILES) $(CPPLIBS) $(QTLIBS) -lpthread
+	$(CC) $(CPPFLAGS) -o mips_sim $(OBJFILES) $(QTOBJFILES) $(CPPLIBS) $(QTLIBS)
 	@echo $(INSTALLDIR)
 
 src/assembler/mips_parser.cpp: src/assembler/mips_assembler.y
-	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
-	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
+	bison $(BISONFLAGS) -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
 
 src/assembler/mips_scanner.cpp: src/assembler/mips_assembler.l
-	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
-	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
+	flex $(FLEXFLAGS) -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
 
 src/assembler/%.o: src/assembler/%.cpp $(DEPS)
 	@mkdir -p "$(@D)"
-	$(CC) -c -o $@ $<
+	$(CC) $(CPPFLAGS) -c -o $@ $<
 
 src/interface/qt/%.o: src/interface/qt/%.cpp src/interface/qt/ui_mips_sim_gui.h
 	@mkdir -p "$(@D)"
@@ -98,6 +98,4 @@ clean:
 	find src -name "*.o" | xargs rm -f
 	rm src/assembler/mips_scanner.cpp src/assembler/mips_parser.cpp
 
-parser:
-	flex -o src/assembler/mips_scanner.cpp src/assembler/mips_assembler.l
-	bison -d -o src/assembler/mips_parser.cpp src/assembler/mips_assembler.y
+parser: src/assembler/mips_parser.cpp src/assembler/mips_scanner.cpp
