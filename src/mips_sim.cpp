@@ -67,6 +67,7 @@ int main(int argc, char * argv[])
     if (!strcmp(argv[1], "help"))
     {
       print_help(argv[0]);
+      return 0;
     }
 
     if (!strcmp(argv[1], "asm"))
