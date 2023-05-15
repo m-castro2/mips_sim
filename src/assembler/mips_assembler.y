@@ -304,6 +304,7 @@ instruction:
         }
         memsections.push_back({$1, type, last_pos, mem_pos-last_pos, values});
         values.clear();
+        free($1); free($2);
       }
       ;
 
@@ -379,7 +380,6 @@ static void setup_memory(shared_ptr<Memory> memory)
       }
       else if (memsection.type == MEM_TYPE_STRING)
       {
-        uint32_t writevalue;
         uint32_t str_len = s.length();
 
         for (uint32_t i=0; i<str_len; i++)
@@ -438,6 +438,7 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
   {
     return 1;
   }
+  
   /* rebuild instructions */
   for (Instruction & instruction : instructions)
   {

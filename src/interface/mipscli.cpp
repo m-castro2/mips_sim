@@ -86,7 +86,7 @@ namespace mips_sim
             [this](std::ostream& out, std::string type){ set_cpu(type, out); },
             "Set CPU [multicycle|pipelined|flex]" );
     cpu_menu = cpuMenu.get();
-    rootMenu -> Insert( move(cpuMenu) );
+    rootMenu -> Insert( std::move(cpuMenu) );
 
     auto runMenu = make_unique< Menu >( "run" );
     runMenu -> Insert(
@@ -129,9 +129,9 @@ namespace mips_sim
             "dia",
             [this](std::ostream& out) { show_diagram( out ); },
             "Show execution diagram" );
-    rootMenu -> Insert( move(runMenu) );
+    rootMenu -> Insert( std::move(runMenu) );
 
-    cl_interface = unique_ptr<Cli>(new Cli( move(rootMenu) ));
+    cl_interface = unique_ptr<Cli>(new Cli( std::move(rootMenu) ));
 
     // global exit action
     cl_interface->ExitAction( [](auto& out){ out << "Goodbye!\n"; } );
@@ -281,7 +281,7 @@ namespace mips_sim
 
     try
     {
-      for (size_t i = 0; cpu->is_ready() ; i++)
+      while(cpu->is_ready())
       {
         cpu->next_cycle(out);
       }

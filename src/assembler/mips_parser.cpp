@@ -601,8 +601,8 @@ static const yytype_int16 yyrline[] =
 {
        0,   119,   119,   120,   121,   124,   129,   135,   143,   151,
      159,   167,   175,   183,   191,   199,   206,   214,   222,   230,
-     243,   251,   256,   261,   269,   269,   272,   311,   315,   319,
-     323,   327
+     243,   251,   256,   261,   269,   269,   272,   312,   316,   320,
+     324,   328
 };
 #endif
 
@@ -1560,55 +1560,56 @@ yyreduce:
         }
         memsections.push_back({(yyvsp[-2].tval), type, last_pos, mem_pos-last_pos, values});
         values.clear();
+        free((yyvsp[-2].tval)); free((yyvsp[-1].tval));
       }
-#line 1565 "src/assembler/mips_parser.cpp"
+#line 1566 "src/assembler/mips_parser.cpp"
     break;
 
   case 27: /* array_values: FLOATVALUE  */
-#line 312 "src/assembler/mips_assembler.y"
+#line 313 "src/assembler/mips_assembler.y"
       {
         values.push_back((yyvsp[0].tval));
       }
-#line 1573 "src/assembler/mips_parser.cpp"
+#line 1574 "src/assembler/mips_parser.cpp"
     break;
 
   case 28: /* array_values: FLOATVALUE COMMA array_values  */
-#line 316 "src/assembler/mips_assembler.y"
+#line 317 "src/assembler/mips_assembler.y"
       {
         values.push_back((yyvsp[-2].tval));
       }
-#line 1581 "src/assembler/mips_parser.cpp"
+#line 1582 "src/assembler/mips_parser.cpp"
     break;
 
   case 29: /* array_values: INTVALUE  */
-#line 320 "src/assembler/mips_assembler.y"
+#line 321 "src/assembler/mips_assembler.y"
       {
         values.push_back(to_string((yyvsp[0].ival)));
       }
-#line 1589 "src/assembler/mips_parser.cpp"
+#line 1590 "src/assembler/mips_parser.cpp"
     break;
 
   case 30: /* array_values: INTVALUE COMMA array_values  */
-#line 324 "src/assembler/mips_assembler.y"
+#line 325 "src/assembler/mips_assembler.y"
       {
         values.push_back(to_string((yyvsp[-2].ival)));
       }
-#line 1597 "src/assembler/mips_parser.cpp"
+#line 1598 "src/assembler/mips_parser.cpp"
     break;
 
   case 31: /* array_values: TEXTVALUE  */
-#line 328 "src/assembler/mips_assembler.y"
+#line 329 "src/assembler/mips_assembler.y"
       {
         string s = (yyvsp[0].tval);
         /* remove quotes */
         assert(s[0] == s[s.length()-1] && s[0] == '\"');
         values.push_back(s.substr(1, s.length()-2));
       }
-#line 1608 "src/assembler/mips_parser.cpp"
+#line 1609 "src/assembler/mips_parser.cpp"
     break;
 
 
-#line 1612 "src/assembler/mips_parser.cpp"
+#line 1613 "src/assembler/mips_parser.cpp"
 
       default: break;
     }
@@ -1801,7 +1802,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 334 "src/assembler/mips_assembler.y"
+#line 335 "src/assembler/mips_assembler.y"
 
 
 namespace mips_sim
@@ -1850,7 +1851,6 @@ static void setup_memory(shared_ptr<Memory> memory)
       }
       else if (memsection.type == MEM_TYPE_STRING)
       {
-        uint32_t writevalue;
         uint32_t str_len = s.length();
 
         for (uint32_t i=0; i<str_len; i++)
@@ -1909,6 +1909,7 @@ int assemble_file(const char filename[], shared_ptr<Memory> memory)
   {
     return 1;
   }
+  
   /* rebuild instructions */
   for (Instruction & instruction : instructions)
   {

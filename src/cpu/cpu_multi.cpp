@@ -11,9 +11,10 @@ using namespace std;
 namespace mips_sim
 {
 
-  constexpr int CpuMulti::uc_microcode_matrix[][SIGNAL_COUNT];
-  constexpr uint32_t CpuMulti::uc_signal_bits[SIGNAL_COUNT];
-  constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[];
+  /* deprecated since C++17 */
+  //constexpr int CpuMulti::uc_microcode_matrix[][SIGNAL_COUNT];
+  //constexpr uint32_t CpuMulti::uc_signal_bits[SIGNAL_COUNT];
+  //constexpr ctrl_dir_t CpuMulti::uc_ctrl_dir[];
 
   CpuMulti::CpuMulti(shared_ptr<Memory> _memory, shared_ptr<ControlUnit> _control_unit)
     : Cpu(_memory,
@@ -69,7 +70,7 @@ namespace mips_sim
 
     uint32_t hi_reg = sr_bank->get(SPECIAL_HI),
              lo_reg = sr_bank->get(SPECIAL_LO);
-    int stall_cycles;
+    int stall_cycles = 0;
     bool hi_lo_updated = false;
 
     if (execution_stall > 0)
@@ -297,7 +298,8 @@ namespace mips_sim
 
     if (control_unit->test(microinstruction, SIG_REGWRITE))
     {
-        uint32_t writereg, writedata;
+        uint8_t writereg; 
+        uint32_t writedata;
 
         if (control_unit->test(microinstruction, SIG_REGDST) == 0)
           writereg = instruction.rt;

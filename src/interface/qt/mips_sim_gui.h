@@ -10,12 +10,14 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <QDialog>
-#include <QMainWindow>
-#include <QTextStream>
-#include <QFont>
-#include <QLabel>
-#include <QLineEdit>
+
+#include <QtGui/QFont>
+#include <QtCore/QTextStream>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QMainWindow>
+
 
 #define MAX_DIA_CYCLES 10
 #define MAX_COLORS      5

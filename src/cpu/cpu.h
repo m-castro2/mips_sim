@@ -42,10 +42,10 @@ public:
   void print_int_registers( std::ostream &out = std::cout ) const;
   void print_fp_registers( std::ostream &out = std::cout ) const;
 
-  uint32_t read_register( size_t reg_index) const;
-  uint32_t read_fp_register( size_t reg_index) const;
-  float read_register_f( size_t reg_index) const;
-  double read_register_d( size_t reg_index) const;
+  uint32_t read_register( uint8_t reg_index) const;
+  uint32_t read_fp_register( uint8_t reg_index) const;
+  float read_register_f( uint8_t reg_index) const;
+  double read_register_d( uint8_t reg_index) const;
   uint32_t read_special_register(std::string reg_name) const;
 
   virtual void reset( bool reset_data_memory = true,
@@ -66,10 +66,10 @@ protected:
 
   void syscall( uint32_t value );
 
-  void write_register( size_t reg_index, uint32_t value);
-  void write_fp_register( size_t reg_index, uint32_t value);
-  void write_register_f( size_t reg_index, float value);
-  void write_register_d( size_t reg_index, double value);
+  void write_register( uint8_t reg_index, uint32_t value);
+  void write_fp_register( uint8_t reg_index, uint32_t value);
+  void write_register_f( uint8_t reg_index, float value);
+  void write_register_d( uint8_t reg_index, double value);
 
   std::shared_ptr<Memory> memory;
   std::shared_ptr<ControlUnit> control_unit;
@@ -93,7 +93,7 @@ protected:
 
 private:
 
-  std::string register_str(size_t reg_id, bool fp,
+  std::string register_str(uint8_t reg_id, bool fp,
                            bool show_value, bool show_double) const;
 };
 

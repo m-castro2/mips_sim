@@ -2,6 +2,7 @@
 #define MIPS_SIM_GLOBAL_DEFS_H
 
 #include <string>
+#include <cstdint>
 
 #define FORMAT_R 0
 #define FORMAT_I 1

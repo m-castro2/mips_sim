@@ -10,9 +10,10 @@ using namespace std;
 
 namespace mips_sim
 {
-  constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
-  constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
-  constexpr ctrl_dir_t CpuPipelined::uc_ctrl_dir[];
+  /* deprecated since C++17 */
+  //constexpr int CpuPipelined::uc_microcode_matrix[][SIGNAL_COUNT];
+  //constexpr uint32_t CpuPipelined::uc_signal_bits[SIGNAL_COUNT];
+  //constexpr ctrl_dir_t CpuPipelined::uc_ctrl_dir[];
 
   CpuPipelined::CpuPipelined(std::shared_ptr<Memory> _memory,
                              std::shared_ptr<ControlUnit> _control_unit,
@@ -427,7 +428,7 @@ namespace mips_sim
   {
     seg_reg_t next_seg_reg = {};
     uint32_t microinstruction = seg_regs[ID_EX].data[SR_SIGNALS];
-    uint32_t alu_input_a, alu_input_b, alu_output;
+    uint32_t alu_input_a, alu_input_b, alu_output = UNDEF32;
 
     /* get data from previous stage */
     uint32_t instruction_code = seg_regs[ID_EX].data[SR_INSTRUCTION];
@@ -446,7 +447,7 @@ namespace mips_sim
     /* temporary data */
     uint32_t hi_reg = sr_bank->get(SPECIAL_HI),
              lo_reg = sr_bank->get(SPECIAL_LO);
-    int stall_cycles;
+    int stall_cycles = 0;
     bool hi_lo_updated = false;
 
     out << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
@@ -650,15 +651,21 @@ namespace mips_sim
     {
       if (control_unit->test(microinstruction, SIG_REGBANK))
       {
-        out << "   REG write " << Utils::get_fp_register_name(reg_dest)
+        assert(reg_dest < 32);
+        uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
+
+        out << "   REG write " << Utils::get_fp_register_name(reg_dest8)
             << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
-        write_fp_register(reg_dest, regwrite_value);
+        write_fp_register(reg_dest8, regwrite_value);
       }
       else
       {
-        out << "   REG write " << Utils::get_register_name(reg_dest)
+        assert(reg_dest < 32);
+        uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
+        
+        out << "   REG write " << Utils::get_register_name(reg_dest8)
             << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
-        write_register(reg_dest, regwrite_value);
+        write_register(reg_dest8, regwrite_value);
       }
     }
   }

@@ -19,7 +19,7 @@
 
 #ifdef _QT
 #include "interface/qt/mips_sim_gui.h"
-#include <QApplication>
+#include <QtWidgets/QApplication>
 #endif
 
 #define MODE_RUN_BATCH       1
@@ -67,6 +67,7 @@ int main(int argc, char * argv[])
     if (!strcmp(argv[1], "help"))
     {
       print_help(argv[0]);
+      return 0;
     }
 
     if (!strcmp(argv[1], "asm"))
@@ -242,8 +243,7 @@ int run_batch(string input_file, int run_mode, int cpu_mode, ostream & outstream
 
   try
   {
-    for (size_t i = 0; cpu->is_ready() ; i++)
-    //for (size_t i = 0; i < 13 ; i++)
+    while (cpu->is_ready())
     {
       cpu->next_cycle(outstream);
     }

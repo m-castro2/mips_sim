@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <cstdint>
 
 namespace mips_sim
 {
@@ -46,7 +47,7 @@ namespace mips_sim
 
     protected:
     
-      std::map<std::string, int> registers;
+      std::map<std::string, uint32_t> registers;
       std::vector<std::string> register_names;
   };
   

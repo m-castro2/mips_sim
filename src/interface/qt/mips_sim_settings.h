@@ -5,7 +5,7 @@
 
 #include <map>
 #include <string>
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 namespace Ui {
 class MipsSimSettings;

@@ -246,7 +246,7 @@ void Cpu::syscall( uint32_t value )
   }
 }
 
-string Cpu::register_str(size_t reg_id, bool fp, bool show_value, bool show_double) const
+string Cpu::register_str(uint8_t reg_id, bool fp, bool show_value, bool show_double) const
 {
   string regname;
   uint32_t regvalue[2];
@@ -276,7 +276,7 @@ string Cpu::register_str(size_t reg_id, bool fp, bool show_value, bool show_doub
 void Cpu::print_registers( ostream &out ) const
 {
   out << setw(134) << setfill('-') << " " << endl;
-  for (size_t i=0; i<16; ++i)
+  for (uint8_t i=0; i<16; ++i)
   {
     out << "|" << register_str(i, false, true, false);
     out << " |" << register_str(i+16, false, true, false);
@@ -290,7 +290,7 @@ void Cpu::print_registers( ostream &out ) const
 void Cpu::print_int_registers( ostream &out ) const
 {
   out << setw(110) << setfill('-') << " " << endl;
-  for (size_t i=0; i<8; ++i)
+  for (uint8_t i=0; i<8; ++i)
   {
     out << "|" << register_str(i, false, true, false);
     out << " |" << register_str(i+8, false, true, false);
@@ -304,7 +304,7 @@ void Cpu::print_int_registers( ostream &out ) const
 void Cpu::print_fp_registers( ostream &out ) const
 {
   out << setw(80) << setfill('-') << " " << endl;
-  for (size_t i=0; i<16; ++i)
+  for (uint8_t i=0; i<16; ++i)
   {
     out << "| " << register_str(i, true, true, !(i%2));
     out << " | " << register_str(i+8, true, true, !(i%2));
@@ -313,21 +313,21 @@ void Cpu::print_fp_registers( ostream &out ) const
   out << setw(80) << setfill('-') << " " << endl;
 }
 
-uint32_t Cpu::read_register( size_t reg_index) const
+uint32_t Cpu::read_register( uint8_t reg_index) const
 {
   assert(reg_index < 32);
 
   return gpr_bank->at(reg_index);
 }
 
-uint32_t Cpu::read_fp_register( size_t reg_index) const
+uint32_t Cpu::read_fp_register( uint8_t reg_index) const
 {
   assert(reg_index < 32);
 
   return fpr_bank->at(reg_index);
 }
 
-void Cpu::write_register( size_t reg_index, uint32_t value)
+void Cpu::write_register( uint8_t reg_index, uint32_t value)
 {
   if (reg_index == 0)
     throw Exception::e(CPU_REG_EXCEPTION, "Cannot write register $0");
@@ -336,14 +336,14 @@ void Cpu::write_register( size_t reg_index, uint32_t value)
   gpr_bank->set_at(reg_index, value);
 }
 
-void Cpu::write_fp_register( size_t reg_index, uint32_t value)
+void Cpu::write_fp_register( uint8_t reg_index, uint32_t value)
 {
   assert(reg_index < 32);
 
   fpr_bank->set_at(reg_index, value);
 }
 
-float Cpu::read_register_f( size_t reg_index ) const
+float Cpu::read_register_f( uint8_t reg_index ) const
 {
   assert(reg_index < 32);
 
@@ -355,14 +355,14 @@ uint32_t Cpu::read_special_register(string reg_name) const {
   return sr_bank->get(reg_name);
 }
 
-void Cpu::write_register_f( size_t reg_index, float value )
+void Cpu::write_register_f( uint8_t reg_index, float value )
 {
   assert(reg_index < 32);
 
   fpr_bank->write_float_at(reg_index, value);
 }
 
-double Cpu::read_register_d( size_t reg_index ) const
+double Cpu::read_register_d( uint8_t reg_index ) const
 {
   if (reg_index % 2 == 1)
     throw Exception::e(CPU_REG_EXCEPTION, "Invalid register for double precision");
@@ -372,7 +372,7 @@ double Cpu::read_register_d( size_t reg_index ) const
   return fpr_bank->read_double_at(reg_index);
 }
 
-void Cpu::write_register_d( size_t reg_index, double value )
+void Cpu::write_register_d( uint8_t reg_index, double value )
 {
   if (reg_index % 2 == 1)
     throw Exception::e(CPU_REG_EXCEPTION, "Invalid register for double precision");

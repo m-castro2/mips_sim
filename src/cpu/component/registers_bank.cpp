@@ -4,6 +4,7 @@
 #include "../../utils.h"
 
 #include <iostream>
+#include <cassert>
 
 using namespace std;
 
@@ -35,13 +36,13 @@ namespace mips_sim
   string RegistersBank::hex32_get(const string key, const int length) const
   {
     uint32_t reg_value = get(key);
-    return Utils::hex32(reg_value);
+    return Utils::hex32(reg_value, length);
   }
 
   string RegistersBank::hex32_at(const uint8_t reg_id, const int length) const
   {
     uint32_t reg_value = at(reg_id);
-    return Utils::hex32(reg_value);
+    return Utils::hex32(reg_value, length);
   }
 
   void RegistersBank::set(const string key, const uint32_t value)
@@ -94,8 +95,9 @@ namespace mips_sim
 
   double RegistersBank::read_double(const string key) const
   {
-    int position = distance(begin(registers), registers.find(key));
-    uint32_t value[2] = { at(position), at(position + 1) };
+    long position = distance(begin(registers), registers.find(key));
+    assert(position < 31);
+    uint32_t value[2] = { at(static_cast<uint8_t>(position)), at(static_cast<uint8_t>(position) + 1) };
     return Utils::word_to_double(value);
   }
 
@@ -107,12 +109,13 @@ namespace mips_sim
       
   void RegistersBank::write_double(const string key, double value)
   {
-    int position = distance(begin(registers), registers.find(key));
+    long position = distance(begin(registers), registers.find(key));
+    assert(position < 31);
     uint32_t rvalue[2];
     Utils::double_to_word(value, rvalue);
 
-    set_at(position, rvalue[0]);
-    set_at(position + 1, rvalue[1]);
+    set_at(static_cast<uint8_t>(position), rvalue[0]);
+    set_at(static_cast<uint8_t>(position) + 1, rvalue[1]);
   }
 
   void RegistersBank::write_double_at(const uint8_t reg_id, double value)
