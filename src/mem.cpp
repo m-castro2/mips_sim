@@ -12,6 +12,11 @@ namespace mips_sim
 
 using namespace std;
 
+uint32_t err_v;
+int err_no;
+string err_msg;
+
+
 Memory::Memory( void )
 {
   locked = false;
