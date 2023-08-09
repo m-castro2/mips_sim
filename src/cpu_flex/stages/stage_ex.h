@@ -2,6 +2,7 @@
 #define MIPS_SIM_STAGE_EX_H
 
 #include "cpu_stage.h"
+#include "../hardware_manager.h"
 #include "../../cpu/component/alu.h"
 
 #include <memory>
@@ -17,7 +18,7 @@ namespace mips_sim {
         
         public:
 
-            StageEX(int mult_delay, int div_delay);
+            StageEX(int mult_delay, int div_delay, std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageEX() = default;
 

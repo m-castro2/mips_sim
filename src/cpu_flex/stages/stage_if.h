@@ -2,6 +2,7 @@
 #define MIPS_SIM_STAGE_IF_H
 
 #include "cpu_stage.h"
+#include "../hardware_manager.h"
 #include "../../mem.h"
 
 #include <memory>
@@ -16,7 +17,7 @@ namespace mips_sim {
 
         public:
 
-            StageIF(std::shared_ptr<Memory> memory);
+            StageIF(std::shared_ptr<Memory> memory, std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageIF() = default;
 

@@ -6,6 +6,7 @@
 #include "stages/stage_mem.h"
 #include "stages/stage_wb.h"
 
+#include <memory>
 
 namespace mips_sim {
 
@@ -17,11 +18,13 @@ namespace mips_sim {
                  bool has_hazard_detection_unit)
     : CpuPipelined(_memory)
     {   
-        StageIF* if_stage = new StageIF(memory);
-        StageID* id_stage = new StageID();
-        StageEX* ex_stage = new StageEX(status["mult-delay"], status["div-delay"]);
-        StageMEM* mem_stage = new StageMEM(memory);
-        StageWB* wb_stage = new StageWB();
+        hardware_manager = std::shared_ptr<HardwareManager>(new HardwareManager());
+
+        StageIF* if_stage = new StageIF(memory, hardware_manager);
+        StageID* id_stage = new StageID(hardware_manager);
+        StageEX* ex_stage = new StageEX(status["mult-delay"], status["div-delay"], hardware_manager);
+        StageMEM* mem_stage = new StageMEM(memory, hardware_manager);
+        StageWB* wb_stage = new StageWB(hardware_manager);
 
         add_cpu_stage(if_stage);
         add_cpu_stage(id_stage);

@@ -1,4 +1,5 @@
 #include "stage_id.h"
+#include "../hardware_manager.h"
 
 #include <iostream>
 
@@ -6,7 +7,9 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageID::StageID() : CpuStage { "ID" } {
+    StageID::StageID(std::shared_ptr<HardwareManager> hardware_manager)
+        : CpuStage { "ID", hardware_manager }
+    {
         gpr_bank = shared_ptr<GPRegistersBank>(new GPRegistersBank());
         fpr_bank = shared_ptr<FPRegistersBank>(new FPRegistersBank());
         //sr_bank = shared_ptr<SpecialRegistersBank>(new SpecialRegistersBank()); ??

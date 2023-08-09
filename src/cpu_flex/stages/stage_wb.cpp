@@ -1,4 +1,5 @@
 #include "stage_wb.h"
+#include "../hardware_manager.h"
 
 #include <iostream>
 
@@ -6,7 +7,9 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageWB::StageWB() : CpuStage { "WB" } {
+    StageWB::StageWB(std::shared_ptr<HardwareManager> hardware_manager)
+        : CpuStage { "WB", hardware_manager }
+    {
 
     };
 

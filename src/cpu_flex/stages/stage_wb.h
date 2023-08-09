@@ -3,6 +3,7 @@
 
 #include "cpu_stage.h"
 #include "i_forwardable_stage.h"
+#include "../hardware_manager.h"
 
 
 namespace mips_sim {
@@ -12,7 +13,7 @@ namespace mips_sim {
         
         public:
 
-            StageWB();
+            StageWB(std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageWB() = default;
 

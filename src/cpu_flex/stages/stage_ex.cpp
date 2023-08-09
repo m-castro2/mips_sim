@@ -1,4 +1,5 @@
 #include "stage_ex.h"
+#include "../hardware_manager.h"
 
 #include <iostream>
 
@@ -6,7 +7,9 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageEX::StageEX(int mult_delay, int div_delay) : CpuStage { "EX" } {
+    StageEX::StageEX(int mult_delay, int div_delay, std::shared_ptr<HardwareManager> hardware_manager)
+        : CpuStage { "EX", hardware_manager } 
+    {
         alu = unique_ptr<Alu>(new Alu(mult_delay, div_delay));
     };
 

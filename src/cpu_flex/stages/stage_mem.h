@@ -4,6 +4,7 @@
 #include "cpu_stage.h"
 #include "i_branch_stage.h"
 #include "i_forwardable_stage.h"
+#include "../hardware_manager.h"
 #include "../../mem.h"
 
 #include <memory>
@@ -18,7 +19,7 @@ namespace mips_sim {
         
         public:
 
-            StageMEM(std::shared_ptr<Memory> memory);
+            StageMEM(std::shared_ptr<Memory> memory, std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageMEM() = default;
 

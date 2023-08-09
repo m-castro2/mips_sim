@@ -2,8 +2,10 @@
 #define MIPS_SIM_CPU_FLEX_H
 
 #include "../cpu_pipelined.h"
+#include "hardware_manager.h"
 #include "stages/cpu_stage.h"
 
+#include <memory>
 #include <vector>
 
 
@@ -14,8 +16,9 @@ namespace mips_sim {
         private:
 
             std::vector<CpuStage*> cpu_stages {};
+            std::shared_ptr<HardwareManager> hardware_manager {};
 
-        
+
         public:
             CpuFlex(std::shared_ptr<Memory>,
                 std::shared_ptr<ControlUnit> = nullptr,

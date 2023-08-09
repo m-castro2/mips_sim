@@ -1,7 +1,10 @@
 #ifndef MIPS_SIM_CPU_STAGE_H
 #define MIPS_SIM_CPU_STAGE_H
 
+#include "../hardware_manager.h"
+#include "../../global_defs.h"
 
+#include <memory>
 #include <string_view>
 
 
@@ -15,18 +18,20 @@ namespace mips_sim {
 
             int sigmask {};
 
-            int seg_reg {};
+            seg_reg_t seg_reg {};
 
-            int* next_seg_reg {}; //next_stage->seg_reg??
+            seg_reg_t* next_seg_reg {};
 
             CpuStage* next_stage {};
 
             int current_instruction {};
 
+            std::shared_ptr<HardwareManager> hardware_manager {};
+
         
         public:
 
-            CpuStage(std::string_view stage_name);
+            CpuStage(std::string_view stage_name, std::shared_ptr<HardwareManager> hardware_manager);
             
             virtual ~CpuStage() = default;
 

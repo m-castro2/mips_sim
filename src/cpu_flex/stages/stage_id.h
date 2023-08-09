@@ -3,6 +3,7 @@
 
 #include "cpu_stage.h"
 #include "i_branch_stage.h"
+#include "../hardware_manager.h"
 #include "../../cpu/component/registers_bank.h"
 
 #include <memory>
@@ -20,7 +21,7 @@ namespace mips_sim {
         
         public:
 
-            StageID();
+            StageID(std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageID() = default;
 

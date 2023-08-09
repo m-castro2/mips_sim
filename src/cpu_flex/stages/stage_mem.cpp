@@ -1,4 +1,5 @@
 #include "stage_mem.h"
+#include "../hardware_manager.h"
 
 #include <iostream>
 
@@ -6,7 +7,9 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageMEM::StageMEM(std::shared_ptr<Memory> _memory) : memory {_memory}, CpuStage { "MEM" } {
+    StageMEM::StageMEM(std::shared_ptr<Memory> _memory, std::shared_ptr<HardwareManager> hardware_manager)
+        : memory {_memory}, CpuStage { "MEM", hardware_manager }
+    {
 
     };
 
