@@ -8,7 +8,7 @@ namespace mips_sim {
 
         protected:
 
-            int sigpcsrc {};
+            uint32_t sig_pcsrc {};
 
             int addr_cbranch {};
 
@@ -22,7 +22,7 @@ namespace mips_sim {
             
             virtual ~IBranchStage() = default;
 
-            virtual int get_sigpcsrc(int p_sigpcsrc) = 0;
+            virtual uint32_t get_sig_pcsrc() = 0;
 
             virtual int get_addr_cbranch(int p_addr_cbranch) = 0;
 

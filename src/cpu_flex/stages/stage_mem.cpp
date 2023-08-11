@@ -35,7 +35,7 @@ namespace mips_sim {
     }
 
     // IBranchStage
-    int StageMEM::get_sigpcsrc(int p_sigpcsrc) {
+    uint32_t StageMEM::get_sig_pcsrc() {
         cout << "Stage " << stage_name << " get_sigpcsrc\n";
         return 0;
     }

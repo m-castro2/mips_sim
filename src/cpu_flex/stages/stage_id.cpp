@@ -37,9 +37,9 @@ namespace mips_sim {
     }
 
     // IBranchStage
-    int StageID::get_sigpcsrc(int p_sigpcsrc) {
+    uint32_t StageID::get_sig_pcsrc() {
         cout << "Stage " << stage_name << " get_sigpcsrc\n";
-        return 0;
+        return sig_pcsrc;
     }
 
     int StageID::get_addr_cbranch(int p_addr_cbranch) {

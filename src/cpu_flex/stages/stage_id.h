@@ -34,7 +34,7 @@ namespace mips_sim {
             int reset() override;
 
             // IBranchStage
-            int get_sigpcsrc(int p_sigpcsrc) override;
+            uint32_t get_sig_pcsrc() override;
 
             int get_addr_cbranch(int p_addr_cbranch) override;
 
