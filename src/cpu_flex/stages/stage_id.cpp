@@ -136,6 +136,8 @@ namespace mips_sim {
                 << Utils::hex32(microinstruction) << endl;
         }
 
+        sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC); //why does bne break if written in work_l ??
+
         /* if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
         {
             //stalls until previous instructions finished
@@ -195,23 +197,23 @@ namespace mips_sim {
             {
                 if (control_unit->test(microinstruction, SIG_BRANCH))
                 {
-                // unconditional branches are resolved here 
-                bool branch_taken = process_branch(instruction,
+                    // unconditional branches are resolved here 
+                    bool branch_taken = process_branch(instruction,
                                                     rs_value, rt_value, pc_value);
 
-                if (!branch_taken)
-                {
-                    control_unit->set(microinstruction, SIG_PCSRC, 0);
-                }
-
-                if (hardware_manager->get_branch_type() == BRANCH_FLUSH
-                    || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
-                {
-                    pipeline_flush_signal = 1;
-
                     if (!branch_taken)
-                        sr_bank->set("pc", pc_value-4);
-                }
+                    {
+                        control_unit->set(microinstruction, SIG_PCSRC, 0);
+                    }
+
+                    if (hardware_manager->get_branch_type() == BRANCH_FLUSH
+                        || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
+                    {
+                        pipeline_flush_signal = 1;
+
+                        if (!branch_taken)
+                            sr_bank->set("pc", pc_value-4);
+                    }
                 }
 
                 switch(control_unit->test(microinstruction, SIG_REGDST))

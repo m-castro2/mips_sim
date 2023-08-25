@@ -5,8 +5,11 @@
 #include "i_branch_stage.h"
 #include "i_forwardable_stage.h"
 #include "../hardware_manager.h"
+#include "../../cpu/component/control_unit.h"
+#include "../../cpu/component/registers_bank.h"
 #include "../../mem.h"
 
+#include <cassert>
 #include <memory>
 
 namespace mips_sim {
@@ -16,11 +19,23 @@ namespace mips_sim {
         private:
 
             std::shared_ptr<Memory> memory {};
+
+            std::shared_ptr<SpecialRegistersBank> sr_bank {};
+
+            uint32_t instruction_code {};
+
+            uint32_t pc_value {};
+
+            uint32_t microinstruction {};
+
+            uint32_t word_read {};
+
+            uint32_t mem_addr {};
         
         public:
 
             StageMEM(std::shared_ptr<Memory> memory, std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
-                    std::initializer_list<signal_t> cpu_signals);
+                    std::initializer_list<signal_t> cpu_signals, std::shared_ptr<SpecialRegistersBank> sr_bank);
             
             ~StageMEM() = default;
 

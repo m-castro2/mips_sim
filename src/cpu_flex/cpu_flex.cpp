@@ -23,8 +23,6 @@ namespace mips_sim {
     {   
         fu = std::shared_ptr<ForwardingUnit>(new ForwardingUnit(control_unit, has_forwarding_unit));
         hdu = std::shared_ptr<HazardDetectionUnit>(new HazardDetectionUnit(control_unit, has_hazard_detection_unit));
-        fu->set_enabled(has_forwarding_unit);
-        hdu->set_enabled(has_hazard_detection_unit);
 
         hardware_manager = std::shared_ptr<HardwareManager>(new HardwareManager(BRANCH_NON_TAKEN, STAGE_ID));
 
@@ -38,7 +36,7 @@ namespace mips_sim {
                                         {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE,
                                         SIG_MEMREAD, SIG_MEMWRITE},
                                         fu, sr_bank);
-        StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE});
+        StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE}, sr_bank);
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager);
 
         fu->set_seg_reg_ex_mem(ex_stage->get_seg_reg());
