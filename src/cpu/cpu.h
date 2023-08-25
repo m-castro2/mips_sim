@@ -12,14 +12,6 @@
 #include <vector>
 #include <iostream>
 
-#define SPECIAL_PC       "pc"
-#define SPECIAL_STATUS   "status"
-#define SPECIAL_HI       "hi"
-#define SPECIAL_LO       "lo"
-#define SPECIAL_EPC      "epc"
-#define SPECIAL_BADVADDR "badvaddr"
-#define SPECIAL_CAUSE    "cause"
-
 #define ERROR_UNSUPPORTED_OPERATION    101
 #define ERROR_UNSUPPORTED_SUBOPERATION 102
 

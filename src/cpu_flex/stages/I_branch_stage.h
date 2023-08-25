@@ -1,6 +1,7 @@
 #ifndef MIPS_SIM_BRANCH_STAGE_H
 #define MIPS_SIM_BRANCH_STAGE_H
 
+#include <cstdint>
 
 namespace mips_sim {
     
@@ -10,25 +11,25 @@ namespace mips_sim {
 
             uint32_t sig_pcsrc {};
 
-            int addr_cbranch {};
+            uint32_t addr_cbranch {};
 
-            int addr_rbranch {};
+            uint32_t addr_rbranch {};
 
-            int addr_jbranch {};
+            uint32_t addr_jbranch {};
 
-            int pipeline_flush_stages();
+            int pipeline_flush_signal;
         
         public:
             
             virtual ~IBranchStage() = default;
 
-            virtual uint32_t get_sig_pcsrc() = 0;
+            virtual uint32_t get_sig_pcsrc() const = 0;
 
-            virtual int get_addr_cbranch(int p_addr_cbranch) = 0;
+            virtual uint32_t get_addr_cbranch() const = 0;
 
-            virtual int get_addr_rbranch(int p_addr_rbranch) = 0;
+            virtual uint32_t get_addr_rbranch() const = 0;
 
-            virtual int get_addr_jbranch(int p_addr_jbranch) = 0;
+            virtual uint32_t get_addr_jbranch() const = 0;
 
     };
 

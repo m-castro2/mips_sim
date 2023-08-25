@@ -242,4 +242,36 @@ struct seg_reg_t {
   uint32_t data[32];
 };
 
+/* data through segmentation registers */
+#define SR_INSTRUCTION  0
+#define SR_IID          1
+#define SR_PC           2
+#define SR_SIGNALS      3
+#define SR_OPCODE       4
+#define SR_RS           5
+#define SR_RT           6
+#define SR_RD           7
+#define SR_SHAMT        8
+#define SR_FUNCT        9
+#define SR_RSVALUE     10
+#define SR_RTVALUE     11
+#define SR_ADDR_I      12
+#define SR_REGDEST     13
+#define SR_ALUOUTPUT   14
+#define SR_ALUZERO     15
+#define SR_RELBRANCH   16
+#define SR_UJUMP       17
+#define SR_JUMPADDR    18
+#define SR_WORDREAD    19
+#define SR_V0          20
+
+// special register
+#define SPECIAL_PC       "pc"
+#define SPECIAL_STATUS   "status"
+#define SPECIAL_HI       "hi"
+#define SPECIAL_LO       "lo"
+#define SPECIAL_EPC      "epc"
+#define SPECIAL_BADVADDR "badvaddr"
+#define SPECIAL_CAUSE    "cause"
+
 #endif

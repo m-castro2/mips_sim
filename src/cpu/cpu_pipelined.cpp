@@ -35,11 +35,6 @@ namespace mips_sim
     status[KEY_FORWARDING_UNIT]       = _has_forwarding_unit;
     status[KEY_HAZARD_DETECTION_UNIT] = _has_hazard_detection_unit;
     
-    /* signals sorted in reverse order */
-    signal_t signals_ID[] = {
-      SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE, // WB stage
-      SIG_MEMREAD, SIG_MEMWRITE, // MEM stage
-      SIG_BRANCH, SIG_PCSRC, SIG_ALUSRC, SIG_ALUOP, SIG_REGDST}; // EX stage
 
     /* build signals bitmask as the number of signals passed to the next stage */
     sigmask[IF_ID]  = UNDEF32;
@@ -108,7 +103,7 @@ namespace mips_sim
     uint32_t instruction_code;
     string cur_instr_name;
     uint32_t current_pc = sr_bank->get(SPECIAL_PC);
-
+    
     if (current_pc != loaded_instructions[loaded_instruction_index])
     {
       loaded_instruction_index++;

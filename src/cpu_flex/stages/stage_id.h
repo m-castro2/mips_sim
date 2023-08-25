@@ -5,6 +5,9 @@
 #include "i_branch_stage.h"
 #include "../hardware_manager.h"
 #include "../../cpu/component/registers_bank.h"
+#include "../../cpu/component/control_unit.h"
+#include "../../cpu/component/hazard_detection_unit.h"
+#include "../../cpu/component/forwarding_unit.h"
 
 #include <memory>
 
@@ -17,11 +20,26 @@ namespace mips_sim {
 
             std::shared_ptr<GPRegistersBank> gpr_bank {}; /* general purpose registers */
             std::shared_ptr<FPRegistersBank> fpr_bank {}; /* floating point registers */
-            //std::shared_ptr<SpecialRegistersBank> sr_bank;  /* special registers */ add?
+            std::shared_ptr<SpecialRegistersBank> sr_bank {};
+
+            uint32_t read_register(uint8_t reg_index);
+            uint32_t read_fp_register(uint8_t reg_index);
+
+            uint32_t instruction_code {};
+            uint32_t microinstruction {};
+            uint32_t pc_value {};
+            uint32_t rs_value {};
+            uint32_t rt_value {};
+            uint32_t reg_dest {};
+            instruction_t instruction {};
+
+            bool pc_write = 1;
         
         public:
 
-            StageID(std::shared_ptr<HardwareManager> hardware_manager);
+            StageID(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
+                    std::initializer_list<signal_t> cpu_signals, std::shared_ptr<HazardDetectionUnit> hdu, std::shared_ptr<ForwardingUnit> fu,
+                    std::shared_ptr<SpecialRegistersBank> sr_bank);
             
             ~StageID() = default;
 
@@ -33,14 +51,20 @@ namespace mips_sim {
 
             int reset() override;
 
+            bool process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value);
+
+            void status_update();
+
+            bool get_pc_write();
+
             // IBranchStage
-            uint32_t get_sig_pcsrc() override;
+            uint32_t get_sig_pcsrc() const override;
 
-            int get_addr_cbranch(int p_addr_cbranch) override;
+            uint32_t get_addr_cbranch() const override;
 
-            int get_addr_rbranch(int p_addr_rbranch) override;
+            uint32_t get_addr_rbranch() const override;
 
-            int get_addr_jbranch(int p_addr_jbranch) override;
+            uint32_t get_addr_jbranch() const override;
 
     };
 

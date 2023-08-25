@@ -4,6 +4,9 @@
 #include "../cpu_pipelined.h"
 #include "hardware_manager.h"
 #include "stages/cpu_stage.h"
+#include "../cpu/component/forwarding_unit.h"
+#include "../cpu/component/hazard_detection_unit.h"
+#include "../../cpu/component/registers_bank.h"
 
 #include <memory>
 #include <vector>
@@ -16,7 +19,12 @@ namespace mips_sim {
         private:
 
             std::vector<CpuStage*> cpu_stages {};
+
             std::shared_ptr<HardwareManager> hardware_manager {};
+
+            std::shared_ptr<HazardDetectionUnit> hdu {};
+
+            std::shared_ptr<ForwardingUnit> fu {};
 
 
         public:
@@ -34,6 +42,13 @@ namespace mips_sim {
             void add_cpu_stage(CpuStage* stage);
 
             virtual bool next_cycle( std::ostream & = std::cout ) override;
+
+            virtual void reset( bool reset_data_memory = true,
+                        bool reset_text_memory = true ) override;
+
+            size_t get_current_instruction(size_t stage) const;
+
+            virtual std::vector<uint32_t> get_loaded_instructions();
 
     };
 } //namespace

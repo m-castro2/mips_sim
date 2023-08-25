@@ -19,7 +19,8 @@ namespace mips_sim {
         
         public:
 
-            StageMEM(std::shared_ptr<Memory> memory, std::shared_ptr<HardwareManager> hardware_manager);
+            StageMEM(std::shared_ptr<Memory> memory, std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
+                    std::initializer_list<signal_t> cpu_signals);
             
             ~StageMEM() = default;
 
@@ -32,13 +33,13 @@ namespace mips_sim {
             int reset() override;
 
             // IBranchStage
-            uint32_t get_sig_pcsrc() override;
+            uint32_t get_sig_pcsrc() const override;
 
-            int get_addr_cbranch(int p_addr_cbranch) override;
+            uint32_t get_addr_cbranch() const override;
 
-            int get_addr_rbranch(int p_addr_rbranch) override;
+            uint32_t get_addr_rbranch() const override;
 
-            int get_addr_jbranch(int p_addr_jbranch) override;
+            uint32_t get_addr_jbranch() const override;
 
             // IForwardableStage
             bool forward_register(int regId, int regValue) override;

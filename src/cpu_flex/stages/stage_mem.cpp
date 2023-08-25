@@ -7,8 +7,9 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageMEM::StageMEM(std::shared_ptr<Memory> _memory, std::shared_ptr<HardwareManager> hardware_manager)
-        : memory {_memory}, CpuStage { "MEM", hardware_manager }
+    StageMEM::StageMEM(std::shared_ptr<Memory> _memory, std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
+                    std::initializer_list<signal_t> cpu_signals)
+        : memory {_memory}, CpuStage { "MEM", control_unit, hardware_manager, cpu_signals }
     {
 
     };
@@ -35,24 +36,24 @@ namespace mips_sim {
     }
 
     // IBranchStage
-    uint32_t StageMEM::get_sig_pcsrc() {
+    uint32_t StageMEM::get_sig_pcsrc() const {
         cout << "Stage " << stage_name << " get_sigpcsrc\n";
         return 0;
     }
 
-    int StageMEM::get_addr_cbranch(int p_addr_cbranch) {
+    uint32_t StageMEM::get_addr_cbranch() const {
         cout << "Stage " << stage_name << " get_addr_cbranch\n";
-        return 0;
+        return addr_cbranch;
     }
 
-    int StageMEM::get_addr_rbranch(int p_addr_rbranch) {
+    uint32_t StageMEM::get_addr_rbranch() const {
         cout << "Stage " << stage_name << " get_addr_rbranch\n";
-        return 0;
+        return addr_rbranch;
     }
 
-    int StageMEM::get_addr_jbranch(int p_addr_jbranch) {
+    uint32_t StageMEM::get_addr_jbranch() const {
         cout << "Stage " << stage_name << " get_addr_jbranch\n";
-        return 0;
+        return addr_jbranch;
     }
 
     // IForwardableStage

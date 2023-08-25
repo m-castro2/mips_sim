@@ -7,8 +7,8 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageWB::StageWB(std::shared_ptr<HardwareManager> hardware_manager)
-        : CpuStage { "WB", hardware_manager }
+    StageWB::StageWB(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager)
+        : CpuStage { "WB", control_unit, hardware_manager }
     {
 
     };

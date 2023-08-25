@@ -13,7 +13,7 @@ namespace mips_sim {
         
         public:
 
-            StageWB(std::shared_ptr<HardwareManager> hardware_manager);
+            StageWB(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager);
             
             ~StageWB() = default;
 
