@@ -31,16 +31,21 @@ namespace mips_sim {
                                         {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE,
                                         SIG_MEMREAD, SIG_MEMWRITE,
                                         SIG_BRANCH, SIG_PCSRC, SIG_ALUSRC, SIG_ALUOP, SIG_REGDST},
-                                        hdu, fu, sr_bank);
+                                        hdu, fu, gpr_bank, fpr_bank, sr_bank);
         StageEX* ex_stage = new StageEX(status["mult-delay"], status["div-delay"], control_unit, hardware_manager,
                                         {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE,
-                                        SIG_MEMREAD, SIG_MEMWRITE},
+                                        SIG_MEMREAD, SIG_MEMWRITE,
+                                        SIG_BRANCH, SIG_PCSRC},
                                         fu, sr_bank);
         StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE}, sr_bank);
-        StageWB* wb_stage = new StageWB(control_unit, hardware_manager);
+        StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
-        fu->set_seg_reg_ex_mem(ex_stage->get_seg_reg());
-        fu->set_seg_reg_mem_wb(mem_stage->get_seg_reg());
+        if_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 10));
+        ex_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 7));
+        mem_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 3));
+
+        fu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
+        fu->set_seg_reg_mem_wb(wb_stage->get_seg_reg());
 
         hdu->set_seg_reg_id_ex(id_stage->get_seg_reg());
         hdu->set_seg_reg_ex_mem(ex_stage->get_seg_reg());
@@ -65,7 +70,7 @@ namespace mips_sim {
 
     bool CpuFlex::next_cycle( std::ostream &out )
     {
-        Cpu::next_cycle( out );
+        Cpu::next_cycle( std::cout );
 
         for (auto stage: cpu_stages) {
             stage->work_h();
@@ -88,10 +93,21 @@ namespace mips_sim {
         }
 
         // update segmentation registers
-        for (size_t stage_id = 0; stage_id < STAGE_COUNT - 1; ++stage_id)
+        /* for (size_t stage_id = STAGE_COUNT - 1; stage_id > 0; --stage_id)
         {
-            cpu_stages.at(stage_id + 1)->set_seg_reg(cpu_stages.at(stage_id)->get_next_seg_reg());
-        }
+            cpu_stages.at(stage_id)->set_seg_reg(cpu_stages.at(stage_id-1)->get_next_seg_reg());
+        } */
+
+        cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
+        cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+        cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+        cpu_stages.at(STAGE_WB)->set_seg_reg(cpu_stages.at(STAGE_MEM)->get_next_seg_reg());
+
+        if (int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)() > 0)
+        {
+            for (int i = 0; i < stages_to_flush; ++i)
+                cpu_stages.at(i)->set_seg_reg({});
+            }
 
         return ready;
     }

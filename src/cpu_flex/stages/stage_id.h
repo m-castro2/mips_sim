@@ -39,6 +39,7 @@ namespace mips_sim {
 
             StageID(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
                     std::initializer_list<signal_t> cpu_signals, std::shared_ptr<HazardDetectionUnit> hdu, std::shared_ptr<ForwardingUnit> fu,
+                    std::shared_ptr<GPRegistersBank> gpr_bank, std::shared_ptr<FPRegistersBank> fpr_bank, 
                     std::shared_ptr<SpecialRegistersBank> sr_bank);
             
             ~StageID() = default;

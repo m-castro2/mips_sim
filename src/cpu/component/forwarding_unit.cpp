@@ -37,8 +37,12 @@ namespace mips_sim
         uint32_t wb_regvalue; /* can come from ALU output or Memory */
         uint32_t wb_fpwrite  = control_unit->test(seg_reg_mem_wb->data[SR_SIGNALS], SIG_REGBANK);
 
+        /* for (int i = 0; i<32; ++i) {
+            std::cout << "\t\t SegRegExMem[" << i << "]: " << seg_reg_ex_mem->data[i] << std::endl;
+        } */
+
         if (reg == 0 && !fp_reg)
-        return reg_value;
+            return reg_value;
 
         /* check EX/MEM register */
         if  (mem_regdest == reg

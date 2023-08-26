@@ -15,29 +15,12 @@ namespace mips_sim {
         : CpuStage { "EX", control_unit, hardware_manager, cpu_signals, nullptr, fu}, sr_bank { p_sr_bank }
     {
         alu = unique_ptr<Alu>(new Alu(mult_delay, div_delay));
+
+        sigmask = control_unit->get_signal_bitmask_static(cpu_signals);
     };
 
     int StageEX::work_l() {
         cout << "Stage " << stage_name << " work_l\n" ;
-
-        /* send data to next stage */
-        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        tmp_seg_reg.data[SR_PC]         = pc_value; /* bypass PC */
-        tmp_seg_reg.data[SR_SIGNALS]    = microinstruction & sigmask;
-        tmp_seg_reg.data[SR_RELBRANCH]  = (addr_i32 << 2) + seg_reg->data[SR_PC];
-        tmp_seg_reg.data[SR_ALUZERO]    = ((alu_output == 0) && (opcode == OP_BEQ))
-                                                || ((alu_output != 0) && (opcode == OP_BNE));
-        tmp_seg_reg.data[SR_ALUOUTPUT]  = alu_output;
-        tmp_seg_reg.data[SR_RTVALUE]    = rt_value;
-        tmp_seg_reg.data[SR_REGDEST]    = seg_reg->data[SR_REGDEST];
-
-        tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
-
-        if (!write_segmentation_register(tmp_seg_reg))
-        {
-            /*TODO: STRUCTURAL HAZARD! */
-            //assert(0); // sigabort??
-        }
 
         return 0;
     };
@@ -49,7 +32,6 @@ namespace mips_sim {
         seg_reg_wrflag = false;
 
         microinstruction = seg_reg->data[SR_SIGNALS];
-        uint32_t alu_input_a, alu_input_b = UNDEF32;
 
         /* get data from previous stage */
         instruction_code = seg_reg->data[SR_INSTRUCTION];
@@ -74,13 +56,16 @@ namespace mips_sim {
         cout << "EX stage: " << Utils::decode_instruction(instruction_code) << endl;
         hardware_manager->set_status(STAGE_EX, pc_value - 4);
 
+        uint32_t alu_input_a, alu_input_b = UNDEF32;
+
         /* forwarding unit */
         if (fu->is_enabled())
         {
-            rs_value = fu->forward_register(rs, rs_value, false, std::cout);
+           rs_value = fu->forward_register(rs, rs_value, false, std::cout);
             if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
-                !control_unit->test(microinstruction, SIG_REGWRITE))
+                !control_unit->test(microinstruction, SIG_REGWRITE)) {
                 rt_value = fu->forward_register(rt, rt_value, opcode == OP_SWC1, std::cout);
+            }
         }
 
         alu_input_a = rs_value;
@@ -138,6 +123,25 @@ namespace mips_sim {
         std::cout << "   ALU compute 0x" << Utils::hex32(alu_input_a) << " OP 0x"
             << Utils::hex32(alu_input_b) << " = 0x"
             << Utils::hex32(alu_output) << endl;
+
+        /* send data to next stage */
+        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+        tmp_seg_reg.data[SR_PC]         = pc_value; /* bypass PC */
+        tmp_seg_reg.data[SR_SIGNALS]    = microinstruction & sigmask;
+        tmp_seg_reg.data[SR_RELBRANCH]  = (addr_i32 << 2) + seg_reg->data[SR_PC];
+        tmp_seg_reg.data[SR_ALUZERO]    = ((alu_output == 0) && (opcode == OP_BEQ))
+                                                || ((alu_output != 0) && (opcode == OP_BNE));
+        tmp_seg_reg.data[SR_ALUOUTPUT]  = alu_output;
+        tmp_seg_reg.data[SR_RTVALUE]    = rt_value;
+        tmp_seg_reg.data[SR_REGDEST]    = seg_reg->data[SR_REGDEST];
+
+        tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
+
+        if (!write_segmentation_register(tmp_seg_reg))
+        {
+            /*TODO: STRUCTURAL HAZARD! */
+            //assert(0); // sigabort??
+        }
 
         return 0;
     }

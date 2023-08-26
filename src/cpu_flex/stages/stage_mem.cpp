@@ -12,7 +12,7 @@ namespace mips_sim {
                     std::initializer_list<signal_t> cpu_signals, std::shared_ptr<SpecialRegistersBank> p_sr_bank)
         : memory {_memory}, sr_bank { p_sr_bank }, CpuStage { "MEM", control_unit, hardware_manager, cpu_signals }
     {
-
+        sigmask = control_unit->get_signal_bitmask_static(cpu_signals);
     };
 
     int StageMEM::work_l() {

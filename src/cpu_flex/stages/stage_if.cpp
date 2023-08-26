@@ -15,6 +15,7 @@ namespace mips_sim {
                     std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<SpecialRegistersBank> _sr_bank)
         : memory { _memory }, sr_bank { _sr_bank }, CpuStage { "IF" , control_unit, hardware_manager }
     {
+        loaded_instruction_index = 1;
         loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
     };
 
@@ -46,7 +47,7 @@ namespace mips_sim {
 
         hardware_manager->set_status(STAGE_IF, current_pc);
 
-        if (current_pc != loaded_instructions[loaded_instruction_index])
+        if (current_pc != loaded_instructions[loaded_instruction_index-1]) // -1: will this work with branching??
         {
             loaded_instruction_index++;
             loaded_instructions.push_back(current_pc);
@@ -55,6 +56,11 @@ namespace mips_sim {
         // fetch instruction 
         instruction_code = memory->mem_read_32(current_pc);
 
+        std::cout << "IF stage" << endl;
+        std::string cur_instr_name = Utils::decode_instruction(instruction_code);
+        std::cout << "   *** PC: 0x" << Utils::hex32(current_pc) << endl;
+        std::cout << "   *** " << cur_instr_name << " : 0x"
+            << Utils::hex32(instruction_code) << endl;
 
         if (!hardware_manager->get_signal(SIGNAL_PCWRITE)()) {
             return 1;
