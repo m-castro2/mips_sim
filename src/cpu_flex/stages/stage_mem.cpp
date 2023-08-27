@@ -28,6 +28,8 @@ namespace mips_sim {
 
         next_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
+        hardware_manager->set_stage_instruction(STAGE_MEM, instruction_code);
+
         if (!write_segmentation_register(next_seg_reg))
         {
         /* no structural hazard should happen here */
@@ -89,6 +91,10 @@ namespace mips_sim {
         // ...
         std::cout << "   Address/ALU_Bypass: 0x" << Utils::hex32(mem_addr) << endl;
 
+        return 0;
+    }
+
+    int StageMEM::rising_flank() {
         return 0;
     }
 

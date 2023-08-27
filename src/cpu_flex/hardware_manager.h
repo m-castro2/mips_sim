@@ -50,6 +50,8 @@ namespace mips_sim {
 
             std::map<std::string_view, std::function<uint32_t( void )>> cpu_signals {};
 
+            std::map<int, uint32_t> stage_instructions {};
+
         public:
 
             HardwareManager(int branch_type, int branch_stage);
@@ -69,6 +71,10 @@ namespace mips_sim {
             void set_signal(std::string_view key, std::function<uint32_t( void )>);
 
             void reset();
+
+            void set_stage_instruction(int stage, uint32_t instruction);
+
+            uint32_t get_stage_instruction(int stage);
 
     };
 } //namespace

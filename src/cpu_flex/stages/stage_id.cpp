@@ -79,16 +79,71 @@ namespace mips_sim {
     int StageID::work_l() {
         cout << "Stage " << stage_name << " work_l\n" ;
 
+        write_segmentation_register(tmp_seg_reg);
+
+        return 0;
+    };
+
+    int StageID::work_h() {
+        cout << "Stage " << stage_name << " work_h\n";
+
+        // reset wrflag
+        seg_reg_wrflag = false;
+        // reset pipeline_flush
+        pipeline_flush_signal = 0;
+        
+        size_t mi_index = UNDEF32;
+
+        /* get data from previous stage */
+        instruction_code = seg_reg->data[SR_INSTRUCTION];
+        pc_value = seg_reg->data[SR_PC];
+
+        cout << "ID stage: " << Utils::decode_instruction(instruction_code) << endl;
+
+        instruction = Utils::fill_instruction(instruction_code);
+
+        std::cout << "  -Instruction:"
+        << " OP=" << static_cast<uint32_t>(instruction.opcode)
+        << " Rs=" << Utils::get_register_name(instruction.rs)
+        << " Rt=" << Utils::get_register_name(instruction.rt)
+        << " Rd=" << Utils::get_register_name(instruction.rd)
+        << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+        << " Func=" << static_cast<uint32_t>(instruction.funct)
+        << endl << "            "
+        << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
+        << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
+        << endl;
+
+        hardware_manager->set_status(STAGE_ID, pc_value - 4);
+
+        if (instruction.code == 0)
+        {
+            /* NOP */
+            microinstruction = 0;
+        }
+
+        else
+        {
+            mi_index = control_unit->get_next_microinstruction_index(UNDEF32,
+                                                                instruction.opcode,
+                                                                instruction.funct);
+
+
+            microinstruction = control_unit->get_microinstruction(mi_index);
+            cout << "   Microinstruction: [" << mi_index << "]: 0x"
+                << Utils::hex32(microinstruction) << endl;
+        }
+
         bool stall = false;
 
-        sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC); //why does bne break if written in work_l ??
+        sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
 
-        /* if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
+        if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
         {
             //stalls until previous instructions finished
-            stall = !(seg_regs[ID_EX].data[SR_INSTRUCTION] == 0 &&
-                        seg_regs[EX_MEM].data[SR_INSTRUCTION] == 0);
-        } */
+            stall = !(hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&
+                        hardware_manager->get_stage_instruction(STAGE_MEM) == 0);
+        }
 
         if (instruction.opcode == OP_FTYPE)
         {
@@ -136,7 +191,7 @@ namespace mips_sim {
             if (stall)
             {
                 // send "NOP" to next stage 
-                next_seg_reg = {};
+                tmp_seg_reg = {};
             }
             else
             {
@@ -172,83 +227,34 @@ namespace mips_sim {
                     default:
                         assert(0);
                 }
+
+                /* send data to next stage */
+                tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+                tmp_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask;
+                tmp_seg_reg.data[SR_PC]      = pc_value; // bypass PC
+                tmp_seg_reg.data[SR_RSVALUE] = rs_value;
+                tmp_seg_reg.data[SR_RTVALUE] = rt_value;
+                tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
+                tmp_seg_reg.data[SR_RT]      = instruction.rt;
+                tmp_seg_reg.data[SR_RD]      = instruction.rd;
+                tmp_seg_reg.data[SR_REGDEST] = reg_dest;
+                tmp_seg_reg.data[SR_FUNCT]   = instruction.funct;
+                tmp_seg_reg.data[SR_OPCODE]  = instruction.opcode;
+                tmp_seg_reg.data[SR_RS]      = instruction.rs;
+                tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
+                tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
+
+                /* for (int i = 0; i < 32; ++i) {
+                    std::cout << "\t\tTMP Seg reg " << i << ": "  << Utils::hex32(tmp_seg_reg.data[i]) << endl;
+                } */
        
             }
         }
 
-        /* send data to next stage */
-        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        tmp_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask;
-        tmp_seg_reg.data[SR_PC]      = pc_value; // bypass PC
-        tmp_seg_reg.data[SR_RSVALUE] = rs_value;
-        tmp_seg_reg.data[SR_RTVALUE] = rt_value;
-        tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
-        tmp_seg_reg.data[SR_RT]      = instruction.rt;
-        tmp_seg_reg.data[SR_RD]      = instruction.rd;
-        tmp_seg_reg.data[SR_REGDEST] = reg_dest;
-        tmp_seg_reg.data[SR_FUNCT]   = instruction.funct;
-        tmp_seg_reg.data[SR_OPCODE]  = instruction.opcode;
-        tmp_seg_reg.data[SR_RS]      = instruction.rs;
-        tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
-        tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
-
-        /* for (int i = 0; i < 32; ++i) {
-            std::cout << "\t\tTMP Seg reg " << i << ": "  << Utils::hex32(tmp_seg_reg.data[i]) << endl;
-        } */
-
-        write_segmentation_register(tmp_seg_reg);
-
         return 0;
-    };
+    }
 
-    int StageID::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
-        // reset wrflag
-        seg_reg_wrflag = false;
-        // reset pipeline_flush
-        pipeline_flush_signal = 0;
-        
-        size_t mi_index = UNDEF32;
-
-        /* get data from previous stage */
-        instruction_code = seg_reg->data[SR_INSTRUCTION];
-        pc_value = seg_reg->data[SR_PC];
-
-        instruction = Utils::fill_instruction(instruction_code);
-
-        std::cout << "  -Instruction:"
-        << " OP=" << static_cast<uint32_t>(instruction.opcode)
-        << " Rs=" << Utils::get_register_name(instruction.rs)
-        << " Rt=" << Utils::get_register_name(instruction.rt)
-        << " Rd=" << Utils::get_register_name(instruction.rd)
-        << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
-        << " Func=" << static_cast<uint32_t>(instruction.funct)
-        << endl << "            "
-        << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
-        << " addr26=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_j), 7)
-        << endl;
-
-        hardware_manager->set_status(STAGE_ID, pc_value - 4);
-
-        if (instruction.code == 0)
-        {
-            /* NOP */
-            microinstruction = 0;
-        }
-
-        else
-        {
-            mi_index = control_unit->get_next_microinstruction_index(UNDEF32,
-                                                                instruction.opcode,
-                                                                instruction.funct);
-
-
-            microinstruction = control_unit->get_microinstruction(mi_index);
-            cout << "   Microinstruction: [" << mi_index << "]: 0x"
-                << Utils::hex32(microinstruction) << endl;
-        }
-
+    int StageID::rising_flank() {
         return 0;
     }
 
@@ -264,7 +270,10 @@ namespace mips_sim {
         pc_write = true;
 
         addr_cbranch = 0;
-        
+        addr_jbranch = 0;
+        addr_rbranch = 0;
+
+        pipeline_flush_signal = 0;
 
         return 0;
     }

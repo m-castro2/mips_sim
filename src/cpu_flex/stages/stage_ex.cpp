@@ -61,7 +61,7 @@ namespace mips_sim {
         /* forwarding unit */
         if (fu->is_enabled())
         {
-           rs_value = fu->forward_register(rs, rs_value, false, std::cout);
+            rs_value = fu->forward_register(rs, rs_value, false, std::cout);
             if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
                 !control_unit->test(microinstruction, SIG_REGWRITE)) {
                 rt_value = fu->forward_register(rt, rt_value, opcode == OP_SWC1, std::cout);
@@ -137,12 +137,18 @@ namespace mips_sim {
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
+        hardware_manager->set_stage_instruction(STAGE_EX, instruction_code);
+
         if (!write_segmentation_register(tmp_seg_reg))
         {
             /*TODO: STRUCTURAL HAZARD! */
             //assert(0); // sigabort??
         }
 
+        return 0;
+    }
+
+    int StageEX::rising_flank() {
         return 0;
     }
 

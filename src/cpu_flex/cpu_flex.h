@@ -50,6 +50,8 @@ namespace mips_sim {
 
             virtual std::vector<uint32_t> get_loaded_instructions();
 
+            bool run_to_cycle( uint32_t target_cycle, std::ostream & = std::cout);
+
     };
 } //namespace
 #endif

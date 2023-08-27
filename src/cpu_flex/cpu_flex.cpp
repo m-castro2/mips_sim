@@ -47,8 +47,8 @@ namespace mips_sim {
         fu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
         fu->set_seg_reg_mem_wb(wb_stage->get_seg_reg());
 
-        hdu->set_seg_reg_id_ex(id_stage->get_seg_reg());
-        hdu->set_seg_reg_ex_mem(ex_stage->get_seg_reg());
+        hdu->set_seg_reg_id_ex(ex_stage->get_seg_reg());
+        hdu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
 
         add_cpu_stage(if_stage);
         add_cpu_stage(id_stage);
@@ -71,6 +71,10 @@ namespace mips_sim {
     bool CpuFlex::next_cycle( std::ostream &out )
     {
         Cpu::next_cycle( std::cout );
+
+        for (auto stage: cpu_stages) {
+            stage->rising_flank();
+        }
 
         for (auto stage: cpu_stages) {
             stage->work_h();
@@ -105,15 +109,20 @@ namespace mips_sim {
 
         if (int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)() > 0)
         {
-            for (int i = 0; i < stages_to_flush; ++i)
+            for (int i = 1; i <= stages_to_flush+1; ++i)
                 cpu_stages.at(i)->set_seg_reg({});
-            }
+        }
 
         return ready;
     }
 
     void CpuFlex::reset(bool reset_data_memory, bool reset_text_memory) {
         Cpu::reset(reset_data_memory, reset_text_memory);
+
+        //reset seg_regs
+        for (auto stage: cpu_stages){
+            stage->set_seg_reg({});
+        }
 
         //reset diagram
         for (size_t i=0; i<MAX_DIAGRAM_SIZE; ++i)
@@ -146,6 +155,24 @@ namespace mips_sim {
 
     std::vector<uint32_t> CpuFlex::get_loaded_instructions() {
         return static_cast<StageIF*>(cpu_stages.at(STAGE_IF))->get_loaded_instructions();
+    }
+
+    bool CpuFlex::run_to_cycle( uint32_t target_cycle, std::ostream& out) {
+        std::ostream nullostream(nullptr);
+
+        /* reset CPU and memory */
+        reset( true, true );
+
+        if (target_cycle > 0)
+        {
+            while(cycle < (target_cycle-1) && ready)
+            {
+            if (!next_cycle(nullostream))
+                return false;
+            }
+            next_cycle(out);
+        }
+        return true;
     }
 
 } //namespace

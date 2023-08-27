@@ -43,8 +43,14 @@ namespace mips_sim {
         for (int i = 0; i < status.size(); ++i) {
             status[i] = -1;
         }
+    }
 
-        
+    void HardwareManager::set_stage_instruction(int stage, uint32_t instruction) {
+        stage_instructions[stage] = instruction;
+    }
+
+    uint32_t HardwareManager::get_stage_instruction(int stage) {
+        return stage_instructions[stage];
     }
 
 } //namespace

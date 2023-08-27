@@ -22,22 +22,6 @@ namespace mips_sim {
     int StageIF::work_l() {
         cout << "Stage " << stage_name << " work_l\n" ;
 
-        sr_bank->set(SPECIAL_PC, current_pc);
-        
-        /* next instruction */
-        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        tmp_seg_reg.data[SR_PC] = current_pc;
-
-        tmp_seg_reg.data[SR_IID] = loaded_instruction_index;
-
-        write_segmentation_register(tmp_seg_reg);
-
-        return 0;
-    };
-
-    int StageIF::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
         // reset wrflag
         seg_reg_wrflag = false;
 
@@ -47,7 +31,7 @@ namespace mips_sim {
 
         hardware_manager->set_status(STAGE_IF, current_pc);
 
-        if (current_pc != loaded_instructions[loaded_instruction_index-1]) // -1: will this work with branching??
+        if (current_pc != loaded_instructions[loaded_instruction_index]) // -1: will this work with branching??
         {
             loaded_instruction_index++;
             loaded_instructions.push_back(current_pc);
@@ -86,6 +70,26 @@ namespace mips_sim {
                 assert(0);
         }
 
+        sr_bank->set(SPECIAL_PC, current_pc);
+        
+        /* next instruction */
+        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+        tmp_seg_reg.data[SR_PC] = current_pc;
+
+        tmp_seg_reg.data[SR_IID] = loaded_instruction_index;
+
+        write_segmentation_register(tmp_seg_reg);
+
+        return 0;
+    };
+
+    int StageIF::work_h() {
+        cout << "Stage " << stage_name << " work_h\n";
+
+        return 0;
+    }
+
+    int StageIF::rising_flank() {
         return 0;
     }
 
@@ -98,6 +102,8 @@ namespace mips_sim {
     int StageIF::reset() {
         cout << "Stage " << stage_name << " reset\n";
 
+        loaded_instructions.clear();
+        loaded_instructions.push_back(0); /* start with a nop instruction */
         loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
         loaded_instruction_index = 1;
         

@@ -43,6 +43,8 @@ namespace mips_sim {
 
             int work_h() override;
 
+            int rising_flank() override;
+
             int next_cycle() override;
 
             int reset() override;

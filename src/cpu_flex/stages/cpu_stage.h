@@ -58,6 +58,8 @@ namespace mips_sim {
 
             virtual int work_h() = 0;
 
+            virtual int rising_flank() = 0;
+
             virtual int next_cycle() = 0;
 
             virtual int reset() = 0;
