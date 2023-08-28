@@ -20,8 +20,6 @@ namespace mips_sim {
     };
 
     int StageIF::work_l() {
-        cout << "Stage " << stage_name << " work_l\n" ;
-
         // reset wrflag
         seg_reg_wrflag = false;
 
@@ -31,7 +29,7 @@ namespace mips_sim {
 
         hardware_manager->set_status(STAGE_IF, current_pc);
 
-        if (current_pc != loaded_instructions[loaded_instruction_index]) // -1: will this work with branching??
+        if (current_pc != loaded_instructions[loaded_instruction_index])
         {
             loaded_instruction_index++;
             loaded_instructions.push_back(current_pc);
@@ -84,8 +82,6 @@ namespace mips_sim {
     };
 
     int StageIF::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
         return 0;
     }
 
@@ -94,14 +90,10 @@ namespace mips_sim {
     }
 
     int StageIF::next_cycle() {
-        work_h();
-        work_l();
         return 0;
     }
 
     int StageIF::reset() {
-        cout << "Stage " << stage_name << " reset\n";
-
         loaded_instructions.clear();
         loaded_instructions.push_back(0); /* start with a nop instruction */
         loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));

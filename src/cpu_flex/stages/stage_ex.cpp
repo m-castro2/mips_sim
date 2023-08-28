@@ -1,6 +1,7 @@
 #include "stage_ex.h"
 #include "../hardware_manager.h"
 #include "../../utils.h"
+#include "../../exception.h"
 
 #include <cassert>
 #include <iostream>
@@ -11,8 +12,8 @@ namespace mips_sim {
 
     StageEX:: StageEX(int mult_delay, int div_delay, std::shared_ptr<ControlUnit> control_unit,
             std::shared_ptr<HardwareManager> hardware_manager, std::initializer_list<signal_t> cpu_signals, std::shared_ptr<ForwardingUnit> fu,
-            std::shared_ptr<SpecialRegistersBank> p_sr_bank)
-        : CpuStage { "EX", control_unit, hardware_manager, cpu_signals, nullptr, fu}, sr_bank { p_sr_bank }
+            std::shared_ptr<SpecialRegistersBank> p_sr_bank, std::shared_ptr<GPRegistersBank> p_gpr_bank)
+        : CpuStage { "EX", control_unit, hardware_manager, cpu_signals, nullptr, fu}, sr_bank { p_sr_bank }, gpr_bank { p_gpr_bank }
     {
         alu = unique_ptr<Alu>(new Alu(mult_delay, div_delay));
 
@@ -20,14 +21,10 @@ namespace mips_sim {
     };
 
     int StageEX::work_l() {
-        cout << "Stage " << stage_name << " work_l\n" ;
-
         return 0;
     };
 
     int StageEX::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
         // reset wrflag
         seg_reg_wrflag = false;
 
@@ -107,10 +104,10 @@ namespace mips_sim {
         }
         catch(int e)
         {
-        /*  if (e == SYSCALL_EXCEPTION)
+         if (e == SYSCALL_EXCEPTION)
             syscall(gpr_bank->get("$v0"));
         else
-            throw Exception::e(e, err_msg, err_v); */
+            throw Exception::e(e, err_msg, err_v);
         }
 
         if (hi_lo_updated)
@@ -153,14 +150,15 @@ namespace mips_sim {
     }
 
     int StageEX::next_cycle() {
-        work_h();
-        work_l();
         return 0;
     }
 
     int StageEX::reset() {
-        cout << "Stage " << stage_name << " reset\n";
         return 0;
+    }
+
+    void StageEX::set_syscall(std::function<void( uint32_t )> p_syscall) {
+        syscall = p_syscall;
     }
 
 } //namespace

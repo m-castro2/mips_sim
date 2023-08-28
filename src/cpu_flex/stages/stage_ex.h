@@ -20,6 +20,7 @@ namespace mips_sim {
             std::unique_ptr<Alu> alu {};
 
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
+            std::shared_ptr<GPRegistersBank> gpr_bank {};
 
             uint32_t instruction_code {};
             uint32_t microinstruction {};
@@ -32,11 +33,14 @@ namespace mips_sim {
             uint32_t lo_reg {};
             int stall_cycles {};
             bool hi_lo_updated {};
+
+            std::function<void( uint32_t )> syscall;
         
         public:
 
             StageEX(int mult_delay, int div_delay, std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
-                    std::initializer_list<signal_t> cpu_signals, std::shared_ptr<ForwardingUnit> fu, std::shared_ptr<SpecialRegistersBank> sr_bank);
+                    std::initializer_list<signal_t> cpu_signals, std::shared_ptr<ForwardingUnit> fu, std::shared_ptr<SpecialRegistersBank> sr_bank,
+                    std::shared_ptr<GPRegistersBank> gpr_bank);
             
             ~StageEX() = default;
 
@@ -49,6 +53,8 @@ namespace mips_sim {
             int next_cycle() override;
 
             int reset() override;
+
+            void set_syscall(std::function<void( uint32_t )>);
 
     };
 

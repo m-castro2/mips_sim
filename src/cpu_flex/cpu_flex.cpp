@@ -36,9 +36,11 @@ namespace mips_sim {
                                         {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE,
                                         SIG_MEMREAD, SIG_MEMWRITE,
                                         SIG_BRANCH, SIG_PCSRC},
-                                        fu, sr_bank);
+                                        fu, sr_bank, gpr_bank);
         StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE}, sr_bank);
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
+
+        ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
 
         if_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 10));
         ex_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 7));

@@ -17,13 +17,11 @@ namespace mips_sim {
     };
 
     int StageWB::work_l() {
-        cout << "Stage " << stage_name << " work_l\n" ;
 
         return 0;
     };
 
     int StageWB::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
 
         return 0;
     }
@@ -99,7 +97,6 @@ namespace mips_sim {
     }
 
     int StageWB::reset() {
-        cout << "Stage " << stage_name << " reset\n";
         return 0;
     }
 
@@ -121,7 +118,6 @@ namespace mips_sim {
 
     // IForwardableStage
     bool StageWB::forward_register(int regId, int regValue) {
-        cout << "Stage " << stage_name << " forward_register\n";
         return 0;
     }
 

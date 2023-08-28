@@ -22,22 +22,18 @@ namespace mips_sim {
 
     // IBranchStage
     uint32_t StageID::get_sig_pcsrc() const {
-        cout << "Stage " << stage_name << " get_sigpcsrc\n";
         return sig_pcsrc;
     }
 
     uint32_t StageID::get_addr_cbranch() const {
-        cout << "Stage " << stage_name << " get_addr_cbranch\n";
         return addr_cbranch;
     }
 
     uint32_t StageID::get_addr_rbranch() const {
-        cout << "Stage " << stage_name << " get_addr_rbranch\n";
         return addr_rbranch;
     }
 
     uint32_t StageID::get_addr_jbranch() const {
-        cout << "Stage " << stage_name << " get_addr_jbranch\n";
         return addr_jbranch;
     }
 
@@ -77,16 +73,12 @@ namespace mips_sim {
     }
 
     int StageID::work_l() {
-        cout << "Stage " << stage_name << " work_l\n" ;
-
         write_segmentation_register(tmp_seg_reg);
 
         return 0;
     };
 
     int StageID::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
         // reset wrflag
         seg_reg_wrflag = false;
         // reset pipeline_flush
@@ -135,8 +127,6 @@ namespace mips_sim {
         }
 
         bool stall = false;
-
-        sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
 
         if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
         {
@@ -247,6 +237,8 @@ namespace mips_sim {
                 /* for (int i = 0; i < 32; ++i) {
                     std::cout << "\t\tTMP Seg reg " << i << ": "  << Utils::hex32(tmp_seg_reg.data[i]) << endl;
                 } */
+
+                sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
        
             }
         }
@@ -259,14 +251,10 @@ namespace mips_sim {
     }
 
     int StageID::next_cycle() {
-        work_h();
-        work_l();
         return 0;
     }
 
     int StageID::reset() {
-        cout << "Stage " << stage_name << " reset\n";
-
         pc_write = true;
 
         addr_cbranch = 0;

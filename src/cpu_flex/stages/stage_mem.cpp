@@ -16,8 +16,6 @@ namespace mips_sim {
     };
 
     int StageMEM::work_l() {
-        cout << "Stage " << stage_name << " work_l\n" ;
-
         /* send data to next stage */
         next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
         next_seg_reg.data[SR_PC]          = pc_value; /* bypass PC */
@@ -99,40 +97,32 @@ namespace mips_sim {
     }
 
     int StageMEM::next_cycle() {
-        work_h();
-        work_l();
         return 0;
     }
 
     int StageMEM::reset() {
-        cout << "Stage " << stage_name << " reset\n";
         return 0;
     }
 
     // IBranchStage
     uint32_t StageMEM::get_sig_pcsrc() const {
-        cout << "Stage " << stage_name << " get_sigpcsrc\n";
         return 0;
     }
 
     uint32_t StageMEM::get_addr_cbranch() const {
-        cout << "Stage " << stage_name << " get_addr_cbranch\n";
         return addr_cbranch;
     }
 
     uint32_t StageMEM::get_addr_rbranch() const {
-        cout << "Stage " << stage_name << " get_addr_rbranch\n";
         return addr_rbranch;
     }
 
     uint32_t StageMEM::get_addr_jbranch() const {
-        cout << "Stage " << stage_name << " get_addr_jbranch\n";
         return addr_jbranch;
     }
 
     // IForwardableStage
     bool StageMEM::forward_register(int regId, int regValue) {
-        cout << "Stage " << stage_name << " forward_register\n";
         return 0;
     }
 
