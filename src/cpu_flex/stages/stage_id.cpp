@@ -234,10 +234,6 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
 
-                /* for (int i = 0; i < 32; ++i) {
-                    std::cout << "\t\tTMP Seg reg " << i << ": "  << Utils::hex32(tmp_seg_reg.data[i]) << endl;
-                } */
-
                 sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
        
             }

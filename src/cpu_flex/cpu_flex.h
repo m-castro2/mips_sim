@@ -48,9 +48,11 @@ namespace mips_sim {
 
             size_t get_current_instruction(size_t stage) const;
 
-            virtual std::vector<uint32_t> get_loaded_instructions();
+            virtual std::vector<uint32_t> get_loaded_instructions() const;
 
             bool run_to_cycle( uint32_t target_cycle, std::ostream & = std::cout);
+
+            void print_diagram( std::ostream &out) const;
 
     };
 } //namespace

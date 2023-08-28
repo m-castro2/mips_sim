@@ -11,6 +11,8 @@
 #include<cassert>
 #include <memory>
 
+using namespace std;
+
 namespace mips_sim {
 
     CpuFlex::CpuFlex(std::shared_ptr<Memory> _memory,
@@ -97,13 +99,8 @@ namespace mips_sim {
             }
             diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
         }
-
+        print_diagram(std::cout);
         // update segmentation registers
-        /* for (size_t stage_id = STAGE_COUNT - 1; stage_id > 0; --stage_id)
-        {
-            cpu_stages.at(stage_id)->set_seg_reg(cpu_stages.at(stage_id-1)->get_next_seg_reg());
-        } */
-
         cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
         cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
         cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
@@ -111,12 +108,44 @@ namespace mips_sim {
 
         if (int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)() > 0)
         {
-            for (int i = 1; i <= stages_to_flush+1; ++i)
+            for (int i = 1; i <= stages_to_flush; ++i)
                 cpu_stages.at(i)->set_seg_reg({});
         }
 
         return ready;
     }
+
+    void CpuFlex::print_diagram( std::ostream &out ) const
+    {   
+        std::vector<uint32_t> loaded_inst = get_loaded_instructions();
+        for (uint32_t inst: loaded_inst) {
+            std::cout << inst << std::endl;
+        }
+        for (size_t i = 1; i < loaded_inst.size(); ++i)
+        {   
+            uint32_t ipc = loaded_inst[i];
+            uint32_t icode = ipc?memory->mem_read_32(ipc):0;
+            uint32_t iindex = (ipc - MEM_TEXT_START)/4 + 1;
+            out << right << iindex << " " << left << Utils::decode_instruction(icode) << "  ";
+            int runstate = 0;
+            for (size_t j = 1; j<=cycle && runstate < 2; j++)
+                if (diagram[i][j] > 0)
+                {
+                    runstate = 1;
+                    if (diagram[i][j] == diagram[i][j-1])
+                        out << "--";
+                    else
+                        out << stage_names[diagram[i][j]-1];
+                }
+                else
+                {
+                    if (runstate)
+                        runstate = 2;
+                    out << "";
+                }
+            out << endl;
+        }
+  }
 
     void CpuFlex::reset(bool reset_data_memory, bool reset_text_memory) {
         Cpu::reset(reset_data_memory, reset_text_memory);
@@ -155,7 +184,7 @@ namespace mips_sim {
         return instruction_code;
     }
 
-    std::vector<uint32_t> CpuFlex::get_loaded_instructions() {
+    std::vector<uint32_t> CpuFlex::get_loaded_instructions() const {
         return static_cast<StageIF*>(cpu_stages.at(STAGE_IF))->get_loaded_instructions();
     }
 

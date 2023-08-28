@@ -15,8 +15,9 @@ namespace mips_sim {
                     std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<SpecialRegistersBank> _sr_bank)
         : memory { _memory }, sr_bank { _sr_bank }, CpuStage { "IF" , control_unit, hardware_manager }
     {
-        loaded_instruction_index = 1;
+        loaded_instructions.push_back(0); /* start with a nop instruction */
         loaded_instructions.push_back(sr_bank->get(SPECIAL_PC));
+        loaded_instruction_index = 1;
     };
 
     int StageIF::work_l() {
