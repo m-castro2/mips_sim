@@ -264,6 +264,10 @@ struct seg_reg_t {
 #define SR_JUMPADDR    18
 #define SR_WORDREAD    19
 #define SR_V0          20
+#define SR_FPPRECISION 21 // 0 single, 1 double
+#define SR_FPRSVALUEUPPER 22
+#define SR_FPRTVALUEUPPER 23
+#define SR_FPOUTPUTUPPER  24
 
 // special register
 #define SPECIAL_PC       "pc"

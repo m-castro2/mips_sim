@@ -42,6 +42,8 @@ namespace mips_sim {
         StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE}, sr_bank);
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
+        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {1, 1, 1}, fpr_bank));
+
         ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
 
         if_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 10));
@@ -84,6 +86,8 @@ namespace mips_sim {
             stage->work_h();
         }
 
+        cp1->work();
+
         for (auto stage: cpu_stages) {
             stage->work_l();
         }
@@ -99,10 +103,21 @@ namespace mips_sim {
             }
             diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
         }
-        print_diagram(std::cout);
+
+        //print_diagram(std::cout);
+
         // update segmentation registers
         cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
-        cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+
+        int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
+        if (fp_unit_type != -1) { //FP instruction
+            //check for movs, conds, bc?
+            cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+            cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
+        }
+        else {
+            cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+        }
         cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
         cpu_stages.at(STAGE_WB)->set_seg_reg(cpu_stages.at(STAGE_MEM)->get_next_seg_reg());
 
@@ -110,6 +125,11 @@ namespace mips_sim {
         {
             for (int i = 1; i <= stages_to_flush; ++i)
                 cpu_stages.at(i)->set_seg_reg({});
+
+            if (stages_to_flush >= STAGE_EX) {
+                //also flush cp1
+            }
+                
         }
 
         return ready;

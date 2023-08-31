@@ -34,6 +34,9 @@ namespace mips_sim {
             instruction_t instruction {};
 
             bool pc_write = 1;
+
+            //coprocessor
+            int fp_unit_type; //FPUnit type
         
         public:
 
@@ -59,6 +62,8 @@ namespace mips_sim {
             void status_update();
 
             bool get_pc_write();
+
+            int send_to_cp1();
 
             // IBranchStage
             uint32_t get_sig_pcsrc() const override;

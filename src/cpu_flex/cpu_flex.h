@@ -7,6 +7,7 @@
 #include "../cpu/component/forwarding_unit.h"
 #include "../cpu/component/hazard_detection_unit.h"
 #include "../../cpu/component/registers_bank.h"
+#include "fp_coprocessor.h"
 
 #include <memory>
 #include <vector>
@@ -25,6 +26,8 @@ namespace mips_sim {
             std::shared_ptr<HazardDetectionUnit> hdu {};
 
             std::shared_ptr<ForwardingUnit> fu {};
+
+            std::shared_ptr<FPCoprocessor> cp1 {};
 
 
         public:

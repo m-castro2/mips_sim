@@ -244,7 +244,12 @@ string Utils::decode_instruction(const instruction_t instruction)
     }
     else
     {
-      ss << registers_def[instruction.rt].regname_int << ", ";
+      if (instruction.opcode == OP_LWC1 || instruction.opcode == OP_SWC1) {
+        ss << registers_def[instruction.rt].regname_fp << ", ";
+      }
+      else {
+        ss << registers_def[instruction.rt].regname_int << ", ";
+      }
       if (instruction.opcode == OP_LW || instruction.opcode == OP_SW ||
           instruction.opcode == OP_LB || instruction.opcode == OP_SB ||
           instruction.opcode == OP_LWC1 || instruction.opcode == OP_SWC1)

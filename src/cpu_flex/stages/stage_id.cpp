@@ -17,6 +17,9 @@ namespace mips_sim {
     {
         sigmask = control_unit->get_signal_bitmask_static(cpu_signals);
 
+        //reset cp1 flag
+        fp_unit_type = -1;
+
         status_update();
     };
 
@@ -79,10 +82,13 @@ namespace mips_sim {
     };
 
     int StageID::work_h() {
+        instruction = {}; //TODO reset everything from previous cycles, ALL STAGES
         // reset wrflag
         seg_reg_wrflag = false;
         // reset pipeline_flush
         pipeline_flush_signal = 0;
+        //reset cp1 flag
+        fp_unit_type = -1;
         
         size_t mi_index = UNDEF32;
 
@@ -93,13 +99,20 @@ namespace mips_sim {
         cout << "ID stage: " << Utils::decode_instruction(instruction_code) << endl;
 
         instruction = Utils::fill_instruction(instruction_code);
-
+        
         std::cout << "  -Instruction:"
-        << " OP=" << static_cast<uint32_t>(instruction.opcode)
-        << " Rs=" << Utils::get_register_name(instruction.rs)
-        << " Rt=" << Utils::get_register_name(instruction.rt)
-        << " Rd=" << Utils::get_register_name(instruction.rd)
-        << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
+        << " OP=" << static_cast<uint32_t>(instruction.opcode);
+        if (instruction.fp_op || instruction.opcode == OP_SWC1 || instruction.opcode == OP_LWC1) {
+            std::cout << " Rs=" << Utils::get_fp_register_name(instruction.rs)
+            << " Rt=" << Utils::get_fp_register_name(instruction.rt)
+            << " Rd=" << Utils::get_fp_register_name(instruction.rd);
+        }
+        else {
+           std::cout  << " Rs=" << Utils::get_register_name(instruction.rs)
+            << " Rt=" << Utils::get_register_name(instruction.rt)
+            << " Rd=" << Utils::get_register_name(instruction.rd);
+        }
+        std::cout << " Shamt=" << static_cast<uint32_t>(instruction.shamt)
         << " Func=" << static_cast<uint32_t>(instruction.funct)
         << endl << "            "
         << " addr16=0x" << Utils::hex32(static_cast<uint32_t>(instruction.addr_i), 4)
@@ -138,10 +151,58 @@ namespace mips_sim {
         if (instruction.opcode == OP_FTYPE)
         {
             /* will go to coprocessor */
-            //TODO
-            //throw Exception::e(CPU_UNIMPL_EXCEPTION, "Instruction not implemented yet: " + Utils::decode_instruction(instruction_code));
 
-            //write_segmentation_register(ID_EX, {});
+            //if rd || rt % 2 != -> Exception?
+
+            //check if theres free funits
+            switch (instruction.funct)
+            {
+            case SUBOP_FPADD:
+            case SUBOP_FPSUB:
+                //hardware_manager->is_cp1_unit_available??
+                fp_unit_type = 0;
+                break;
+            case SUBOP_FPMUL:
+                fp_unit_type = 1;
+                break;
+            case SUBOP_FPDIV:
+                fp_unit_type = 2;
+                break;
+            case SUBOP_FPMOV:
+            case SUBOP_FPCEQ:
+            case SUBOP_FPCLE:
+            case SUBOP_FPCLT:
+                //no FU needed
+                //fp_unit_type = 3?
+                //check for dependencies
+                break;
+            default:
+                break;
+            }
+            
+            //TODO: HDU
+
+            
+            /* send data to next stage */
+            tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+            tmp_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask;
+            tmp_seg_reg.data[SR_PC]      = pc_value; // bypass PC
+            tmp_seg_reg.data[SR_RSVALUE] = read_fp_register(instruction.rs);
+            tmp_seg_reg.data[SR_RTVALUE] = read_fp_register(instruction.rt);
+            //Read paired FPU registers
+            tmp_seg_reg.data[SR_FPRSVALUEUPPER] = read_fp_register(instruction.rs + 1);
+            tmp_seg_reg.data[SR_FPRTVALUEUPPER] = read_fp_register(instruction.rt + 1);
+            tmp_seg_reg.data[SR_FPPRECISION] = (instruction.cop != 0);
+            //set precision
+            tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
+            tmp_seg_reg.data[SR_RT]      = instruction.rt;
+            tmp_seg_reg.data[SR_RD]      = instruction.rd;
+            tmp_seg_reg.data[SR_REGDEST] = instruction.rd;
+            tmp_seg_reg.data[SR_FUNCT]   = instruction.funct;
+            tmp_seg_reg.data[SR_OPCODE]  = instruction.opcode;
+            tmp_seg_reg.data[SR_RS]      = instruction.rs;
+            tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
+            tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
         }
         else
         {
@@ -164,14 +225,14 @@ namespace mips_sim {
                 if (instruction.code > 0 && instruction.funct != SUBOP_SYSCALL
                     && instruction.opcode != OP_LUI)
                 {
-                stall = hdu->detect_hazard(instruction.rs, can_forward);
+                    stall = hdu->detect_hazard(instruction.rs, can_forward);
 
-                if ((!control_unit->test(microinstruction, SIG_ALUSRC))
-                    || instruction.opcode == OP_SW
-                    || instruction.opcode == OP_SWC1)
-                {
-                    stall |= hdu->detect_hazard(instruction.rt, can_forward, instruction.opcode == OP_SWC1);
-                }
+                    if ((!control_unit->test(microinstruction, SIG_ALUSRC))
+                        || instruction.opcode == OP_SW
+                        || instruction.opcode == OP_SWC1)
+                    {
+                        stall |= hdu->detect_hazard(instruction.rt, can_forward, instruction.opcode == OP_SWC1);
+                    }
                 }
 
                 if (stall) cout << "   Hazard detected: Pipeline stall" << endl;
@@ -259,6 +320,8 @@ namespace mips_sim {
 
         pipeline_flush_signal = 0;
 
+        fp_unit_type = -1;
+
         return 0;
     }
 
@@ -278,6 +341,10 @@ namespace mips_sim {
             hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageID::pipeline_flush_signal, this));
             hardware_manager->set_signal(SIGNAL_PCWRITE,   bind(&StageID::get_pc_write, this));
         }
+    }
+
+    int StageID::send_to_cp1() {
+        return fp_unit_type;
     }
 
 } //namespace
