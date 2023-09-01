@@ -16,10 +16,24 @@ namespace mips_sim
 
 struct fp_unit {
     seg_reg_t seg_reg = {};
-    int delay {};
+    int delay_s {};
+    int delay_d {};
     int cycles_elapsed {};
     bool available {};
+    int active_delay {}; //depends on instruction precision
 };
+
+//FCR31, Floating Point Control Register
+typedef struct {
+    uint8_t opcode; //7 bits, reserved, 0
+    bool fs; // FP instruction
+    bool c; //condition bit
+    uint8_t cop; // 5 bits, reserved, 0
+    uint8_t cause; // 6 bits E V Z O U I
+    uint8_t enables; // 5 bits V Z O U I
+    uint8_t flags; // 5 bits V Z O U I
+    uint8_t rm; // 2 bits
+} fp_coprocessor_control_status_register_format_t; 
 
 class FPCoprocessor
 {
@@ -27,9 +41,10 @@ class FPCoprocessor
 
         bool enabled {};
 
-        //TODO control register for condition bit (p209)
+        fp_coprocessor_control_status_register_format_t ctrl_status_reg;
 
-        std::vector<int> delays = {}; //TODO different delays for s and d precision (p233)
+        std::vector<int> delays_s = {};
+        std::vector<int> delays_d = {}; 
 
         std::vector<int> counts = {};
 
@@ -39,7 +54,7 @@ class FPCoprocessor
 
     public:
   
-        FPCoprocessor(std::vector<int> delays, std::vector<int> counts, std::shared_ptr<FPRegistersBank> fpr_bank);
+        FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, std::shared_ptr<FPRegistersBank> fpr_bank);
     
         ~FPCoprocessor();
 
@@ -54,6 +69,8 @@ class FPCoprocessor
         void set_seg_reg(int unit_type, seg_reg_t seg_reg);
 
         void fp_unit_compute(std::shared_ptr<fp_unit> unit);
+
+        void reset();
 };
 
 } /* namespace */

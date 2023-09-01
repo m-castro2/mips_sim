@@ -44,7 +44,7 @@ namespace mips_sim {
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
         StageFWB* fwb_stage = new StageFWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
-        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {1, 1, 1}, fpr_bank));
+        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank));
 
         ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
 
@@ -54,6 +54,7 @@ namespace mips_sim {
 
         fu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
         fu->set_seg_reg_mem_wb(wb_stage->get_seg_reg());
+        fu->set_seg_reg_wb_fwb(fwb_stage->get_seg_reg());
 
         hdu->set_seg_reg_id_ex(ex_stage->get_seg_reg());
         hdu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
@@ -145,7 +146,7 @@ namespace mips_sim {
                 cpu_stages.at(i)->set_seg_reg({});
 
             if (stages_to_flush >= STAGE_EX) {
-                //also flush cp1
+                cp1.reset();
             }
                 
         }

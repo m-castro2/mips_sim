@@ -36,10 +36,9 @@ namespace mips_sim
         uint32_t wb_regdest   = seg_reg_mem_wb->data[SR_REGDEST];
         uint32_t wb_regvalue; /* can come from ALU output or Memory */
         uint32_t wb_fpwrite  = control_unit->test(seg_reg_mem_wb->data[SR_SIGNALS], SIG_REGBANK);
-
-        /* for (int i = 0; i<32; ++i) {
-            std::cout << "\t\t SegRegExMem[" << i << "]: " << seg_reg_ex_mem->data[i] << std::endl;
-        } */
+        uint32_t fwb_regdest = seg_reg_wb_fwb->data[SR_REGDEST];
+        uint32_t fwb_regvalue; /* can come from ALU output or Memory */
+        uint32_t fwb_fpwrite  = control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGBANK);
 
         if (reg == 0 && !fp_reg)
             return reg_value;
@@ -83,6 +82,32 @@ namespace mips_sim
         return wb_regvalue;
         }
 
+        /* check WB/FWB register */
+        if (fwb_regdest == reg
+            && !(fwb_fpwrite ^ fp_reg)
+            && control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGWRITE))
+        {
+        switch (control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_MEM2REG))
+        {
+            case 0:
+            fwb_regvalue = seg_reg_wb_fwb->data[SR_WORDREAD];
+            break;
+            case 1:
+            fwb_regvalue = seg_reg_wb_fwb->data[SR_ALUOUTPUT];
+            break;
+            case 2:
+            fwb_regvalue = seg_reg_wb_fwb->data[SR_PC];
+            break;
+            default:
+            assert(0);
+        }
+        out << " -- forward "
+            << (fp_reg?Utils::get_fp_register_name(reg)
+                        :Utils::get_register_name(reg))
+            << " [0x" << Utils::hex32(wb_regvalue) << "] from WB/FWB" << endl;
+        return fwb_regvalue;
+        }
+
         return reg_value;
     }
 
@@ -92,6 +117,10 @@ namespace mips_sim
 
     void ForwardingUnit::set_seg_reg_ex_mem(std::shared_ptr<seg_reg_t> seg_reg) {
         seg_reg_ex_mem = seg_reg;
+    }
+
+    void ForwardingUnit::set_seg_reg_wb_fwb(std::shared_ptr<seg_reg_t> seg_reg){
+        seg_reg_wb_fwb = seg_reg;
     }
   
 } /* namespace */

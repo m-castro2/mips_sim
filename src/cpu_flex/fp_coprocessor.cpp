@@ -8,27 +8,30 @@ namespace mips_sim
 {
 
   
-    FPCoprocessor::FPCoprocessor(std::vector<int> p_delays, std::vector<int> p_counts, std::shared_ptr<FPRegistersBank> p_fpr_bank)
+    FPCoprocessor::FPCoprocessor(std::vector<int> p_delays_s, std::vector<int> p_delays_d, std::vector<int> p_counts, std::shared_ptr<FPRegistersBank> p_fpr_bank)
     {
         fpr_bank = p_fpr_bank;
 
-        delays = p_delays;
+        delays_s = p_delays_s;
+        delays_d = p_delays_d;
         counts = p_counts;
+
+        ctrl_status_reg = {};
 
         for (int i=0; i<3; ++i) { //initialize vec
             fp_units.push_back({nullptr});
         }
 
         for (int i=0; i<counts[ADD_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> add = std::shared_ptr<fp_unit>(new fp_unit({{}, delays[ADD_UNIT], 0, true}));
+            std::shared_ptr<fp_unit> add = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[ADD_UNIT], delays_d[ADD_UNIT], 0, true, 0}));
             fp_units[ADD_UNIT][i] = add;
         }
         for (int i=0; i<counts[MULT_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> mult = std::shared_ptr<fp_unit>(new fp_unit({{}, delays[MULT_UNIT], 0, true}));
+            std::shared_ptr<fp_unit> mult = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[MULT_UNIT], delays_d[MULT_UNIT], 0, true, 0}));
             fp_units[MULT_UNIT][i] = mult;
         }
         for (int i=0; i<counts[DIV_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> div = std::shared_ptr<fp_unit>(new fp_unit({{}, delays[DIV_UNIT], 0, true}));
+            std::shared_ptr<fp_unit> div = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[DIV_UNIT], delays_d[DIV_UNIT], 0, true, 0}));
             fp_units[DIV_UNIT][i] = div;
         }
     }
@@ -67,17 +70,15 @@ namespace mips_sim
                 //if instruction was just received, compute
                 if (unit->cycles_elapsed == 0 ) {
                     fp_unit_compute(unit);
-                    std::cout << unit->seg_reg.data[SR_ALUOUTPUT] << "\n";
-                    std::cout << unit->seg_reg.data[SR_FPOUTPUTUPPER] << "\n";
                 }
 
-                if (unit->cycles_elapsed < unit->delay) {
+                if (unit->cycles_elapsed < unit->active_delay) {
                     unit->cycles_elapsed++;
                 }
                 //if instruction is done
-                if (unit->cycles_elapsed == unit->delay) {
-                    if (unit->delay > max_delay){ // first issued instruction has priority
-                        max_delay = unit->delay;
+                if (unit->cycles_elapsed == unit->active_delay) {
+                    if (unit->active_delay > max_delay){ // first issued instruction has priority
+                        max_delay = unit->active_delay;
                         finished_unit = unit;
                     }
                 }
@@ -102,6 +103,7 @@ namespace mips_sim
                 }
 
                 unit->available = false;
+                unit->active_delay = unit->delay_d ? next_seg_reg.data[SR_FPPRECISION] : unit->delay_s;
             }
         }
     }
@@ -160,6 +162,17 @@ namespace mips_sim
 
         unit->seg_reg.data[SR_ALUOUTPUT] = outputs[0];
         unit->seg_reg.data[SR_FPOUTPUTUPPER] = outputs[1];
+    }
+
+    void FPCoprocessor::reset() {
+        //TODO reset mov, bc
+        for(std::vector<std::shared_ptr<fp_unit>> type_vector: fp_units) {
+            for (std::shared_ptr<fp_unit> unit: type_vector) {
+                unit->seg_reg = {};
+                unit->available = true;
+                unit->cycles_elapsed = 0;
+            }   
+        }
     }
 
 } /* namespace */

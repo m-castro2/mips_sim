@@ -22,6 +22,8 @@ namespace mips_sim
 
         std::shared_ptr<seg_reg_t> seg_reg_mem_wb {};
 
+        std::shared_ptr<seg_reg_t> seg_reg_wb_fwb {};
+
     public:
     
         ForwardingUnit(std::shared_ptr<ControlUnit> control_unit, bool enabled);
@@ -36,6 +38,8 @@ namespace mips_sim
         void set_seg_reg_mem_wb(std::shared_ptr<seg_reg_t> seg_reg);
 
         void set_seg_reg_ex_mem(std::shared_ptr<seg_reg_t> seg_reg);
+
+        void set_seg_reg_wb_fwb(std::shared_ptr<seg_reg_t> seg_reg);
 
   }; 
 } /* namespace */
