@@ -66,33 +66,15 @@ namespace mips_sim {
         if (control_unit->test(microinstruction, SIG_REGWRITE))
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
-            if (control_unit->test(microinstruction, SIG_REGBANK))
-                std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
-            else
-                std::cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
+            std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
             std::cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
-        }
 
-        if (control_unit->test(microinstruction, SIG_REGWRITE))
-        {
-            if (control_unit->test(microinstruction, SIG_REGBANK))
-            {
-                assert(reg_dest < 32);
-                uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
+            assert(reg_dest < 32);
+            uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
 
-                std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest8)
-                    << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
-                write_fp_register(reg_dest8, regwrite_value);
-            }
-            else
-            {
-                assert(reg_dest < 32);
-                uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
-                
-                std::cout << "   REG write " << Utils::get_register_name(reg_dest8)
-                    << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
-                write_register(reg_dest8, regwrite_value);
-            }
+            std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest8)
+                << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+            write_fp_register(reg_dest8, regwrite_value);
         }
 
         return 0;

@@ -20,8 +20,6 @@ namespace mips_sim {
     };
 
     int StageMEM::work_h() {
-        cout << "Stage " << stage_name << " work_h\n";
-
         // reset wrflag
         seg_reg_wrflag = false;
         //reset tmp_seg_reg
