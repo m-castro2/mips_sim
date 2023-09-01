@@ -44,7 +44,7 @@ namespace mips_sim {
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
         StageFWB* fwb_stage = new StageFWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
-        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank));
+        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank, fu));
 
         ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
 

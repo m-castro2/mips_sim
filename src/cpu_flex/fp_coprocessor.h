@@ -3,6 +3,7 @@
 
 #include "../cpu/component/registers_bank.h"
 #include "../../global_defs.h"
+#include "../cpu/component/forwarding_unit.h"
 
 #include <memory>
 
@@ -52,9 +53,12 @@ class FPCoprocessor
 
         std::shared_ptr<FPRegistersBank> fpr_bank {};
 
+        std::shared_ptr<ForwardingUnit> fu {};
+
     public:
   
-        FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, std::shared_ptr<FPRegistersBank> fpr_bank);
+        FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, 
+                    std::shared_ptr<FPRegistersBank> fpr_bank, std::shared_ptr<ForwardingUnit> fu);
     
         ~FPCoprocessor();
 

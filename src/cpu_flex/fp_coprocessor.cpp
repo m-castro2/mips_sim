@@ -8,9 +8,11 @@ namespace mips_sim
 {
 
   
-    FPCoprocessor::FPCoprocessor(std::vector<int> p_delays_s, std::vector<int> p_delays_d, std::vector<int> p_counts, std::shared_ptr<FPRegistersBank> p_fpr_bank)
+    FPCoprocessor::FPCoprocessor(std::vector<int> p_delays_s, std::vector<int> p_delays_d, std::vector<int> p_counts,
+                                std::shared_ptr<FPRegistersBank> p_fpr_bank, std::shared_ptr<ForwardingUnit> p_fu)
     {
         fpr_bank = p_fpr_bank;
+        fu = p_fu;
 
         delays_s = p_delays_s;
         delays_d = p_delays_d;
@@ -109,8 +111,24 @@ namespace mips_sim
     }
 
     void FPCoprocessor::fp_unit_compute(std::shared_ptr<fp_unit> unit) {
-        uint32_t rs_words[] = {unit->seg_reg.data[SR_RSVALUE], unit->seg_reg.data[SR_FPRSVALUEUPPER]};
-        uint32_t rt_words[] = {unit->seg_reg.data[SR_RTVALUE], unit->seg_reg.data[SR_FPRTVALUEUPPER]};
+        uint32_t rs_value = unit->seg_reg.data[SR_RSVALUE];
+        uint32_t rs_value_upper = unit->seg_reg.data[SR_FPRSVALUEUPPER];
+        uint32_t rt_value = unit->seg_reg.data[SR_RTVALUE];
+        uint32_t rt_value_upper = unit->seg_reg.data[SR_FPRTVALUEUPPER];
+
+        if (fu->is_enabled()) {
+            uint32_t microinstruction = unit->seg_reg.data[SR_SIGNALS];
+            uint32_t rs = unit->seg_reg.data[SR_RS];
+            uint32_t rt = unit->seg_reg.data[SR_RT];
+            
+            rs_value = fu->forward_register(rs, rs_value, true, std::cout);
+            rs_value_upper = fu->forward_register(rs+1, rs_value_upper, true, std::cout);
+            rt_value = fu->forward_register(rt, rt_value, true, std::cout);
+            rt_value_upper = fu->forward_register(rt+1, rt_value_upper, true, std::cout);
+        }
+
+        uint32_t rs_words[] = {rs_value, rs_value_upper};
+        uint32_t rt_words[] = {rt_value, rt_value_upper};
 
         uint32_t outputs[2];
 
