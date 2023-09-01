@@ -30,7 +30,8 @@
 #define STAGE_EX      2
 #define STAGE_MEM     3
 #define STAGE_WB      4
-#define STAGE_COUNT   5
+#define STAGE_FWB     5
+#define STAGE_COUNT   6
 
 /* status keys */
 #define KEY_BRANCH_TYPE           "branch-type"

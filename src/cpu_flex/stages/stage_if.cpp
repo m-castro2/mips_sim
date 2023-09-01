@@ -21,12 +21,17 @@ namespace mips_sim {
     };
 
     int StageIF::work_l() {
+        if (hardware_manager->get_fp_stall()){
+            return 0;
+        }
         // reset wrflag
         seg_reg_wrflag = false;
+        //reset tmp_seg_reg
+        tmp_seg_reg = {};
 
-        current_pc = sr_bank->get(SPECIAL_PC);
+        uint32_t current_pc = sr_bank->get(SPECIAL_PC);
 
-        pc_src = hardware_manager->get_signal(SIGNAL_PCSRC)();
+        uint32_t pc_src = hardware_manager->get_signal(SIGNAL_PCSRC)();
 
         hardware_manager->set_status(STAGE_IF, current_pc);
 
@@ -37,7 +42,7 @@ namespace mips_sim {
         }
 
         // fetch instruction 
-        instruction_code = memory->mem_read_32(current_pc);
+        uint32_t instruction_code = memory->mem_read_32(current_pc);
 
         std::cout << "IF stage" << endl;
         std::string cur_instr_name = Utils::decode_instruction(instruction_code);

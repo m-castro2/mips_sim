@@ -42,23 +42,12 @@ class FPCoprocessor
         FPCoprocessor(std::vector<int> delays, std::vector<int> counts, std::shared_ptr<FPRegistersBank> fpr_bank);
     
         ~FPCoprocessor();
-    
-/*         uint32_t compute_op(uint32_t alu_input_a,
-                            uint32_t alu_input_b,
-                            uint32_t alu_op) const;
-
-        uint32_t compute_subop(uint32_t alu_input_a,
-                            uint32_t alu_input_b,
-                            uint8_t shift_amount,
-                            uint32_t alu_subop,
-                            uint32_t *HI, uint32_t *LO,
-                            int *execution_stall); */
 
         bool is_enabled();
 
         void set_enabled(bool value);
 
-        void work();
+        seg_reg_t work();
 
         bool is_unit_available(int unit_type);
 

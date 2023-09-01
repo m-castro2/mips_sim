@@ -1,4 +1,4 @@
-#include "stage_wb.h"
+#include "stage_fwb.h"
 #include "../hardware_manager.h"
 #include "../../utils.h"
 
@@ -9,28 +9,24 @@ using namespace std;
 
 namespace mips_sim {
 
-    StageWB::StageWB(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
+    StageFWB::StageFWB(std::shared_ptr<ControlUnit> control_unit, std::shared_ptr<HardwareManager> hardware_manager,
         std::shared_ptr<GPRegistersBank> p_gpr_bank, std::shared_ptr<FPRegistersBank> p_fpr_bank)
         : CpuStage { "WB", control_unit, hardware_manager },  gpr_bank { p_gpr_bank }, fpr_bank { p_fpr_bank }
     {
 
     };
 
-    int StageWB::work_l() {
+    int StageFWB::work_l() {
 
         return 0;
     };
 
-    int StageWB::work_h() {
-        if (!write_segmentation_register(tmp_seg_reg))
-        {
-            /* no structural hazard should happen here */
-            assert(0);
-        }
+    int StageFWB::work_h() {
+
         return 0;
     }
 
-    int StageWB::rising_flank() {
+    int StageFWB::rising_flank() {
         // reset wrflag
         seg_reg_wrflag = false;
         //reset tmp_seg_reg
@@ -46,21 +42,13 @@ namespace mips_sim {
         uint32_t mem_word_read    = seg_reg->data[SR_WORDREAD];
         uint32_t alu_output       = seg_reg->data[SR_ALUOUTPUT];
 
-        //if FPRegister, send data to FWB stage
-        if (control_unit->test(microinstruction, SIG_REGBANK)) {
-            tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-            tmp_seg_reg.data[SR_PC] = pc_value;
-            tmp_seg_reg.data[SR_SIGNALS] = microinstruction;
-            tmp_seg_reg.data[SR_REGDEST] = reg_dest;
-            tmp_seg_reg.data[SR_WORDREAD] = mem_word_read;
-            tmp_seg_reg.data[SR_ALUOUTPUT] = alu_output;
-
-            std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
-            std::cout << "\t FPRegister, redirect to FWB Stage" << endl;
+        if (!control_unit->test(microinstruction, SIG_REGBANK) && (microinstruction != 0)) {
+            std::cout << "FWB Stage: " << Utils::decode_instruction(instruction_code) << endl;
+            std::cout << "\t No FPRegister involved, continue" << endl;
             return 0;
         }
 
-        std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
+        std::cout << "FWB Stage: " << Utils::decode_instruction(instruction_code) << endl;
         //current_state[STAGE_WB] = pc_value-4;
 
         switch (control_unit->test(microinstruction, SIG_MEM2REG))
@@ -110,17 +98,17 @@ namespace mips_sim {
         return 0;
     }
 
-    int StageWB::next_cycle() {
+    int StageFWB::next_cycle() {
         work_h();
         work_l();
         return 0;
     }
 
-    int StageWB::reset() {
+    int StageFWB::reset() {
         return 0;
     }
 
-    void StageWB::write_register( uint8_t reg_index, uint32_t value)
+    void StageFWB::write_register( uint8_t reg_index, uint32_t value)
     {
         /* if (reg_index == 0)
             throw Exception::e(CPU_REG_EXCEPTION, "Cannot write register $0"); */
@@ -129,7 +117,7 @@ namespace mips_sim {
         gpr_bank->set_at(reg_index, value);
     }
 
-    void StageWB::write_fp_register( uint8_t reg_index, uint32_t value)
+    void StageFWB::write_fp_register( uint8_t reg_index, uint32_t value)
         {
         assert(reg_index < 32);
 
@@ -137,7 +125,7 @@ namespace mips_sim {
     }
 
     // IForwardableStage
-    bool StageWB::forward_register(int regId, int regValue) {
+    bool StageFWB::forward_register(int regId, int regValue) {
         return 0;
     }
 

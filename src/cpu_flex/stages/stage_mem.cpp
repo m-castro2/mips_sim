@@ -16,24 +16,6 @@ namespace mips_sim {
     };
 
     int StageMEM::work_l() {
-        /* send data to next stage */
-        next_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        next_seg_reg.data[SR_PC]          = pc_value; /* bypass PC */
-        next_seg_reg.data[SR_SIGNALS]     = microinstruction & sigmask;
-        next_seg_reg.data[SR_WORDREAD]    = word_read;
-        next_seg_reg.data[SR_ALUOUTPUT]   = mem_addr; // come from alu output
-        next_seg_reg.data[SR_REGDEST]     = seg_reg->data[SR_REGDEST];
-
-        next_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
-
-        hardware_manager->set_stage_instruction(STAGE_MEM, instruction_code);
-
-        if (!write_segmentation_register(next_seg_reg))
-        {
-        /* no structural hazard should happen here */
-        assert(0);
-        }
-
         return 0;
     };
 
@@ -42,12 +24,16 @@ namespace mips_sim {
 
         // reset wrflag
         seg_reg_wrflag = false;
+        //reset tmp_seg_reg
+        tmp_seg_reg = {};
+
+        uint32_t word_read = UNDEF32;
 
         /* get data from previous stage */
-        instruction_code = seg_reg->data[SR_INSTRUCTION];
-        pc_value         = seg_reg->data[SR_PC];
-        microinstruction = seg_reg->data[SR_SIGNALS];
-        mem_addr         = seg_reg->data[SR_ALUOUTPUT];
+        uint32_t instruction_code = seg_reg->data[SR_INSTRUCTION];
+        uint32_t pc_value         = seg_reg->data[SR_PC];
+        uint32_t microinstruction = seg_reg->data[SR_SIGNALS];
+        uint32_t mem_addr         = seg_reg->data[SR_ALUOUTPUT];
         uint32_t rt_value         = seg_reg->data[SR_RTVALUE];
         uint32_t branch_addr      = seg_reg->data[SR_RELBRANCH];
         uint32_t branch_taken     = seg_reg->data[SR_ALUZERO];
@@ -88,6 +74,25 @@ namespace mips_sim {
 
         // ...
         std::cout << "   Address/ALU_Bypass: 0x" << Utils::hex32(mem_addr) << endl;
+
+
+        /* send data to next stage */
+        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+        tmp_seg_reg.data[SR_PC]          = pc_value; /* bypass PC */
+        tmp_seg_reg.data[SR_SIGNALS]     = microinstruction & sigmask;
+        tmp_seg_reg.data[SR_WORDREAD]    = word_read;
+        tmp_seg_reg.data[SR_ALUOUTPUT]   = mem_addr; // come from alu output
+        tmp_seg_reg.data[SR_REGDEST]     = seg_reg->data[SR_REGDEST];
+
+        tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
+
+        hardware_manager->set_stage_instruction(STAGE_MEM, instruction_code);
+
+        if (!write_segmentation_register(tmp_seg_reg))
+        {
+            /* no structural hazard should happen here */
+            assert(0);
+        }
 
         return 0;
     }

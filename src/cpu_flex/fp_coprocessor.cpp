@@ -54,7 +54,7 @@ namespace mips_sim
         return false;
     }
 
-    void FPCoprocessor::work() {
+    seg_reg_t FPCoprocessor::work() {
         int max_delay = 0; //identify the first issued instruction
         std::shared_ptr<fp_unit> finished_unit = nullptr;
 
@@ -88,7 +88,10 @@ namespace mips_sim
             //send data to MEM
             finished_unit->cycles_elapsed = 0;
             finished_unit->available = true;
+            return finished_unit->seg_reg;
         }
+
+        return {};
     }
 
     void FPCoprocessor::set_seg_reg(int unit_type, seg_reg_t next_seg_reg) {

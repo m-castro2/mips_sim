@@ -21,16 +21,6 @@ namespace mips_sim {
             std::shared_ptr<Memory> memory {};
 
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
-
-            uint32_t instruction_code {};
-
-            uint32_t pc_value {};
-
-            uint32_t microinstruction {};
-
-            uint32_t word_read {};
-
-            uint32_t mem_addr {};
         
         public:
 

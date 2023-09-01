@@ -22,18 +22,6 @@ namespace mips_sim {
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
             std::shared_ptr<GPRegistersBank> gpr_bank {};
 
-            uint32_t instruction_code {};
-            uint32_t microinstruction {};
-            uint32_t pc_value {};
-            uint32_t addr_i32 {};
-            uint32_t alu_output {};
-            uint32_t opcode {};
-            uint32_t rt_value {};
-            uint32_t hi_reg {};
-            uint32_t lo_reg {};
-            int stall_cycles {};
-            bool hi_lo_updated {};
-
             std::function<void( uint32_t )> syscall;
         
         public:

@@ -52,6 +52,8 @@ namespace mips_sim {
 
             std::map<int, uint32_t> stage_instructions {};
 
+            bool fp_stall {};
+
         public:
 
             HardwareManager(int branch_type, int branch_stage);
@@ -75,6 +77,10 @@ namespace mips_sim {
             void set_stage_instruction(int stage, uint32_t instruction);
 
             uint32_t get_stage_instruction(int stage);
+
+            bool get_fp_stall();
+
+            void set_fp_stall(bool value);
 
     };
 } //namespace

@@ -82,23 +82,29 @@ namespace mips_sim {
     };
 
     int StageID::work_h() {
-        instruction = {}; //TODO reset everything from previous cycles, ALL STAGES
+
+        if (hardware_manager->get_fp_stall()){
+            return 0;
+        }
+        
         // reset wrflag
         seg_reg_wrflag = false;
         // reset pipeline_flush
         pipeline_flush_signal = 0;
         //reset cp1 flag
         fp_unit_type = -1;
+        //reset tmp_seg_reg
+        tmp_seg_reg = {};
         
         size_t mi_index = UNDEF32;
 
         /* get data from previous stage */
-        instruction_code = seg_reg->data[SR_INSTRUCTION];
-        pc_value = seg_reg->data[SR_PC];
+        uint32_t instruction_code = seg_reg->data[SR_INSTRUCTION];
+        uint32_t pc_value = seg_reg->data[SR_PC];
 
         cout << "ID stage: " << Utils::decode_instruction(instruction_code) << endl;
 
-        instruction = Utils::fill_instruction(instruction_code);
+        instruction_t instruction = Utils::fill_instruction(instruction_code);
         
         std::cout << "  -Instruction:"
         << " OP=" << static_cast<uint32_t>(instruction.opcode);
@@ -121,6 +127,7 @@ namespace mips_sim {
 
         hardware_manager->set_status(STAGE_ID, pc_value - 4);
 
+        uint32_t microinstruction {};
         if (instruction.code == 0)
         {
             /* NOP */
@@ -151,7 +158,6 @@ namespace mips_sim {
         if (instruction.opcode == OP_FTYPE)
         {
             /* will go to coprocessor */
-
             //if rd || rt % 2 != -> Exception?
 
             //check if theres free funits
@@ -192,8 +198,8 @@ namespace mips_sim {
             //Read paired FPU registers
             tmp_seg_reg.data[SR_FPRSVALUEUPPER] = read_fp_register(instruction.rs + 1);
             tmp_seg_reg.data[SR_FPRTVALUEUPPER] = read_fp_register(instruction.rt + 1);
-            tmp_seg_reg.data[SR_FPPRECISION] = (instruction.cop != 0);
             //set precision
+            tmp_seg_reg.data[SR_FPPRECISION] = (instruction.cop != 0);
             tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
             tmp_seg_reg.data[SR_RT]      = instruction.rt;
             tmp_seg_reg.data[SR_RD]      = instruction.rd;
@@ -207,7 +213,8 @@ namespace mips_sim {
         else
         {
             /* integer unit */
-            rs_value = read_register(instruction.rs);
+            uint32_t rs_value = read_register(instruction.rs);
+            uint32_t rt_value;
             if (control_unit->test(microinstruction, SIG_REGBANK))
                 rt_value = read_fp_register(instruction.rt);
             else
@@ -267,6 +274,7 @@ namespace mips_sim {
                     }
                 }
 
+                uint32_t reg_dest;
                 switch(control_unit->test(microinstruction, SIG_REGDST))
                 {
                     case 0:

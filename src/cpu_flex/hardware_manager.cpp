@@ -53,4 +53,13 @@ namespace mips_sim {
         return stage_instructions[stage];
     }
 
+    bool HardwareManager::get_fp_stall(){
+        return fp_stall;
+    }
+
+    void HardwareManager::set_fp_stall(bool value) {
+        fp_stall = value;
+    }
+
+
 } //namespace

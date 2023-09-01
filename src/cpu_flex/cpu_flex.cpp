@@ -5,6 +5,7 @@
 #include "stages/stage_ex.h"
 #include "stages/stage_mem.h"
 #include "stages/stage_wb.h"
+#include "stages/stage_fwb.h"
 
 #include "../utils.h"
 
@@ -41,6 +42,7 @@ namespace mips_sim {
                                         fu, sr_bank, gpr_bank);
         StageMEM* mem_stage = new StageMEM(memory, control_unit, hardware_manager, {SIG_MEM2REG, SIG_REGBANK, SIG_REGWRITE}, sr_bank);
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
+        StageFWB* fwb_stage = new StageFWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
         cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {1, 1, 1}, fpr_bank));
 
@@ -60,7 +62,8 @@ namespace mips_sim {
         add_cpu_stage(id_stage);
         add_cpu_stage(ex_stage);
         add_cpu_stage(mem_stage);
-        add_cpu_stage(wb_stage); 
+        add_cpu_stage(wb_stage);
+        add_cpu_stage(fwb_stage); 
     }
 
   
@@ -75,7 +78,9 @@ namespace mips_sim {
     }
 
     bool CpuFlex::next_cycle( std::ostream &out )
-    {
+    {   
+        //reset fp_stall
+        hardware_manager->set_fp_stall(false);
         Cpu::next_cycle( std::cout );
 
         for (auto stage: cpu_stages) {
@@ -86,7 +91,7 @@ namespace mips_sim {
             stage->work_h();
         }
 
-        cp1->work();
+        seg_reg_t cp1_seg_reg = cp1->work();
 
         for (auto stage: cpu_stages) {
             stage->work_l();
@@ -107,19 +112,32 @@ namespace mips_sim {
         //print_diagram(std::cout);
 
         // update segmentation registers
-        cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
-
-        int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
-        if (fp_unit_type != -1) { //FP instruction
-            //check for movs, conds, bc?
-            cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
-            cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
+        if (cp1_seg_reg.data[SR_INSTRUCTION] != 0) { // if cp1 finished a instruction, send it to mem, stalling <=EX
+            hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
+            cpu_stages.at(STAGE_MEM)->set_seg_reg(cp1_seg_reg);
+            cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+            cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
         }
         else {
-            cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+            cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
+            int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
+            if (fp_unit_type != -1) { //FP instruction
+                //check for movs, conds, bc?
+                cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+                cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
+            }
+            else {
+                cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+            }
+            
+            cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+            
         }
-        cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+
         cpu_stages.at(STAGE_WB)->set_seg_reg(cpu_stages.at(STAGE_MEM)->get_next_seg_reg());
+        cpu_stages.at(STAGE_FWB)->set_seg_reg(cpu_stages.at(STAGE_WB)->get_next_seg_reg());
+
+        
 
         if (int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)() > 0)
         {
@@ -189,7 +207,7 @@ namespace mips_sim {
 
     size_t CpuFlex::get_current_instruction(size_t stage) const
     {
-        assert(stage <= STAGE_WB);
+        assert(stage <= STAGE_FWB);
 
         uint32_t instruction_code;
         if (stage == STAGE_IF)

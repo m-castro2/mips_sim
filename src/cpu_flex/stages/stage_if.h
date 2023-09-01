@@ -17,12 +17,6 @@ namespace mips_sim {
 
             std::shared_ptr<Memory> memory {};
 
-            uint32_t instruction_code {};
-
-            uint32_t current_pc {};
-
-            uint32_t pc_src {};
-
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
 
             uint32_t loaded_instruction_index {};

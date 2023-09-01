@@ -25,14 +25,6 @@ namespace mips_sim {
             uint32_t read_register(uint8_t reg_index);
             uint32_t read_fp_register(uint8_t reg_index);
 
-            uint32_t instruction_code {};
-            uint32_t microinstruction {};
-            uint32_t pc_value {};
-            uint32_t rs_value {};
-            uint32_t rt_value {};
-            uint32_t reg_dest {};
-            instruction_t instruction {};
-
             bool pc_write = 1;
 
             //coprocessor
