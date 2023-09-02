@@ -9,10 +9,12 @@ namespace mips_sim
 
   
     FPCoprocessor::FPCoprocessor(std::vector<int> p_delays_s, std::vector<int> p_delays_d, std::vector<int> p_counts,
-                                std::shared_ptr<FPRegistersBank> p_fpr_bank, std::shared_ptr<ForwardingUnit> p_fu)
+                                std::shared_ptr<FPRegistersBank> p_fpr_bank, std::shared_ptr<ForwardingUnit> p_fu,
+                                std::shared_ptr<HardwareManager> p_hardware_manager)
     {
         fpr_bank = p_fpr_bank;
         fu = p_fu;
+        hardware_manager = p_hardware_manager;
 
         delays_s = p_delays_s;
         delays_d = p_delays_d;
@@ -20,22 +22,36 @@ namespace mips_sim
 
         ctrl_status_reg = {};
 
-        for (int i=0; i<3; ++i) { //initialize vec
-            fp_units.push_back({nullptr});
-        }
-
+        std::vector<std::shared_ptr<fp_unit>> v {};
         for (int i=0; i<counts[ADD_UNIT]; ++i) {
             std::shared_ptr<fp_unit> add = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[ADD_UNIT], delays_d[ADD_UNIT], 0, true, 0}));
-            fp_units[ADD_UNIT][i] = add;
+            v.push_back(add);
         }
+        fp_units.push_back(v);
+
+        v.clear();
         for (int i=0; i<counts[MULT_UNIT]; ++i) {
             std::shared_ptr<fp_unit> mult = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[MULT_UNIT], delays_d[MULT_UNIT], 0, true, 0}));
-            fp_units[MULT_UNIT][i] = mult;
+            v.push_back(mult);
         }
+        fp_units.push_back(v);
+
+        v.clear();
         for (int i=0; i<counts[DIV_UNIT]; ++i) {
             std::shared_ptr<fp_unit> div = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[DIV_UNIT], delays_d[DIV_UNIT], 0, true, 0}));
-            fp_units[DIV_UNIT][i] = div;
+            v.push_back(div);
         }
+        fp_units.push_back(v);
+        
+        v.clear();
+        //3 should be enough since max delay is 2
+        for (int i=0; i<3; ++i) {
+            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0}));
+            v.push_back(gen);
+        }
+        fp_units.push_back(v);
+
+        status_update();
     }
     
     FPCoprocessor::~FPCoprocessor() {
@@ -60,6 +76,7 @@ namespace mips_sim
     }
 
     seg_reg_t FPCoprocessor::work() {
+        std::cout << "FPCoprocessor Stage:" << std::endl;
         int max_delay = 0; //identify the first issued instruction
         std::shared_ptr<fp_unit> finished_unit = nullptr;
 
@@ -68,21 +85,35 @@ namespace mips_sim
                 if (unit->available) { //empty unit
                     continue;
                 }
+
+                std::cout << "  FPCoprocessor"; 
+                switch (std::find(fp_units.begin(), fp_units.end(), unit_type) - fp_units.begin())
+                {
+                case ADD_UNIT:
+                    std::cout << " Add Unit"; break;
+                case MULT_UNIT:
+                    std::cout << " Mult Unit"; break;
+                case DIV_UNIT:
+                    std::cout << " Div Unit"; break;
+                default: break;
+                }
+                std::cout << ": " << Utils::decode_instruction(unit->seg_reg.data[SR_INSTRUCTION]) << std::endl;
                 
                 //if instruction was just received, compute
                 if (unit->cycles_elapsed == 0 ) {
-                    fp_unit_compute(unit);
                 }
 
-                if (unit->cycles_elapsed < unit->active_delay) {
-                    unit->cycles_elapsed++;
-                }
                 //if instruction is done
                 if (unit->cycles_elapsed == unit->active_delay) {
                     if (unit->active_delay > max_delay){ // first issued instruction has priority
                         max_delay = unit->active_delay;
                         finished_unit = unit;
+                        fp_unit_compute(unit);
                     }
+                }
+
+                if (unit->cycles_elapsed < unit->active_delay) {
+                    unit->cycles_elapsed++;
                 }
             }
         }
@@ -98,15 +129,34 @@ namespace mips_sim
     }
 
     void FPCoprocessor::set_seg_reg(int unit_type, seg_reg_t next_seg_reg) {
-        for (std::shared_ptr<fp_unit> unit: fp_units[unit_type]) {
+        for (std::shared_ptr<fp_unit> unit: fp_units.at(unit_type)) {
             if (unit->available) {
                 for (int i=0; i < 32; ++i) {
                     unit->seg_reg.data[i] = next_seg_reg.data[i];
                 }
 
+                if (unit_type == 3) {
+                    if (next_seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) {
+                        unit->active_delay = 1;
+                    }
+                    else { //CEQ, CLE, CLT
+                        unit->active_delay = 2;
+                    }
+                    unit->cycles_elapsed = 0;
+                    unit->available = false;
+                    return;
+                }
+
+                unit->cycles_elapsed = 0;
                 unit->available = false;
                 unit->active_delay = unit->delay_d ? next_seg_reg.data[SR_FPPRECISION] : unit->delay_s;
-            }
+                return;
+            }      
+        }
+
+        if (unit_type == GENERAL_UNIT) { // if all are busy add a new one
+            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0}));
+            fp_units.at(GENERAL_UNIT).push_back(gen);
         }
     }
 
@@ -117,7 +167,6 @@ namespace mips_sim
         uint32_t rt_value_upper = unit->seg_reg.data[SR_FPRTVALUEUPPER];
 
         if (fu->is_enabled()) {
-            uint32_t microinstruction = unit->seg_reg.data[SR_SIGNALS];
             uint32_t rs = unit->seg_reg.data[SR_RS];
             uint32_t rt = unit->seg_reg.data[SR_RT];
             
@@ -150,7 +199,7 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words) +
+                Utils::float_to_word(Utils::word_to_float(rs_words) -
                                     Utils::word_to_float(rt_words), outputs);
             }
             break;
@@ -174,7 +223,35 @@ namespace mips_sim
                                     Utils::word_to_float(rt_words), outputs);
             }
             break;
+        case SUBOP_FPCEQ:
+            if (unit->seg_reg.data[SR_FPPRECISION]) {
+                ctrl_status_reg.c = (Utils::word_to_double(rs_words) == Utils::word_to_double(rt_words));
+            }
+            else {
+                ctrl_status_reg.c = (Utils::word_to_float(rs_words) == Utils::word_to_float(rt_words));
+            }
+            return;
+            break;
+        case SUBOP_FPCLE:
+            if (unit->seg_reg.data[SR_FPPRECISION]) {
+                ctrl_status_reg.c = (Utils::word_to_double(rs_words) <= Utils::word_to_double(rt_words));
+            }
+            else {
+                ctrl_status_reg.c = (Utils::word_to_float(rs_words) <= Utils::word_to_float(rt_words));
+            }
+            return;
+            break;
+        case SUBOP_FPCLT:
+            if (unit->seg_reg.data[SR_FPPRECISION]) {
+                ctrl_status_reg.c = (Utils::word_to_double(rs_words) < Utils::word_to_double(rt_words));
+            }
+            else {
+                ctrl_status_reg.c = (Utils::word_to_float(rs_words) < Utils::word_to_float(rt_words));
+            }
+            return;
+            break;
         default:
+            return;
             break;
         }
 
@@ -191,6 +268,15 @@ namespace mips_sim
                 unit->cycles_elapsed = 0;
             }   
         }
+    }
+
+    uint32_t FPCoprocessor::get_conditional_bit() {
+        return static_cast<uint32_t>(ctrl_status_reg.c);
+    }
+
+    void FPCoprocessor::status_update() {
+        /* bind functions */
+        hardware_manager->set_signal(SIGNAL_FPCOND, std::bind(&FPCoprocessor::get_conditional_bit, this));
     }
 
 } /* namespace */

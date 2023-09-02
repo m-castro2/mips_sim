@@ -104,7 +104,7 @@ namespace mips_sim
         out << " -- forward "
             << (fp_reg?Utils::get_fp_register_name(reg)
                         :Utils::get_register_name(reg))
-            << " [0x" << Utils::hex32(wb_regvalue) << "] from WB/FWB" << endl;
+            << " [0x" << Utils::hex32(fwb_regvalue) << "] from WB/FWB" << endl;
         return fwb_regvalue;
         }
 

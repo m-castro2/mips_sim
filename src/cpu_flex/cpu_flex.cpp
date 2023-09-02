@@ -44,7 +44,7 @@ namespace mips_sim {
         StageWB* wb_stage = new StageWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
         StageFWB* fwb_stage = new StageFWB(control_unit, hardware_manager, gpr_bank, fpr_bank);
 
-        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank, fu));
+        cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank, fu, hardware_manager));
 
         ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
 
@@ -80,8 +80,6 @@ namespace mips_sim {
 
     bool CpuFlex::next_cycle( std::ostream &out )
     {   
-        //reset fp_stall
-        hardware_manager->set_fp_stall(false);
         Cpu::next_cycle( std::cout );
 
         for (auto stage: cpu_stages) {
@@ -112,8 +110,11 @@ namespace mips_sim {
 
         //print_diagram(std::cout);
 
+        //reset fp_stall
+        hardware_manager->set_fp_stall(false);
         // update segmentation registers
-        if (cp1_seg_reg.data[SR_INSTRUCTION] != 0) { // if cp1 finished a instruction, send it to mem, stalling <=EX
+        if (cp1_seg_reg.data[SR_INSTRUCTION] != 0) { 
+            // if both cp1 and EX finished an instruction, send CP1 to mem, stalling <=EX
             hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
             cpu_stages.at(STAGE_MEM)->set_seg_reg(cp1_seg_reg);
             cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
@@ -123,7 +124,6 @@ namespace mips_sim {
             cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
             int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
             if (fp_unit_type != -1) { //FP instruction
-                //check for movs, conds, bc?
                 cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
                 cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
             }

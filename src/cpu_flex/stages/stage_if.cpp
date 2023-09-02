@@ -21,11 +21,13 @@ namespace mips_sim {
     };
 
     int StageIF::work_l() {
-        if (hardware_manager->get_fp_stall()){
-            return 0;
-        }
         // reset wrflag
         seg_reg_wrflag = false;
+
+        if (hardware_manager->get_fp_stall()){
+            write_segmentation_register(tmp_seg_reg);
+            return 0;
+        }
         //reset tmp_seg_reg
         tmp_seg_reg = {};
 

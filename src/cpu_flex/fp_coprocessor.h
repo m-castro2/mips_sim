@@ -4,6 +4,7 @@
 #include "../cpu/component/registers_bank.h"
 #include "../../global_defs.h"
 #include "../cpu/component/forwarding_unit.h"
+#include "hardware_manager.h"
 
 #include <memory>
 
@@ -14,6 +15,7 @@ namespace mips_sim
 #define ADD_UNIT 0
 #define MULT_UNIT 1
 #define DIV_UNIT 2
+#define GENERAL_UNIT 3
 
 struct fp_unit {
     seg_reg_t seg_reg = {};
@@ -55,10 +57,13 @@ class FPCoprocessor
 
         std::shared_ptr<ForwardingUnit> fu {};
 
+        std::shared_ptr<HardwareManager> hardware_manager {};
+
     public:
   
         FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, 
-                    std::shared_ptr<FPRegistersBank> fpr_bank, std::shared_ptr<ForwardingUnit> fu);
+                    std::shared_ptr<FPRegistersBank> fpr_bank, std::shared_ptr<ForwardingUnit> fu,
+                    std::shared_ptr<HardwareManager> hardware_manager);
     
         ~FPCoprocessor();
 
@@ -75,6 +80,10 @@ class FPCoprocessor
         void fp_unit_compute(std::shared_ptr<fp_unit> unit);
 
         void reset();
+
+        uint32_t get_conditional_bit();
+
+        void status_update();
 };
 
 } /* namespace */

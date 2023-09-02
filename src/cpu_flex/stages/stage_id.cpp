@@ -82,13 +82,13 @@ namespace mips_sim {
     };
 
     int StageID::work_h() {
+        // reset wrflag
+        seg_reg_wrflag = false;
 
         if (hardware_manager->get_fp_stall()){
             return 0;
         }
         
-        // reset wrflag
-        seg_reg_wrflag = false;
         // reset pipeline_flush
         pipeline_flush_signal = 0;
         //reset cp1 flag
@@ -155,7 +155,7 @@ namespace mips_sim {
                         hardware_manager->get_stage_instruction(STAGE_MEM) == 0);
         }
 
-        if (instruction.opcode == OP_FTYPE)
+        if (instruction.opcode == OP_FTYPE && instruction.cop != 8) // BC1T and BC1F wont go to CP1
         {
             /* will go to coprocessor */
             //if rd || rt % 2 != -> Exception?
@@ -179,14 +179,20 @@ namespace mips_sim {
             case SUBOP_FPCLE:
             case SUBOP_FPCLT:
                 //no FU needed
-                //fp_unit_type = 3?
+                fp_unit_type = 3;
                 //check for dependencies
                 break;
             default:
                 break;
             }
             
-            //TODO: HDU
+
+            if (hdu->is_enabled())
+            {
+                bool can_forward = true; //no branching here
+                
+                //TODO: Detect hazard
+            }
 
             
             /* send data to next stage */
@@ -225,7 +231,7 @@ namespace mips_sim {
                 //TODO: Branch stage can be decided using additional signals.
                 // That way we don't need explicit comparisons here
                 bool can_forward = fu->is_enabled() &&
-                                ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ)
+                                ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ && instruction.cop != 8) //added check for BC1T/F here
                                     || hardware_manager->get_branch_stage() > STAGE_ID);
 
                 // check for hazards
