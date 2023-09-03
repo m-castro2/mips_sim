@@ -158,6 +158,7 @@ namespace mips_sim
             std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0}));
             fp_units.at(GENERAL_UNIT).push_back(gen);
         }
+
     }
 
     void FPCoprocessor::fp_unit_compute(std::shared_ptr<fp_unit> unit) {

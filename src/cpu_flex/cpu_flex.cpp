@@ -204,6 +204,8 @@ namespace mips_sim {
         for (auto stage: cpu_stages) {
             stage->reset();
         }
+
+        cp1->reset();
     }
 
     size_t CpuFlex::get_current_instruction(size_t stage) const

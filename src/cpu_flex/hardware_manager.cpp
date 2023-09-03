@@ -43,6 +43,7 @@ namespace mips_sim {
         for (int i = 0; i < status.size(); ++i) {
             status[i] = -1;
         }
+        fp_stall = false;
     }
 
     void HardwareManager::set_stage_instruction(int stage, uint32_t instruction) {

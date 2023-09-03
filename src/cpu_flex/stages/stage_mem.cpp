@@ -81,6 +81,7 @@ namespace mips_sim {
         tmp_seg_reg.data[SR_WORDREAD]    = word_read;
         tmp_seg_reg.data[SR_ALUOUTPUT]   = mem_addr; // come from alu output
         tmp_seg_reg.data[SR_REGDEST]     = seg_reg->data[SR_REGDEST];
+        tmp_seg_reg.data[SR_OPCODE]      = seg_reg->data[SR_OPCODE];
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
@@ -104,6 +105,13 @@ namespace mips_sim {
     }
 
     int StageMEM::reset() {
+        set_seg_reg({});
+        tmp_seg_reg = {};
+        next_seg_reg = {};
+        pipeline_flush_signal = 0;
+        addr_cbranch = 0;
+        addr_jbranch = 0;
+        addr_rbranch = 0;
         return 0;
     }
 

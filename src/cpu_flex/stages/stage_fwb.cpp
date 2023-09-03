@@ -42,7 +42,7 @@ namespace mips_sim {
         uint32_t mem_word_read    = seg_reg->data[SR_WORDREAD];
         uint32_t alu_output       = seg_reg->data[SR_ALUOUTPUT];
 
-        if (!control_unit->test(microinstruction, SIG_REGBANK) && (microinstruction != 0)) {
+        if (!control_unit->test(microinstruction, SIG_REGBANK) && (microinstruction != 0) && (seg_reg->data[SR_OPCODE] != OP_FTYPE)) {
             std::cout << "FWB Stage: " << Utils::decode_instruction(instruction_code) << endl;
             std::cout << "\t No FPRegister involved, continue" << endl;
             return 0;
@@ -63,7 +63,7 @@ namespace mips_sim {
             assert(0);
         }
 
-        if (control_unit->test(microinstruction, SIG_REGWRITE))
+        if (control_unit->test(microinstruction, SIG_REGWRITE) || (seg_reg->data[SR_OPCODE] == OP_FTYPE))
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
             std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
