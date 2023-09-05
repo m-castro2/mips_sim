@@ -247,4 +247,37 @@ namespace mips_sim {
         return true;
     }
 
+    std::vector<std::vector<int>> CpuFlex::get_stage_instruction_signals(int stage_count) {
+        std::vector<std::vector<int>> pipeline_signals {};
+        for (int i = 0; i < stage_count; ++i) {
+            std::vector<int> stage_signals {};
+            size_t inst_code = get_current_instruction(i);
+            instruction_t instruction = Utils::fill_instruction(inst_code);
+            uint32_t microinstruction;
+            if (instruction.code == 0)
+            {
+                /* NOP */
+                microinstruction = 0;
+            }
+            else
+            {
+                mi_index = control_unit->get_next_microinstruction_index(UNDEF32,
+                                                                    instruction.opcode,
+                                                                    instruction.funct);
+
+                microinstruction = control_unit->get_microinstruction(mi_index);
+
+                for (int j=0; j< SIGNAL_COUNT; ++j) {
+                    stage_signals.push_back(control_unit->test(microinstruction, static_cast<signal_t>(j)));
+                }
+            }
+            pipeline_signals.push_back(stage_signals);
+        }
+        return pipeline_signals;
+    }
+
+    std::map<int, std::map<std::string_view, int>> CpuFlex::get_hw_stage_instruction_signals(int stage_count) {
+        return hardware_manager->get_instruction_signal_map();
+    }
+
 } //namespace

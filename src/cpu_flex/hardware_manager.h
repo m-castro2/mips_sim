@@ -55,6 +55,9 @@ namespace mips_sim {
 
             bool fp_stall {};
 
+            //For GUI program
+            std::map<int, std::map<std::string_view, int>> instruction_signal_map {};
+
         public:
 
             HardwareManager(int branch_type, int branch_stage);
@@ -82,6 +85,10 @@ namespace mips_sim {
             bool get_fp_stall();
 
             void set_fp_stall(bool value);
+
+            std::map<int, std::map<std::string_view, int>> get_instruction_signal_map();
+
+            void add_instruction_signal(int stage, std::string_view key, int value);
 
     };
 } //namespace

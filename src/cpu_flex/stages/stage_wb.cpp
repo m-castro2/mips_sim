@@ -64,7 +64,9 @@ namespace mips_sim {
         std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
         //current_state[STAGE_WB] = pc_value-4;
 
-        switch (control_unit->test(microinstruction, SIG_MEM2REG))
+        uint32_t mem2reg = control_unit->test(microinstruction, SIG_MEM2REG);
+        hardware_manager->add_instruction_signal(STAGE_WB, "MEM_2_REG", mem2reg);
+        switch (mem2reg)
         {
         case 0:
             regwrite_value = mem_word_read; break;

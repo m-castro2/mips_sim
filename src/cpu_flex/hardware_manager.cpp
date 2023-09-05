@@ -62,5 +62,13 @@ namespace mips_sim {
         fp_stall = value;
     }
 
+    std::map<int, std::map<std::string_view, int>> HardwareManager::get_instruction_signal_map() {
+        return instruction_signal_map;
+    }
+
+    void HardwareManager::add_instruction_signal(int stage, std::string_view key, int value) {
+        instruction_signal_map[stage][key] = value;
+    }
+
 
 } //namespace

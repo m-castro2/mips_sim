@@ -71,20 +71,24 @@ namespace mips_sim {
         if (fu->is_enabled())
         {   
             uint32_t rt_value;
+            //TODO GUI FU sources
             rs_value = fu->forward_register(rs, rs_value, false, std::cout);
             if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
                 !control_unit->test(microinstruction, SIG_REGWRITE)) {
                 rt_value = fu->forward_register(rt, rt_value, opcode == OP_SWC1, std::cout);
             }
         }
-
+        uint32_t alu_src =  control_unit->test(microinstruction, SIG_ALUSRC);
+        hardware_manager->add_instruction_signal(STAGE_EX, "ALU_SRC", alu_src);
         alu_input_a = rs_value;
-        alu_input_b = control_unit->test(microinstruction, SIG_ALUSRC)
+        alu_input_b = alu_src
                     ? addr_i32
                     : rt_value;
         try
         {
-            switch (control_unit->test(microinstruction, SIG_ALUOP))
+            uint32_t alu_op = control_unit->test(microinstruction, SIG_ALUOP);
+            hardware_manager->add_instruction_signal(STAGE_EX, "ALU_OP", alu_op);
+            switch (alu_op)
             {
                 case 0:
                     alu_output = alu->compute_subop(alu_input_a, alu_input_b,

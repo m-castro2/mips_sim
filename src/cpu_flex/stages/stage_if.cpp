@@ -52,7 +52,12 @@ namespace mips_sim {
         std::cout << "   *** " << cur_instr_name << " : 0x"
             << Utils::hex32(instruction_code) << endl;
 
-        if (!hardware_manager->get_signal(SIGNAL_PCWRITE)()) {
+        uint32_t pc_write = hardware_manager->get_signal(SIGNAL_PCWRITE)();
+
+        hardware_manager->add_instruction_signal(STAGE_IF, "PC_WR", pc_write);
+        hardware_manager->add_instruction_signal(STAGE_IF, "PC_SRC", pc_src);
+        
+        if (!pc_write) {
             return 1;
         }
 

@@ -57,6 +57,10 @@ namespace mips_sim {
 
             void print_diagram( std::ostream &out) const;
 
+            std::vector<std::vector<int>> get_stage_instruction_signals(int stage_count);
+
+            std::map<int, std::map<std::string_view, int>> get_hw_stage_instruction_signals(int stage_count);
+
     };
 } //namespace
 #endif
