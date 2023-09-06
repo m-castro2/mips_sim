@@ -41,6 +41,7 @@ namespace mips_sim {
 
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
         {
+            hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 1);
             /* if conditional branches are resolved here */
             if (hardware_manager->get_branch_type() == BRANCH_FLUSH
                 || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
@@ -58,6 +59,7 @@ namespace mips_sim {
                 //next_pc = branch_addr; // sr_bank->set(SPECIAL_PC, branch_addr); diff??
             }
         }
+        hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 0);
 
         if (control_unit->test(microinstruction, SIG_MEMREAD))
         {

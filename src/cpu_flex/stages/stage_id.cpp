@@ -261,6 +261,7 @@ namespace mips_sim {
             {
                 if (control_unit->test(microinstruction, SIG_BRANCH))
                 {
+                    hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
                     // unconditional branches are resolved here 
                     bool branch_taken = process_branch(instruction,
                                                     rs_value, rt_value, pc_value);
@@ -279,9 +280,12 @@ namespace mips_sim {
                             sr_bank->set("pc", pc_value-4);
                     }
                 }
+                hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 0);
 
                 uint32_t reg_dest;
-                switch(control_unit->test(microinstruction, SIG_REGDST))
+                uint32_t sig_reg_dest = control_unit->test(microinstruction, SIG_REGDST);
+                hardware_manager->add_instruction_signal(STAGE_ID, "REG_DEST", sig_reg_dest);
+                switch(sig_reg_dest)
                 {
                     case 0:
                         reg_dest = instruction.rt; break;
@@ -310,8 +314,6 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
 
                 sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
-
-                hardware_manager->add_instruction_signal(STAGE_ID, "REG_DST", reg_dest);
        
             }
         }

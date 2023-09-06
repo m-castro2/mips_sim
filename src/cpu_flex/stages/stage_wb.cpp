@@ -78,7 +78,9 @@ namespace mips_sim {
             assert(0);
         }
 
-        if (control_unit->test(microinstruction, SIG_REGWRITE))
+        uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
+        hardware_manager->add_instruction_signal(STAGE_WB, "REG_WRITE", reg_write);
+        if (reg_write)
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
             std::cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
