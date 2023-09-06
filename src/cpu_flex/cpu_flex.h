@@ -61,6 +61,11 @@ namespace mips_sim {
 
             std::map<int, std::map<std::string_view, int>> get_hw_stage_instruction_signals(int stage_count);
 
+            void change_branch_stage(int new_branch_stage);
+            void change_branch_type(int new_branch_type);
+            void enable_hazard_detection_unit(bool value);
+            void enable_forwarding_unit(bool value);
+
     };
 } //namespace
 #endif

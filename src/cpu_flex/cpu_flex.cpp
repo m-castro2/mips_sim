@@ -280,4 +280,24 @@ namespace mips_sim {
         return hardware_manager->get_instruction_signal_map();
     }
 
+    void CpuFlex::change_branch_stage(int new_branch_stage) {
+        reset(true, false);
+        hardware_manager->set_branch_stage(new_branch_stage);
+    }
+
+    void CpuFlex::change_branch_type(int new_branch_type) {
+        reset(true, false);
+        hardware_manager->set_branch_type(new_branch_type);
+    }
+
+    void CpuFlex::enable_hazard_detection_unit(bool value) {
+        reset(true, false);
+        hdu->set_enabled(value);
+    }
+
+    void CpuFlex::enable_forwarding_unit(bool value) {
+        reset(true, false);
+        fu->set_enabled(value);
+    }
+
 } //namespace

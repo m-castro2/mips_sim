@@ -16,9 +16,18 @@ namespace mips_sim {
         return branch_type;
     }
 
+    void HardwareManager::set_branch_type(int new_type) {
+        branch_type = new_type;
+    }
+
     int HardwareManager::get_branch_stage() {
         return branch_stage;
     }
+
+    void HardwareManager::set_branch_stage(int new_stage) {
+        branch_stage = new_stage;
+    }
+
 
     int HardwareManager::get_status(int key) {
         return status[key];

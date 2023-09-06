@@ -66,7 +66,11 @@ namespace mips_sim {
 
             int get_branch_type();
 
+            void set_branch_type(int new_type);
+
             int get_branch_stage();
+
+            void set_branch_stage(int new_stage);
 
             int get_status(int key);
 
