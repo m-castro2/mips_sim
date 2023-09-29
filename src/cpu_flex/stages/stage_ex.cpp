@@ -73,9 +73,13 @@ namespace mips_sim {
             uint32_t rt_value;
             //TODO GUI FU sources
             rs_value = fu->forward_register(rs, rs_value, false, std::cout);
+            int rs_forward = fu->get_forwarded_from();
+            hardware_manager->add_instruction_signal(STAGE_EX, "RS_FU", rs_forward);
             if (control_unit->test(microinstruction, SIG_REGDST) == 1 ||
                 !control_unit->test(microinstruction, SIG_REGWRITE)) {
                 rt_value = fu->forward_register(rt, rt_value, opcode == OP_SWC1, std::cout);
+                int rt_forward = fu->get_forwarded_from();
+                hardware_manager->add_instruction_signal(STAGE_EX, "RT_FU", rt_forward);
             }
         }
         uint32_t alu_src =  control_unit->test(microinstruction, SIG_ALUSRC);

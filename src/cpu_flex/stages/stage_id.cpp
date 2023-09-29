@@ -280,7 +280,10 @@ namespace mips_sim {
                             sr_bank->set("pc", pc_value-4);
                     }
                 }
-                hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 0);
+                
+                else {
+                    hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 0);
+                }
 
                 uint32_t reg_dest;
                 uint32_t sig_reg_dest = control_unit->test(microinstruction, SIG_REGDST);

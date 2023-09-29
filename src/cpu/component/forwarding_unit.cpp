@@ -25,7 +25,7 @@ namespace mips_sim
         return enabled;
     }
 
-    uint32_t ForwardingUnit::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out) const 
+    uint32_t ForwardingUnit::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out) 
     {    
         if (!enabled)
             return UNDEF32;
@@ -40,8 +40,10 @@ namespace mips_sim
         uint32_t fwb_regvalue; /* can come from ALU output or Memory */
         uint32_t fwb_fpwrite  = control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGBANK);
 
-        if (reg == 0 && !fp_reg)
+        if (reg == 0 && !fp_reg) {
+            forwarded_from = 0;
             return reg_value;
+        }
 
         /* check EX/MEM register */
         if  (mem_regdest == reg
@@ -49,11 +51,12 @@ namespace mips_sim
             && !control_unit->test(seg_reg_ex_mem->data[SR_SIGNALS], SIG_MEMREAD)
             && control_unit->test(seg_reg_ex_mem->data[SR_SIGNALS], SIG_REGWRITE))
         {
-        out << " -- forward "
-            << (fp_reg?Utils::get_fp_register_name(reg)
-                    :Utils::get_register_name(reg))
-            << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
-        return mem_regvalue;
+            out << " -- forward "
+                << (fp_reg?Utils::get_fp_register_name(reg)
+                        :Utils::get_register_name(reg))
+                << " [0x" << Utils::hex32(mem_regvalue) << "] from EX/MEM" << endl;
+            forwarded_from = 1;
+            return mem_regvalue;
         }
 
         /* check MEM/WB register */
@@ -64,12 +67,15 @@ namespace mips_sim
         switch (control_unit->test(seg_reg_mem_wb->data[SR_SIGNALS], SIG_MEM2REG))
         {
             case 0:
+            forwarded_from = 2;
             wb_regvalue = seg_reg_mem_wb->data[SR_WORDREAD];
             break;
             case 1:
+            forwarded_from = 3;
             wb_regvalue = seg_reg_mem_wb->data[SR_ALUOUTPUT];
             break;
             case 2:
+            forwarded_from = 4;
             wb_regvalue = seg_reg_mem_wb->data[SR_PC];
             break;
             default:
@@ -90,12 +96,15 @@ namespace mips_sim
         switch (control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_MEM2REG))
         {
             case 0:
+            forwarded_from = 5;
             fwb_regvalue = seg_reg_wb_fwb->data[SR_WORDREAD];
             break;
             case 1:
+            forwarded_from = 6;
             fwb_regvalue = seg_reg_wb_fwb->data[SR_ALUOUTPUT];
             break;
             case 2:
+            forwarded_from = 7;
             fwb_regvalue = seg_reg_wb_fwb->data[SR_PC];
             break;
             default:
@@ -108,6 +117,7 @@ namespace mips_sim
         return fwb_regvalue;
         }
 
+        forwarded_from = 0;
         return reg_value;
     }
 
@@ -119,8 +129,14 @@ namespace mips_sim
         seg_reg_ex_mem = seg_reg;
     }
 
-    void ForwardingUnit::set_seg_reg_wb_fwb(std::shared_ptr<seg_reg_t> seg_reg){
+    void ForwardingUnit::set_seg_reg_wb_fwb(std::shared_ptr<seg_reg_t> seg_reg) {
         seg_reg_wb_fwb = seg_reg;
+    }
+
+    int ForwardingUnit::get_forwarded_from() {
+        int tmp = forwarded_from;
+        forwarded_from = -1;
+        return tmp;
     }
   
 } /* namespace */
