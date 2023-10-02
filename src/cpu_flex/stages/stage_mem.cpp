@@ -16,6 +16,12 @@ namespace mips_sim {
     };
 
     int StageMEM::work_l() {
+        if (next_pc != 0) {
+            sr_bank->set(SPECIAL_PC, branch_addr);
+        }
+        else {
+            sig_pcsrc = 0;
+        }
         return 0;
     };
 
@@ -24,6 +30,9 @@ namespace mips_sim {
         seg_reg_wrflag = false;
         //reset tmp_seg_reg
         tmp_seg_reg = {};
+        // reset pipeline_flush
+        pipeline_flush_signal = 0;
+        next_pc = 0;
 
         uint32_t word_read = UNDEF32;
 
@@ -33,7 +42,7 @@ namespace mips_sim {
         uint32_t microinstruction = seg_reg->data[SR_SIGNALS];
         uint32_t mem_addr         = seg_reg->data[SR_ALUOUTPUT];
         uint32_t rt_value         = seg_reg->data[SR_RTVALUE];
-        uint32_t branch_addr      = seg_reg->data[SR_RELBRANCH];
+        branch_addr      = seg_reg->data[SR_RELBRANCH];
         uint32_t branch_taken     = seg_reg->data[SR_ALUZERO];
 
         std::cout << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
@@ -56,10 +65,19 @@ namespace mips_sim {
             {
                 std::cout << "  BRANCH: Jump to 0x" << Utils::hex32(branch_addr) << endl;
 
-                //next_pc = branch_addr; // sr_bank->set(SPECIAL_PC, branch_addr); diff??
+                next_pc = branch_addr; //redundant
+                addr_cbranch = branch_addr;
+                
+                sig_pcsrc = 1;
+            }
+            else {
+                sig_pcsrc = 0;
             }
         }
-        hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 0);
+
+        else {
+            hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 0);
+        }
 
         if (control_unit->test(microinstruction, SIG_MEMREAD))
         {
@@ -118,12 +136,13 @@ namespace mips_sim {
         addr_cbranch = 0;
         addr_jbranch = 0;
         addr_rbranch = 0;
+        sig_pcsrc = 0;
         return 0;
     }
 
     // IBranchStage
     uint32_t StageMEM::get_sig_pcsrc() const {
-        return 0;
+        return sig_pcsrc;
     }
 
     uint32_t StageMEM::get_addr_cbranch() const {
@@ -141,6 +160,24 @@ namespace mips_sim {
     // IForwardableStage
     bool StageMEM::forward_register(int regId, int regValue) {
         return 0;
+    }
+
+    void StageMEM::status_update()
+    {
+        /* bind functions */
+        if (hardware_manager->get_branch_stage() == STAGE_MEM)
+            {
+            hardware_manager->set_signal(SIGNAL_PCSRC,   bind(&StageMEM::get_sig_pcsrc, this));
+            hardware_manager->set_signal(SIGNAL_CBRANCH, bind(&StageMEM::get_addr_cbranch, this));
+            hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageMEM::get_addr_rbranch, this));
+            hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageMEM::get_addr_jbranch, this));
+            hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageMEM::get_pipeline_flush_signal, this));
+            //hardware_manager->set_signal(SIGNAL_PCWRITE,   bind(&StageMEM::get_pc_write, this));
+        }
+    }
+
+    uint32_t StageMEM::get_pipeline_flush_signal() const {
+        return pipeline_flush_signal;
     }
 
 

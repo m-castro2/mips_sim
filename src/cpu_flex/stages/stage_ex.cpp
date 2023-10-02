@@ -155,6 +155,13 @@ namespace mips_sim {
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
+        if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH)) {
+            hardware_manager->add_instruction_signal(STAGE_EX, "RELBRANCH", 1);
+        }
+        else {
+            hardware_manager->add_instruction_signal(STAGE_EX, "RELBRANCH", 0);
+        }
+
         hardware_manager->set_stage_instruction(STAGE_EX, instruction_code);
 
         return 0;

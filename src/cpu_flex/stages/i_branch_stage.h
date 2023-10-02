@@ -17,7 +17,7 @@ namespace mips_sim {
 
             uint32_t addr_jbranch {};
 
-            int pipeline_flush_signal;
+            uint32_t pipeline_flush_signal;
         
         public:
             
@@ -30,6 +30,10 @@ namespace mips_sim {
             virtual uint32_t get_addr_rbranch() const = 0;
 
             virtual uint32_t get_addr_jbranch() const = 0;
+
+            virtual uint32_t get_pipeline_flush_signal() const = 0;
+
+            virtual void status_update() = 0;
 
     };
 

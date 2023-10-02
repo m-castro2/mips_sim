@@ -21,6 +21,10 @@ namespace mips_sim {
             std::shared_ptr<Memory> memory {};
 
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
+
+            uint32_t next_pc {};
+
+            uint32_t branch_addr {};
         
         public:
 
@@ -47,6 +51,10 @@ namespace mips_sim {
             uint32_t get_addr_rbranch() const override;
 
             uint32_t get_addr_jbranch() const override;
+
+            void status_update() override;
+
+            uint32_t get_pipeline_flush_signal() const override;
 
             // IForwardableStage
             bool forward_register(int regId, int regValue) override;

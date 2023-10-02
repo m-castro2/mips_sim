@@ -139,14 +139,14 @@ namespace mips_sim {
         cpu_stages.at(STAGE_FWB)->set_seg_reg(cpu_stages.at(STAGE_WB)->get_next_seg_reg());
 
         
-
-        if (int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)() > 0)
+        int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)();
+        if (stages_to_flush > 0)
         {
             for (int i = 1; i <= stages_to_flush; ++i)
                 cpu_stages.at(i)->set_seg_reg({});
 
             if (stages_to_flush >= STAGE_EX) {
-                cp1.reset();
+                cp1->reset();
             }
                 
         }
@@ -283,6 +283,7 @@ namespace mips_sim {
     void CpuFlex::change_branch_stage(int new_branch_stage) {
         reset(true, false);
         hardware_manager->set_branch_stage(new_branch_stage);
+        dynamic_cast<IBranchStage*>(cpu_stages.at(new_branch_stage))->status_update();
     }
 
     void CpuFlex::change_branch_type(int new_branch_type) {

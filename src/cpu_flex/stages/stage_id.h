@@ -51,8 +51,6 @@ namespace mips_sim {
 
             bool process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value);
 
-            void status_update();
-
             bool get_pc_write();
 
             int send_to_cp1();
@@ -65,6 +63,10 @@ namespace mips_sim {
             uint32_t get_addr_rbranch() const override;
 
             uint32_t get_addr_jbranch() const override;
+
+            uint32_t get_pipeline_flush_signal() const override;
+
+            void status_update() override;
 
     };
 

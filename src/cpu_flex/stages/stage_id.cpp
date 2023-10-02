@@ -261,7 +261,6 @@ namespace mips_sim {
             {
                 if (control_unit->test(microinstruction, SIG_BRANCH))
                 {
-                    hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
                     // unconditional branches are resolved here 
                     bool branch_taken = process_branch(instruction,
                                                     rs_value, rt_value, pc_value);
@@ -270,14 +269,19 @@ namespace mips_sim {
                     {
                         control_unit->set(microinstruction, SIG_PCSRC, 0);
                     }
+                    else {
+                        if (hardware_manager->get_branch_stage() == STAGE_ID) {
+                            hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
+                        }
+                    }
 
                     if (hardware_manager->get_branch_type() == BRANCH_FLUSH
                         || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
                     {
                         pipeline_flush_signal = 1;
 
-                        if (!branch_taken)
-                            sr_bank->set("pc", pc_value-4);
+                        //if (!branch_taken)
+                            //sr_bank->set("pc", pc_value-4);
                     }
                 }
                 
@@ -351,7 +355,10 @@ namespace mips_sim {
     }
 
     void StageID::status_update()
-    {
+    {   
+        //pc_write is always in ID
+        hardware_manager->set_signal(SIGNAL_PCWRITE, bind(&StageID::get_pc_write, this));
+
         /* bind functions */
         if (hardware_manager->get_branch_stage() == STAGE_ID)
             {
@@ -359,13 +366,16 @@ namespace mips_sim {
             hardware_manager->set_signal(SIGNAL_CBRANCH, bind(&StageID::get_addr_cbranch, this));
             hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageID::get_addr_rbranch, this));
             hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageID::get_addr_jbranch, this));
-            hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageID::pipeline_flush_signal, this));
-            hardware_manager->set_signal(SIGNAL_PCWRITE,   bind(&StageID::get_pc_write, this));
+            hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageID::get_pipeline_flush_signal, this));
         }
     }
 
     int StageID::send_to_cp1() {
         return fp_unit_type;
+    }
+
+    uint32_t StageID::get_pipeline_flush_signal() const {
+        return pipeline_flush_signal;
     }
 
 } //namespace
