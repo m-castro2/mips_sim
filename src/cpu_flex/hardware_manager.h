@@ -1,7 +1,7 @@
 #ifndef MIPS_SIM_HARDWARE_MANAGER_H
 #define MIPS_SIM_HARDWARE_MANAGER_H
 
-#include "stages/I_branch_stage.h"
+#include "stages/i_branch_stage.h"
 
 #include <functional>
 #include <map>
