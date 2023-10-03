@@ -93,6 +93,10 @@ namespace mips_sim {
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_READ", 0);
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_WRITE", 1);
         }
+        else {
+            hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_READ", 0);
+            hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_WRITE", 0);
+        }
 
         // ...
         std::cout << "   Address/ALU_Bypass: 0x" << Utils::hex32(mem_addr) << endl;
@@ -110,6 +114,9 @@ namespace mips_sim {
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
         hardware_manager->set_stage_instruction(STAGE_MEM, instruction_code);
+
+        uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REG_WRITE", reg_write);
 
         if (!write_segmentation_register(tmp_seg_reg))
         {

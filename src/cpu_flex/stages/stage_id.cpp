@@ -225,6 +225,19 @@ namespace mips_sim {
                 rt_value = read_fp_register(instruction.rt);
             else
                 rt_value = read_register(instruction.rt);
+            
+            // get data for GUI
+            hardware_manager->add_instruction_signal(STAGE_ID, "RS_REG", instruction.rs);
+            hardware_manager->add_instruction_signal(STAGE_ID, "RS_VALUE", rs_value);
+            hardware_manager->add_instruction_signal(STAGE_ID, "RT_REG", instruction.rs);
+            hardware_manager->add_instruction_signal(STAGE_ID, "RT_VALUE", rt_value);
+            // data EX will use
+            uint32_t alu_src =  control_unit->test(microinstruction, SIG_ALUSRC);
+            hardware_manager->add_instruction_signal(STAGE_ID, "ALU_SRC", alu_src);
+            hardware_manager->add_instruction_signal(STAGE_ID, "IMM_VALUE", instruction.addr_i);
+            // data WB will use
+            uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
+            hardware_manager->add_instruction_signal(STAGE_ID, "REG_WRITE", reg_write);
 
             if (hdu->is_enabled())
             {
@@ -250,7 +263,7 @@ namespace mips_sim {
 
                 if (stall) cout << "   Hazard detected: Pipeline stall" << endl;
             } 
-
+            hardware_manager->add_instruction_signal(STAGE_ID, "STALL", stall);
             pc_write = !stall;
             if (stall)
             {
