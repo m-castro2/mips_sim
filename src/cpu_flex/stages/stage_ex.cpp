@@ -67,6 +67,10 @@ namespace mips_sim {
 
         uint32_t alu_input_a, alu_input_b, alu_output = UNDEF32;
 
+        hardware_manager->add_instruction_signal(STAGE_EX, "RS", rs);
+        hardware_manager->add_instruction_signal(STAGE_EX, "RT", rt);
+        hardware_manager->add_instruction_signal(STAGE_EX, "ADDR_I", addr_i32);
+
         /* forwarding unit */
         if (fu->is_enabled())
         {   
@@ -87,6 +91,8 @@ namespace mips_sim {
         alu_input_b = alu_src
                     ? addr_i32
                     : rt_value;
+        hardware_manager->add_instruction_signal(STAGE_EX, "ALU_A", alu_input_a);
+        hardware_manager->add_instruction_signal(STAGE_EX, "ALU_B", alu_input_b);
         try
         {
             uint32_t alu_op = control_unit->test(microinstruction, SIG_ALUOP);
@@ -162,6 +168,11 @@ namespace mips_sim {
         }
 
         hardware_manager->set_stage_instruction(STAGE_EX, instruction_code);
+
+        uint32_t mem_write = control_unit->test(microinstruction, SIG_MEMWRITE);
+        hardware_manager->add_instruction_signal(STAGE_EX, "MEM_WRITE", mem_write);
+
+        hardware_manager->add_instruction_signal(STAGE_EX, "RT_VALUE", rt_value);
 
         return 0;
     }

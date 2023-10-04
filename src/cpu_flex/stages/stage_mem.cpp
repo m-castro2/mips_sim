@@ -117,6 +117,11 @@ namespace mips_sim {
 
         uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
         hardware_manager->add_instruction_signal(STAGE_MEM, "REG_WRITE", reg_write);
+        
+        // FU values
+        uint32_t mem_regdest  = seg_reg->data[SR_REGDEST];
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REGDEST", mem_regdest);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REGVALUE", mem_addr);
 
         if (!write_segmentation_register(tmp_seg_reg))
         {

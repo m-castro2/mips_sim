@@ -95,6 +95,10 @@ namespace mips_sim {
     
         }
 
+        // FU values
+        hardware_manager->add_instruction_signal(STAGE_WB, "REGDEST", reg_dest);
+        hardware_manager->add_instruction_signal(STAGE_WB, "REGVALUE", regwrite_value);
+
         return 0;
     }
 
