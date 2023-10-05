@@ -47,6 +47,7 @@ namespace mips_sim {
 
         std::cout << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
         hardware_manager->set_status(STAGE_MEM, pc_value-4);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "PC", pc_value - 4);
 
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
         {
@@ -117,7 +118,7 @@ namespace mips_sim {
 
         uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
         hardware_manager->add_instruction_signal(STAGE_MEM, "REG_WRITE", reg_write);
-        
+
         // FU values
         uint32_t mem_regdest  = seg_reg->data[SR_REGDEST];
         hardware_manager->add_instruction_signal(STAGE_MEM, "REGDEST", mem_regdest);

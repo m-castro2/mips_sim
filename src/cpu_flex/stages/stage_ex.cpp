@@ -70,6 +70,7 @@ namespace mips_sim {
         hardware_manager->add_instruction_signal(STAGE_EX, "RS", rs);
         hardware_manager->add_instruction_signal(STAGE_EX, "RT", rt);
         hardware_manager->add_instruction_signal(STAGE_EX, "ADDR_I", addr_i32);
+        hardware_manager->add_instruction_signal(STAGE_EX, "PC", pc_value - 4);
 
         /* forwarding unit */
         if (fu->is_enabled())

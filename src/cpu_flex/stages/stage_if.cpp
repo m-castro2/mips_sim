@@ -57,6 +57,8 @@ namespace mips_sim {
         hardware_manager->add_instruction_signal(STAGE_IF, "PC_WR", pc_write);
         hardware_manager->add_instruction_signal(STAGE_IF, "PC_SRC", pc_src);
         
+        hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc);
+
         if (!pc_write) {
             return 1;
         }
@@ -82,6 +84,7 @@ namespace mips_sim {
         }
 
         sr_bank->set(SPECIAL_PC, current_pc);
+        hardware_manager->add_instruction_signal(STAGE_IF, "PC", current_pc);
         
         /* next instruction */
         tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
