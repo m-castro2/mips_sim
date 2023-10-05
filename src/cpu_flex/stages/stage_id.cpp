@@ -56,6 +56,10 @@ namespace mips_sim {
         addr_rbranch = rs_value;
         addr_jbranch = (pc_value & 0xF0000000) | (instruction.addr_j << 2);
 
+        hardware_manager->add_instruction_signal(STAGE_ID, "C_BRANCH", addr_cbranch);
+        hardware_manager->add_instruction_signal(STAGE_ID, "R_BRANCH", addr_rbranch);
+        hardware_manager->add_instruction_signal(STAGE_ID, "J_BRANCH", addr_jbranch);
+
         bool branch_taken = conditional_branch
             || opcode == OP_J || opcode == OP_JAL
             || (opcode == OP_RTYPE && (funct == SUBOP_JR || funct == SUBOP_JALR));
@@ -316,6 +320,8 @@ namespace mips_sim {
                     default:
                         assert(0);
                 }
+
+                hardware_manager->add_instruction_signal(STAGE_ID, "REG_DEST_REGISTER", reg_dest);
 
                 /* send data to next stage */
                 tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
