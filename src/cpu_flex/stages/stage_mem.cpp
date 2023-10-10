@@ -45,6 +45,8 @@ namespace mips_sim {
         branch_addr      = seg_reg->data[SR_RELBRANCH];
         uint32_t branch_taken     = seg_reg->data[SR_ALUZERO];
 
+        hardware_manager->add_instruction_signal(STAGE_MEM, "RT_VALUE", rt_value);
+
         std::cout << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
         hardware_manager->set_status(STAGE_MEM, pc_value-4);
         hardware_manager->add_instruction_signal(STAGE_MEM, "PC", pc_value - 4);
@@ -121,8 +123,10 @@ namespace mips_sim {
 
         // FU values
         uint32_t mem_regdest  = seg_reg->data[SR_REGDEST];
-        hardware_manager->add_instruction_signal(STAGE_MEM, "REGDEST", mem_regdest);
-        hardware_manager->add_instruction_signal(STAGE_MEM, "REGVALUE", mem_addr);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REG_DEST_REGISTER", mem_regdest);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REG_VALUE", mem_addr);
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_OUT", word_read);
 
         if (!write_segmentation_register(tmp_seg_reg))
         {

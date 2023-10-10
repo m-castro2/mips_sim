@@ -92,6 +92,8 @@ namespace mips_sim {
 
         tmp_seg_reg.data[SR_IID] = loaded_instruction_index;
 
+        hardware_manager->add_instruction_signal(STAGE_IF, "INSTRUCTION", instruction_code);
+
         write_segmentation_register(tmp_seg_reg);
 
         return 0;

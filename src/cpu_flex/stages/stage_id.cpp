@@ -341,6 +341,8 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
 
                 sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
+
+                hardware_manager->add_instruction_signal(STAGE_ID, "INSTRUCTION", instruction_code);
        
             }
         }

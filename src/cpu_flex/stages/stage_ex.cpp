@@ -137,6 +137,8 @@ namespace mips_sim {
             throw Exception::e(e, err_msg, err_v);
         }
 
+        hardware_manager->add_instruction_signal(STAGE_EX, "ALU_OUT", alu_output);
+
         if (hi_lo_updated)
         {
             sr_bank->set(SPECIAL_HI, hi_reg);
@@ -174,6 +176,8 @@ namespace mips_sim {
         hardware_manager->add_instruction_signal(STAGE_EX, "MEM_WRITE", mem_write);
 
         hardware_manager->add_instruction_signal(STAGE_EX, "RT_VALUE", rt_value);
+
+        hardware_manager->add_instruction_signal(STAGE_EX, "REG_DEST_REGISTER", seg_reg->data[SR_REGDEST]);
 
         return 0;
     }

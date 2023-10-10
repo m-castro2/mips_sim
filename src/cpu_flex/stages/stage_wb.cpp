@@ -96,8 +96,8 @@ namespace mips_sim {
         }
 
         // FU values
-        hardware_manager->add_instruction_signal(STAGE_WB, "REGDEST", reg_dest);
-        hardware_manager->add_instruction_signal(STAGE_WB, "REGVALUE", regwrite_value);
+        hardware_manager->add_instruction_signal(STAGE_WB, "REG_DEST_REGISTER", reg_dest);
+        hardware_manager->add_instruction_signal(STAGE_WB, "REG_VALUE", regwrite_value);
 
         hardware_manager->add_instruction_signal(STAGE_WB, "PC", pc_value - 4);
 
