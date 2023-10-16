@@ -66,6 +66,8 @@ namespace mips_sim {
             void enable_hazard_detection_unit(bool value);
             void enable_forwarding_unit(bool value);
 
+            std::vector<std::string> get_memory_data();
+
     };
 } //namespace
 #endif

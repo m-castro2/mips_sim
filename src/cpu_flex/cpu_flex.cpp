@@ -301,4 +301,33 @@ namespace mips_sim {
         fu->set_enabled(value);
     }
 
+    std::vector<std::string> CpuFlex::get_memory_data() {
+        uint32_t start = MEM_DATA_START;
+        uint32_t length = MEM_DATA_SIZE;
+        std::vector<std::string> data_array {};
+
+        try
+        {
+            for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
+            {
+                uint32_t word = memory->mem_read_32(mem_addr);
+                data_array.push_back(Utils::hex32(mem_addr));
+                data_array.push_back(Utils::hex32(word));
+                word = memory->mem_read_32(mem_addr + 4);
+                data_array.push_back(Utils::hex32(word));
+                word = memory->mem_read_32(mem_addr + 8);
+                data_array.push_back(Utils::hex32(word));
+                word = memory->mem_read_32(mem_addr + 12);
+                data_array.push_back(Utils::hex32(word));
+            }
+        }
+        catch (int)
+        {
+            //out << endl;
+            /* ignore */
+        }
+        
+        return data_array;
+    }
+
 } //namespace
