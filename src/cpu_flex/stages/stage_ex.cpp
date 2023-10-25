@@ -86,6 +86,10 @@ namespace mips_sim {
                 hardware_manager->add_instruction_signal(STAGE_EX, "RT_FU", rt_forward);
             }
         }
+        else { // 0 means value wasnt forwarded
+            hardware_manager->add_instruction_signal(STAGE_EX, "RS_FU", 0);
+            hardware_manager->add_instruction_signal(STAGE_EX, "RT_FU", 0);
+        }
         uint32_t alu_src =  control_unit->test(microinstruction, SIG_ALUSRC);
         hardware_manager->add_instruction_signal(STAGE_EX, "ALU_SRC", alu_src);
         alu_input_a = rs_value;
