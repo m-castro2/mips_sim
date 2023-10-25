@@ -102,6 +102,8 @@ namespace mips_sim {
         {
             uint32_t alu_op = control_unit->test(microinstruction, SIG_ALUOP);
             hardware_manager->add_instruction_signal(STAGE_EX, "ALU_OP", alu_op);
+            hardware_manager->add_instruction_signal(STAGE_EX, "OPCODE", opcode);
+            hardware_manager->add_instruction_signal(STAGE_EX, "FUNCT", funct);
             switch (alu_op)
             {
                 case 0:
