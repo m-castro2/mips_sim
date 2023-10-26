@@ -234,7 +234,7 @@ namespace mips_sim {
             // get data for GUI
             hardware_manager->add_instruction_signal(STAGE_ID, "RS_REG", instruction.rs);
             hardware_manager->add_instruction_signal(STAGE_ID, "RS_VALUE", rs_value);
-            hardware_manager->add_instruction_signal(STAGE_ID, "RT_REG", instruction.rs);
+            hardware_manager->add_instruction_signal(STAGE_ID, "RT_REG", instruction.rt);
             hardware_manager->add_instruction_signal(STAGE_ID, "RT_VALUE", rt_value);
             // data EX will use
             uint32_t alu_src =  control_unit->test(microinstruction, SIG_ALUSRC);
