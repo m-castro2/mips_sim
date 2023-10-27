@@ -23,6 +23,10 @@ namespace mips_sim {
 
             std::vector<uint32_t> loaded_instructions;
 
+            uint32_t delayed_pc {};
+
+            bool delay = false;
+
         public:
 
             StageIF(std::shared_ptr<Memory> memory, std::shared_ptr<HardwareManager> hardware_manager, 

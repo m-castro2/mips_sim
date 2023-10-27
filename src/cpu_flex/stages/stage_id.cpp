@@ -155,10 +155,6 @@ namespace mips_sim {
 
         if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
         {   
-            int a, b, c;
-            a = hardware_manager->get_stage_instruction(STAGE_ID);
-            b = hardware_manager->get_stage_instruction(STAGE_EX);
-            c = hardware_manager->get_stage_instruction(STAGE_MEM);
             //stalls until previous instructions finished
             stall = !(hardware_manager->get_stage_instruction(STAGE_MEM) == 0 &&
                         hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&

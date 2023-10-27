@@ -68,6 +68,10 @@ namespace mips_sim {
             case 0:
                 current_pc += 4; break;
             case 1:
+                if (hardware_manager->get_branch_type() == BRANCH_DELAYED) {
+                    delayed_pc = current_pc;
+                    delay = true;
+                }
                 current_pc = hardware_manager->get_signal(SIGNAL_CBRANCH)();
                 // current_pc = hardware_manager->get_instruction_signal_map()[hardware_manager->get_branch_type() != STAGE_ID ? STAGE_MEM : STAGE_ID]["C_BRANCH"];
                 cout << "   !!! Conditional branch taken >> 0x"
@@ -87,11 +91,21 @@ namespace mips_sim {
         }
 
         sr_bank->set(SPECIAL_PC, current_pc);
-        hardware_manager->add_instruction_signal(STAGE_IF, "PC", current_pc);
+        if (delay){
+            hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", delayed_pc);
+            tmp_seg_reg.data[SR_PC] = delayed_pc + 4;
+        }
+        else {
+            hardware_manager->add_instruction_signal(STAGE_IF, "PC", current_pc);
+            tmp_seg_reg.data[SR_PC] = current_pc;
+        }
+
+        if (delay) {
+            delay = false; // delay init to 2 when delayed_pc is set, allows for comparison next cycle
+        }
         
         /* next instruction */
         tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        tmp_seg_reg.data[SR_PC] = current_pc;
 
         tmp_seg_reg.data[SR_IID] = loaded_instruction_index;
 
