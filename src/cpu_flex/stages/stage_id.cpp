@@ -130,7 +130,7 @@ namespace mips_sim {
         << endl;
 
         hardware_manager->set_status(STAGE_ID, pc_value - 4);
-        hardware_manager->add_instruction_signal(STAGE_ID, "PC", pc_value - 4);
+        hardware_manager->add_instruction_signal(STAGE_ID, "PC", pc_value);
 
         uint32_t microinstruction {};
         if (instruction.code == 0)
@@ -298,8 +298,8 @@ namespace mips_sim {
                     {
                         pipeline_flush_signal = 1;
 
-                        //if (!branch_taken)
-                            //sr_bank->set("pc", pc_value-4);
+                        if (!branch_taken)
+                            sr_bank->set("pc", pc_value - 4);
                     }
                 }
                 

@@ -49,7 +49,7 @@ namespace mips_sim {
 
         std::cout << "MEM stage: " << Utils::decode_instruction(instruction_code) << endl;
         hardware_manager->set_status(STAGE_MEM, pc_value-4);
-        hardware_manager->add_instruction_signal(STAGE_MEM, "PC", pc_value - 4);
+        hardware_manager->add_instruction_signal(STAGE_MEM, "PC", pc_value);
 
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
         {

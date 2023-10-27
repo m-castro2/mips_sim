@@ -99,7 +99,7 @@ namespace mips_sim {
         hardware_manager->add_instruction_signal(STAGE_WB, "REG_DEST_REGISTER", reg_dest);
         hardware_manager->add_instruction_signal(STAGE_WB, "REG_VALUE", regwrite_value);
 
-        hardware_manager->add_instruction_signal(STAGE_WB, "PC", pc_value - 4);
+        hardware_manager->add_instruction_signal(STAGE_WB, "PC", pc_value);
 
         return 0;
     }

@@ -56,8 +56,8 @@ namespace mips_sim {
 
         hardware_manager->add_instruction_signal(STAGE_IF, "PC_WR", pc_write);
         hardware_manager->add_instruction_signal(STAGE_IF, "PC_SRC", pc_src);
-        
-        hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc);
+
+        hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc); //ID PC
 
         if (!pc_write) {
             return 1;
@@ -69,17 +69,14 @@ namespace mips_sim {
                 current_pc += 4; break;
             case 1:
                 current_pc = hardware_manager->get_signal(SIGNAL_CBRANCH)();
-                hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc);
                 cout << "   !!! Conditional branch taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             case 2:
                 current_pc = hardware_manager->get_signal(SIGNAL_RBRANCH)();
-                hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc);
                 cout << "   !!! Register jump taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             case 3:
                 current_pc = hardware_manager->get_signal(SIGNAL_JBRANCH)();
-                hardware_manager->add_instruction_signal(STAGE_IF, "PREV_PC", current_pc);
                 cout << "   !!! Unconditional jump taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             default:
