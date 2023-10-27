@@ -154,10 +154,15 @@ namespace mips_sim {
         bool stall = false;
 
         if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
-        {
+        {   
+            int a, b, c;
+            a = hardware_manager->get_stage_instruction(STAGE_ID);
+            b = hardware_manager->get_stage_instruction(STAGE_EX);
+            c = hardware_manager->get_stage_instruction(STAGE_MEM);
             //stalls until previous instructions finished
-            stall = !(hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&
-                        hardware_manager->get_stage_instruction(STAGE_MEM) == 0);
+            stall = !(hardware_manager->get_stage_instruction(STAGE_MEM) == 0 &&
+                        hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&
+                        hardware_manager->get_stage_instruction(STAGE_ID) == instruction_code); // previous cycle instruction is now in ex
         }
 
         if (instruction.opcode == OP_FTYPE && instruction.cop != 8) // BC1T and BC1F wont go to CP1
@@ -298,6 +303,8 @@ namespace mips_sim {
                     {
                         pipeline_flush_signal = 1;
 
+                        hardware_manager->set_flush_signal(pipeline_flush_signal);
+
                         if (!branch_taken)
                             sr_bank->set("pc", pc_value - 4);
                     }
@@ -347,6 +354,12 @@ namespace mips_sim {
             }
         }
 
+        if (hardware_manager->get_branch_stage() == STAGE_ID || hardware_manager->get_flush_signal() == 1) {
+            hardware_manager->set_flush_signal(pipeline_flush_signal);
+        }
+
+        hardware_manager->set_stage_instruction(STAGE_ID, instruction_code);
+
         return 0;
     }
 
@@ -378,16 +391,16 @@ namespace mips_sim {
 
     void StageID::status_update()
     {   
-        //pc_write is always in ID
+        //always in ID
         hardware_manager->set_signal(SIGNAL_PCWRITE, bind(&StageID::get_pc_write, this));
+        hardware_manager->set_signal(SIGNAL_PCSRC,   bind(&StageID::get_sig_pcsrc, this));
+        hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageID::get_addr_rbranch, this));
+        hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageID::get_addr_jbranch, this));
 
         /* bind functions */
         if (hardware_manager->get_branch_stage() == STAGE_ID)
             {
-            hardware_manager->set_signal(SIGNAL_PCSRC,   bind(&StageID::get_sig_pcsrc, this));
             hardware_manager->set_signal(SIGNAL_CBRANCH, bind(&StageID::get_addr_cbranch, this));
-            hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageID::get_addr_rbranch, this));
-            hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageID::get_addr_jbranch, this));
             hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageID::get_pipeline_flush_signal, this));
         }
     }

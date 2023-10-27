@@ -55,6 +55,8 @@ namespace mips_sim {
 
             bool fp_stall {};
 
+            int flush_signal {};
+
             //For GUI program
             std::map<int, std::map<std::string_view, int>> instruction_signal_map {};
 
@@ -93,6 +95,10 @@ namespace mips_sim {
             std::map<int, std::map<std::string_view, int>> get_instruction_signal_map();
 
             void add_instruction_signal(int stage, std::string_view key, int value);
+
+            int get_flush_signal();
+
+            void set_flush_signal(int value);
 
     };
 } //namespace

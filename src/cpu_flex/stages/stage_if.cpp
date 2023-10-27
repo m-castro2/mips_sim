@@ -69,14 +69,17 @@ namespace mips_sim {
                 current_pc += 4; break;
             case 1:
                 current_pc = hardware_manager->get_signal(SIGNAL_CBRANCH)();
+                // current_pc = hardware_manager->get_instruction_signal_map()[hardware_manager->get_branch_type() != STAGE_ID ? STAGE_MEM : STAGE_ID]["C_BRANCH"];
                 cout << "   !!! Conditional branch taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             case 2:
                 current_pc = hardware_manager->get_signal(SIGNAL_RBRANCH)();
+                // current_pc = hardware_manager->get_instruction_signal_map()[STAGE_ID]["R_BRANCH"];
                 cout << "   !!! Register jump taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             case 3:
                 current_pc = hardware_manager->get_signal(SIGNAL_JBRANCH)();
+                // current_pc = hardware_manager->get_instruction_signal_map()[STAGE_ID]["J_BRANCH"];
                 cout << "   !!! Unconditional jump taken >> 0x"
                     << Utils::hex32(current_pc) << endl; break;
             default:

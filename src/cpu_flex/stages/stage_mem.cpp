@@ -51,6 +51,10 @@ namespace mips_sim {
         hardware_manager->set_status(STAGE_MEM, pc_value-4);
         hardware_manager->add_instruction_signal(STAGE_MEM, "PC", pc_value);
 
+        hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH_TAKEN", branch_taken);
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REL_BRANCH", branch_addr);
+
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
         {
             hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 1);
@@ -59,6 +63,8 @@ namespace mips_sim {
                 || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
             {
                 pipeline_flush_signal = 3;
+
+                hardware_manager->set_flush_signal(pipeline_flush_signal);
 
                 if (!branch_taken)
                     sr_bank->set(SPECIAL_PC, pc_value-4);
@@ -116,7 +122,6 @@ namespace mips_sim {
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 
-        hardware_manager->set_stage_instruction(STAGE_MEM, instruction_code);
 
         uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
         hardware_manager->add_instruction_signal(STAGE_MEM, "REG_WRITE", reg_write);
@@ -134,10 +139,16 @@ namespace mips_sim {
             assert(0);
         }
 
+        if (hardware_manager->get_branch_stage() == STAGE_MEM && hardware_manager->get_flush_signal() != 1) {
+            // skip if flush signal has been set by ID because J branches
+            hardware_manager->set_flush_signal(pipeline_flush_signal);
+        }
+
         return 0;
     }
 
     int StageMEM::rising_flank() {
+        hardware_manager->set_stage_instruction(STAGE_MEM, seg_reg->data[SR_INSTRUCTION]);
         return 0;
     }
 
@@ -184,10 +195,10 @@ namespace mips_sim {
         /* bind functions */
         if (hardware_manager->get_branch_stage() == STAGE_MEM)
             {
-            hardware_manager->set_signal(SIGNAL_PCSRC,   bind(&StageMEM::get_sig_pcsrc, this));
+            // hardware_manager->set_signal(SIGNAL_PCSRC,   bind(&StageMEM::get_sig_pcsrc, this));
             hardware_manager->set_signal(SIGNAL_CBRANCH, bind(&StageMEM::get_addr_cbranch, this));
-            hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageMEM::get_addr_rbranch, this));
-            hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageMEM::get_addr_jbranch, this));
+            // hardware_manager->set_signal(SIGNAL_RBRANCH, bind(&StageMEM::get_addr_rbranch, this));
+            // hardware_manager->set_signal(SIGNAL_JBRANCH, bind(&StageMEM::get_addr_jbranch, this));
             hardware_manager->set_signal(SIGNAL_FLUSH,   bind(&StageMEM::get_pipeline_flush_signal, this));
             //hardware_manager->set_signal(SIGNAL_PCWRITE,   bind(&StageMEM::get_pc_write, this));
         }

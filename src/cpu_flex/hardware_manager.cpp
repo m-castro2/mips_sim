@@ -79,5 +79,13 @@ namespace mips_sim {
         instruction_signal_map[stage][key] = value;
     }
 
+    int HardwareManager::get_flush_signal() {
+        return flush_signal;
+    }
+
+    void HardwareManager::set_flush_signal(int value){
+        flush_signal = value;
+    }
+
 
 } //namespace

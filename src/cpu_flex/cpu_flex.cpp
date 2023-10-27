@@ -139,7 +139,7 @@ namespace mips_sim {
         cpu_stages.at(STAGE_FWB)->set_seg_reg(cpu_stages.at(STAGE_WB)->get_next_seg_reg());
 
         
-        int stages_to_flush = hardware_manager->get_signal(SIGNAL_FLUSH)();
+        int stages_to_flush = hardware_manager->get_flush_signal();
         if (stages_to_flush > 0)
         {
             for (int i = 1; i <= stages_to_flush; ++i)

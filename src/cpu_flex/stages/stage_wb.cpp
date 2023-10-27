@@ -101,6 +101,8 @@ namespace mips_sim {
 
         hardware_manager->add_instruction_signal(STAGE_WB, "PC", pc_value);
 
+        hardware_manager->set_stage_instruction(STAGE_WB, instruction_code);
+
         return 0;
     }
 
