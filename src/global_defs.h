@@ -279,4 +279,10 @@ struct seg_reg_t {
 #define SPECIAL_BADVADDR "badvaddr"
 #define SPECIAL_CAUSE    "cause"
 
+typedef struct {
+    uint32_t id;
+    std::string message;
+    uint32_t value;
+} syscall_struct_t;
+
 #endif

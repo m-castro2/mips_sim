@@ -33,6 +33,9 @@ namespace mips_sim {
         // reset wrflag
         seg_reg_wrflag = false;
 
+        //reset syscall struct
+        syscall_struct.id = 0;
+
         if (hardware_manager->get_fp_stall()){
             return 0;
         }
@@ -138,7 +141,7 @@ namespace mips_sim {
         catch(int e)
         {
          if (e == SYSCALL_EXCEPTION)
-            syscall(gpr_bank->get("$v0"));
+            syscall_struct = syscall(gpr_bank->get("$v0"));
         else
             throw Exception::e(e, err_msg, err_v);
         }
@@ -203,11 +206,16 @@ namespace mips_sim {
     }
 
     int StageEX::reset() {
+        syscall_struct.id = 0;
         return 0;
     }
 
-    void StageEX::set_syscall(std::function<void( uint32_t )> p_syscall) {
+    void StageEX::set_syscall(std::function<syscall_struct_t( uint32_t )> p_syscall) {
         syscall = p_syscall;
+    }
+
+    syscall_struct_t StageEX::get_syscall_struct() {
+        return syscall_struct;
     }
 
 } //namespace

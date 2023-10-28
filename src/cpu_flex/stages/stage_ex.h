@@ -22,7 +22,9 @@ namespace mips_sim {
             std::shared_ptr<SpecialRegistersBank> sr_bank {};
             std::shared_ptr<GPRegistersBank> gpr_bank {};
 
-            std::function<void( uint32_t )> syscall;
+            std::function<syscall_struct_t( uint32_t )> syscall;
+
+            syscall_struct_t syscall_struct {};
         
         public:
 
@@ -42,7 +44,9 @@ namespace mips_sim {
 
             int reset() override;
 
-            void set_syscall(std::function<void( uint32_t )>);
+            void set_syscall(std::function<syscall_struct_t( uint32_t )>);
+
+            syscall_struct_t get_syscall_struct();
 
     };
 

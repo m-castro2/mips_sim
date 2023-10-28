@@ -8,6 +8,7 @@
 #include "stages/stage_fwb.h"
 
 #include "../utils.h"
+#include "../exception.h"
 
 #include<cassert>
 #include <memory>
@@ -46,7 +47,7 @@ namespace mips_sim {
 
         cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank, fu, hardware_manager));
 
-        ex_stage->set_syscall(std::bind(&CpuFlex::syscall_throw_exception, this, std::placeholders::_1));
+        ex_stage->set_syscall(std::bind(&CpuFlex::syscall_struct, this, std::placeholders::_1));
 
         if_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 10));
         ex_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 7));
@@ -149,6 +150,11 @@ namespace mips_sim {
                 cp1->reset();
             }
                 
+        }
+
+        syscall_struct_t syscall_struct = static_cast<StageEX*>(cpu_stages.at(STAGE_EX))->get_syscall_struct();
+        if (syscall_struct.id != 0) {
+            throw Exception::e(syscall_struct.id, syscall_struct.message, syscall_struct.value);
         }
 
         return ready;

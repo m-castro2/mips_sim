@@ -246,7 +246,7 @@ void Cpu::syscall( uint32_t value )
   }
 }
 
-void Cpu::syscall_throw_exception( uint32_t value )
+syscall_struct_t Cpu::syscall_struct( uint32_t value )
 {
   string message {};
   switch(value)
@@ -413,7 +413,7 @@ void Cpu::syscall_throw_exception( uint32_t value )
     default:
       throw Exception::e(CPU_SYSCALL_EXCEPTION, "Undefined syscall", value);
   }
-  throw Exception::e(CPU_SYSCALL_EXCEPTION, message, value);
+  return syscall_struct_t {CPU_SYSCALL_EXCEPTION, message, value};
 }
 
 string Cpu::register_str(uint8_t reg_id, bool fp, bool show_value, bool show_double) const
