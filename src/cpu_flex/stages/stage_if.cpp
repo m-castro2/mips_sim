@@ -63,15 +63,17 @@ namespace mips_sim {
             return 1;
         }
 
+
+        if (pc_src && hardware_manager->get_branch_type() == BRANCH_DELAYED) {
+            delayed_pc = current_pc;
+            delay = true;
+        }
+
         switch(pc_src)
         {
             case 0:
                 current_pc += 4; break;
             case 1:
-                if (hardware_manager->get_branch_type() == BRANCH_DELAYED) {
-                    delayed_pc = current_pc;
-                    delay = true;
-                }
                 current_pc = hardware_manager->get_signal(SIGNAL_CBRANCH)();
                 // current_pc = hardware_manager->get_instruction_signal_map()[hardware_manager->get_branch_type() != STAGE_ID ? STAGE_MEM : STAGE_ID]["C_BRANCH"];
                 cout << "   !!! Conditional branch taken >> 0x"
@@ -101,7 +103,7 @@ namespace mips_sim {
         }
 
         if (delay) {
-            delay = false; // delay init to 2 when delayed_pc is set, allows for comparison next cycle
+            delay = false;
         }
         
         /* next instruction */
