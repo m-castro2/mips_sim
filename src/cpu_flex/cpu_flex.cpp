@@ -46,7 +46,7 @@ namespace mips_sim {
 
         cp1 = std::shared_ptr<FPCoprocessor>(new FPCoprocessor({2, 4, 12}, {2, 5, 19}, {1, 1, 1}, fpr_bank, fu, hardware_manager));
 
-        ex_stage->set_syscall(std::bind(&CpuFlex::syscall, this, std::placeholders::_1));
+        ex_stage->set_syscall(std::bind(&CpuFlex::syscall_throw_exception, this, std::placeholders::_1));
 
         if_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 10));
         ex_stage->set_sigmask(control_unit->get_signal_bitmask(signals_ID, 7));

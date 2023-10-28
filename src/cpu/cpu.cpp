@@ -246,6 +246,176 @@ void Cpu::syscall( uint32_t value )
   }
 }
 
+void Cpu::syscall_throw_exception( uint32_t value )
+{
+  string message {};
+  switch(value)
+  {
+    case 1:
+      /* print_integer $a0 */
+      cout << "[SYSCALL] " << gpr_bank->get("$a0") << endl;
+      message = "Print $a0";
+      value = gpr_bank->get("$a0");
+      break;
+    case 2:
+      /* print_float $f12 */
+      cout << "[SYSCALL] " << fpr_bank->read_float("$f12") << endl;
+      message = "Print $f12";
+      value = gpr_bank->read_float("$f12");
+      break;
+    case 3:
+      /* print_double $f12 */
+      cout << "[SYSCALL] " << fpr_bank->read_double("$f12") << endl;
+      message = "Print $a0";
+      value = gpr_bank->read_double("$f12");
+      break;
+    case 4:
+      {
+        /* print_string $a0 */
+        uint32_t address = gpr_bank->get("$a0");
+        uint32_t alloc_length = memory->get_allocated_length(address);
+        stringstream ss;
+        for (uint32_t i=0; i<alloc_length; ++i)
+        {
+          ss << static_cast<char>(memory->mem_read_8(address + i));
+        }
+        cout << "[SYSCALL] " << ss.str() << endl;
+        message = "Print string $a0: ";
+        message.append(ss.str());
+      }
+      break;
+    case 5:
+      {
+        /* read_integer -> $v0 */
+        //TODO: Fails in CLI mode
+        int readvalue;
+        cout << "[SYSCALL] Input an integer value: ";
+        cin >> readvalue;
+        gpr_bank->set("$v0", static_cast<uint32_t>(readvalue));
+      }
+      break;
+    case 6:
+      {
+        /* read_float -> $f0 */
+        //TODO: Fails in CLI mode
+        float readvalue;
+        cout << "[SYSCALL] Input a float value: ";
+        cin >> readvalue;
+        fpr_bank->write_float("$f0", readvalue);
+      }
+      break;
+    case 7:
+      {
+        /* read_double -> $f0 */
+        //TODO: Fails in CLI mode
+        double readvalue;
+        cout << "[SYSCALL] Input a double value: ";
+        cin >> readvalue;
+        fpr_bank->write_double("$f0", readvalue);
+      }
+      break;
+    case 8:
+      {
+        /* read_string -> $a0 of up to $a1 chars ma*/
+        //TODO: Fails in CLI mode
+        string readvalue;
+        uint32_t address = gpr_bank->get("$a0");
+        uint32_t max_length = gpr_bank->get("$a1");
+        uint32_t str_len;
+
+        cout << "[SYSCALL] Input a string value [max_length=" << max_length << "]: ";
+        cin >> readvalue;
+        str_len = static_cast<uint32_t>(readvalue.length());
+
+        if (str_len > max_length)
+          str_len = max_length;
+
+        for (uint32_t i=0; i<str_len; i++)
+        {
+          memory->mem_write_8(address + i, static_cast<uint8_t>(readvalue[i]));
+        }
+
+        //gpr[Utils::find_register_by_name("$a1")] = static_cast<uint32_t>(str_len);
+      }
+      break;
+    case 9:
+      {
+        /* allocate $a0 Bytes in data memory. Returns address in $v0 */
+        uint32_t block_size = gpr_bank->get("$a0");
+        uint32_t address;
+
+        /* align block size with memory */
+        block_size = memory->align_address(block_size);
+
+        address = memory->allocate_space(block_size);
+
+        cout << "[SYSCALL] " << block_size << " Bytes allocated at " << Utils::hex32(address) << endl;
+
+        gpr_bank->set("$v0", address);
+      }
+      break;
+    case 10:
+      //TODO: Send stop signal or something
+      /* exit program */
+      cout << "[SYSCALL] Program done." << endl;
+      ready = false;
+      message = "Program done";
+      value = 1;
+      break;
+    case 41:
+      {
+        /* random_integer $a0(seed) --> $a0 */
+        srand(gpr_bank->get("$a0"));
+        int rvalue = rand();
+        cout << "[SYSCALL] Random integer: " << rvalue << endl;
+        gpr_bank->set("$a0", static_cast<uint32_t>(rvalue));
+        message = "Random integer";
+        value = rvalue;
+      }
+      break;
+    case 42:
+      {
+        /* random_integer < $a1, $a0(seed) --> $a0 */
+        int rvalue, ulimit;
+        srand(gpr_bank->get("$a0"));
+        ulimit = static_cast<int>(gpr_bank->get("$a1"));
+        rvalue = rand() % ulimit;
+        cout << "[SYSCALL] Random integer below " << ulimit << ": " << rvalue << endl;
+        gpr_bank->set("$a0", static_cast<uint32_t>(rvalue));
+        message = "Random integer below " + ulimit;
+        value = rvalue;
+      }
+      break;
+    case 43:
+      {
+        /* random_float $a0(seed) --> $f0 */
+        srand(gpr_bank->get("$a0"));
+        float rvalue = rand() / 0x7FFFFFFF;
+        cout << "[SYSCALL] Random float: " << rvalue << endl;
+
+        fpr_bank->write_float("$f0", rvalue);
+        message = "Random float";
+        value = rvalue;
+      }
+      break;
+    case 44:
+      {
+        /* random_double $a0(seed) --> $f0 */
+        srand(gpr_bank->get("$a0"));
+        double rvalue = rand() / 0x7FFFFFFF;
+        cout << "[SYSCALL] Random float: " << rvalue << endl;
+
+        fpr_bank->write_double("$f0", rvalue);
+        message = "Random double";
+        value = rvalue;
+      }
+      break;
+    default:
+      throw Exception::e(CPU_SYSCALL_EXCEPTION, "Undefined syscall", value);
+  }
+  throw Exception::e(CPU_SYSCALL_EXCEPTION, message, value);
+}
+
 string Cpu::register_str(uint8_t reg_id, bool fp, bool show_value, bool show_double) const
 {
   string regname;

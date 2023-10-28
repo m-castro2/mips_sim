@@ -58,6 +58,8 @@ protected:
 
   void syscall( uint32_t value );
 
+  void syscall_throw_exception(uint32_t value);
+
   void write_register( uint8_t reg_index, uint32_t value);
   void write_fp_register( uint8_t reg_index, uint32_t value);
   void write_register_f( uint8_t reg_index, float value);
