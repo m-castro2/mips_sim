@@ -22,7 +22,7 @@ namespace mips_sim
         return enabled;
     }
 
-    uint32_t HazardDetectionUnit::detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg) const
+    uint32_t HazardDetectionUnit::detect_hazard( uint32_t read_reg, bool can_forward, bool fp_reg, bool fpu) const
     {    
         if(!enabled)
         {
@@ -53,7 +53,18 @@ namespace mips_sim
                 && mem_regtype_match
                 && mem_regwrite
                 && !can_forward;
+        
+        if (!fpu) {
+            return hazard;          
+        }
+        
+        for (auto dest_reg: *dest_registers) {
+            hazard |= (read_reg == dest_reg);
+        }
+
         return hazard;
+
+
     }
 
     void HazardDetectionUnit::set_seg_reg_id_ex(std::shared_ptr<seg_reg_t> seg_reg) {
@@ -62,6 +73,10 @@ namespace mips_sim
 
     void HazardDetectionUnit::set_seg_reg_ex_mem(std::shared_ptr<seg_reg_t> seg_reg) {
         seg_reg_ex_mem = seg_reg;
+    }
+
+    void HazardDetectionUnit::set_fpu_dest_registers(std::shared_ptr<std::vector<uint32_t>> p_dest_registers) {
+        dest_registers = p_dest_registers;
     }
   
 } /* namespace */

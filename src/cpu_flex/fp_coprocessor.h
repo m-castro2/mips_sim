@@ -24,6 +24,7 @@ struct fp_unit {
     int cycles_elapsed {};
     bool available {};
     int active_delay {}; //depends on instruction precision
+    int type {};
 };
 
 //FCR31, Floating Point Control Register
@@ -59,6 +60,8 @@ class FPCoprocessor
 
         std::shared_ptr<HardwareManager> hardware_manager {};
 
+        std::shared_ptr<std::vector<uint32_t>> dest_registers {}; //vector[type][regdst]
+
     public:
   
         FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, 
@@ -84,6 +87,8 @@ class FPCoprocessor
         uint32_t get_conditional_bit();
 
         void status_update();
+
+        std::shared_ptr<std::vector<uint32_t>> get_dest_registers();
 };
 
 } /* namespace */

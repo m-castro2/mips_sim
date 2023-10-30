@@ -59,6 +59,7 @@ namespace mips_sim {
 
         hdu->set_seg_reg_id_ex(ex_stage->get_seg_reg());
         hdu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
+        hdu->set_fpu_dest_registers(cp1->get_dest_registers());
 
         add_cpu_stage(if_stage);
         add_cpu_stage(id_stage);
@@ -114,26 +115,38 @@ namespace mips_sim {
         //reset fp_stall
         hardware_manager->set_fp_stall(false);
         // update segmentation registers
-        if (cp1_seg_reg.data[SR_INSTRUCTION] != 0) { 
+        if (cp1_seg_reg.data[SR_INSTRUCTION] != 0) {
             // if both cp1 and EX finished an instruction, send CP1 to mem, stalling <=EX
-            hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
+            if (cpu_stages.at(STAGE_EX)->get_seg_reg()->data[SR_INSTRUCTION] != 0) {
+                hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
+            }
+            else {
+                // if EX was already empty no need to stall
+                cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
+            }
+
             cpu_stages.at(STAGE_MEM)->set_seg_reg(cp1_seg_reg);
-            cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
-            cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+        }
+        else {
+            // no FPU instruction finished
+            cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+        }
+
+        int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
+        if (fp_unit_type == 4) {
+            // ID stall cause of FPU hazard
+            hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
         }
         else {
             cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
-            int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
             if (fp_unit_type != -1) { //FP instruction
                 cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
                 cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
             }
-            else {
-                cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+            else { // regular EX instruction
+                if (!hardware_manager->get_fp_stall()) // if not stalled cause of an FPU instruction returning to the pipeline and EX being used already
+                    cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
             }
-            
-            cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
-            
         }
 
         cpu_stages.at(STAGE_WB)->set_seg_reg(cpu_stages.at(STAGE_MEM)->get_next_seg_reg());

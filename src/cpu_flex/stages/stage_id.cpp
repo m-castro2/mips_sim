@@ -195,32 +195,51 @@ namespace mips_sim {
 
             if (hdu->is_enabled())
             {
-                bool can_forward = true; //no branching here
-                
-                //TODO: Detect hazard
+                bool can_forward = true; // TODO FPU forwarding
+
+                stall = hdu->detect_hazard(instruction.rs, can_forward, false, true);
+
+                if (instruction.opcode <= SUBOP_FPDIV) { // ADD, SUB, MUL, DIV
+                    stall |= hdu->detect_hazard(instruction.rt, can_forward, false, true);
+                }
+
+                if (stall) {
+                    fp_unit_type = 4; // stall
+                }
             }
 
+            hardware_manager->add_instruction_signal(STAGE_ID, "STALL", stall);
+            pc_write = !stall;
+            if (stall)
+            {
+                std::cout << "   FPU stall" << "\n";
+                // send "NOP" to next stage 
+                tmp_seg_reg = {};
+            }
+
+            else {
+                /* send data to next stage */
+                tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+                tmp_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask;
+                tmp_seg_reg.data[SR_PC]      = pc_value; // bypass PC
+                tmp_seg_reg.data[SR_RSVALUE] = read_fp_register(instruction.rs);
+                tmp_seg_reg.data[SR_RTVALUE] = read_fp_register(instruction.rt);
+                //Read paired FPU registers
+                tmp_seg_reg.data[SR_FPRSVALUEUPPER] = read_fp_register(instruction.rs + 1);
+                tmp_seg_reg.data[SR_FPRTVALUEUPPER] = read_fp_register(instruction.rt + 1);
+                //set precision
+                tmp_seg_reg.data[SR_FPPRECISION] = (instruction.cop != 0);
+                tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
+                tmp_seg_reg.data[SR_RT]      = instruction.rt;
+                tmp_seg_reg.data[SR_RD]      = instruction.rd;
+                tmp_seg_reg.data[SR_REGDEST] = instruction.rd;
+                tmp_seg_reg.data[SR_FUNCT]   = instruction.funct;
+                tmp_seg_reg.data[SR_OPCODE]  = instruction.opcode;
+                tmp_seg_reg.data[SR_RS]      = instruction.rs;
+                tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
+                tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
+            }   
             
-            /* send data to next stage */
-            tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-            tmp_seg_reg.data[SR_SIGNALS] = microinstruction & sigmask;
-            tmp_seg_reg.data[SR_PC]      = pc_value; // bypass PC
-            tmp_seg_reg.data[SR_RSVALUE] = read_fp_register(instruction.rs);
-            tmp_seg_reg.data[SR_RTVALUE] = read_fp_register(instruction.rt);
-            //Read paired FPU registers
-            tmp_seg_reg.data[SR_FPRSVALUEUPPER] = read_fp_register(instruction.rs + 1);
-            tmp_seg_reg.data[SR_FPRTVALUEUPPER] = read_fp_register(instruction.rt + 1);
-            //set precision
-            tmp_seg_reg.data[SR_FPPRECISION] = (instruction.cop != 0);
-            tmp_seg_reg.data[SR_ADDR_I]  = instruction.addr_i;
-            tmp_seg_reg.data[SR_RT]      = instruction.rt;
-            tmp_seg_reg.data[SR_RD]      = instruction.rd;
-            tmp_seg_reg.data[SR_REGDEST] = instruction.rd;
-            tmp_seg_reg.data[SR_FUNCT]   = instruction.funct;
-            tmp_seg_reg.data[SR_OPCODE]  = instruction.opcode;
-            tmp_seg_reg.data[SR_RS]      = instruction.rs;
-            tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
-            tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
         }
         else
         {
@@ -263,7 +282,7 @@ namespace mips_sim {
                         || instruction.opcode == OP_SW
                         || instruction.opcode == OP_SWC1)
                     {
-                        stall |= hdu->detect_hazard(instruction.rt, can_forward, instruction.opcode == OP_SWC1);
+                        stall |= hdu->detect_hazard(instruction.rt, can_forward, (instruction.opcode == OP_SWC1), (instruction.opcode == OP_SWC1 || instruction.opcode == OP_LWC1));
                     }
                 }
 

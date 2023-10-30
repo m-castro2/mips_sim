@@ -24,21 +24,21 @@ namespace mips_sim
 
         std::vector<std::shared_ptr<fp_unit>> v {};
         for (int i=0; i<counts[ADD_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> add = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[ADD_UNIT], delays_d[ADD_UNIT], 0, true, 0}));
+            std::shared_ptr<fp_unit> add = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[ADD_UNIT], delays_d[ADD_UNIT], 0, true, 0, ADD_UNIT}));
             v.push_back(add);
         }
         fp_units.push_back(v);
 
         v.clear();
         for (int i=0; i<counts[MULT_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> mult = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[MULT_UNIT], delays_d[MULT_UNIT], 0, true, 0}));
+            std::shared_ptr<fp_unit> mult = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[MULT_UNIT], delays_d[MULT_UNIT], 0, true, 0, MULT_UNIT}));
             v.push_back(mult);
         }
         fp_units.push_back(v);
 
         v.clear();
         for (int i=0; i<counts[DIV_UNIT]; ++i) {
-            std::shared_ptr<fp_unit> div = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[DIV_UNIT], delays_d[DIV_UNIT], 0, true, 0}));
+            std::shared_ptr<fp_unit> div = std::shared_ptr<fp_unit>(new fp_unit({{}, delays_s[DIV_UNIT], delays_d[DIV_UNIT], 0, true, 0, DIV_UNIT}));
             v.push_back(div);
         }
         fp_units.push_back(v);
@@ -46,10 +46,12 @@ namespace mips_sim
         v.clear();
         //3 should be enough since max delay is 2
         for (int i=0; i<3; ++i) {
-            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0}));
+            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0, GENERAL_UNIT}));
             v.push_back(gen);
         }
         fp_units.push_back(v);
+
+        dest_registers = std::shared_ptr<std::vector<uint32_t>>(new std::vector<uint32_t>({}));
 
         status_update();
     }
@@ -122,6 +124,10 @@ namespace mips_sim
             //send data to MEM
             finished_unit->cycles_elapsed = 0;
             finished_unit->available = true;
+            if (finished_unit->type < 3) { // comparisons dont need reg dest
+                auto position = std::find(dest_registers.get()->begin(), dest_registers.get()->end(), finished_unit->seg_reg.data[SR_REGDEST]);
+                dest_registers.get()->erase(position);
+            }
             return finished_unit->seg_reg;
         }
 
@@ -150,6 +156,10 @@ namespace mips_sim
                 unit->cycles_elapsed = 0;
                 unit->available = false;
                 unit->active_delay = unit->delay_d ? next_seg_reg.data[SR_FPPRECISION] : unit->delay_s;
+
+                if (unit_type < 3){ // comparisons dont need reg dest
+                    dest_registers.get()->push_back(next_seg_reg.data[SR_REGDEST]);
+                }
                 return;
             }      
         }
@@ -269,6 +279,7 @@ namespace mips_sim
                 unit->cycles_elapsed = 0;
             }   
         }
+        dest_registers.get()->clear();
     }
 
     uint32_t FPCoprocessor::get_conditional_bit() {
@@ -278,6 +289,10 @@ namespace mips_sim
     void FPCoprocessor::status_update() {
         /* bind functions */
         hardware_manager->set_signal(SIGNAL_FPCOND, std::bind(&FPCoprocessor::get_conditional_bit, this));
+    }
+
+    std::shared_ptr<std::vector<uint32_t>> FPCoprocessor::get_dest_registers(){
+        return dest_registers;
     }
 
 } /* namespace */

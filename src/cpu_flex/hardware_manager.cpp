@@ -68,7 +68,9 @@ namespace mips_sim {
     }
 
     void HardwareManager::set_fp_stall(bool value) {
-        fp_stall = value;
+        // 2 EX STAGE
+        // if EX already empty no need to stall
+        fp_stall = (value && (get_stage_instruction(2) != 0)) ? true : false;
     }
 
     std::map<int, std::map<std::string_view, int>> HardwareManager::get_instruction_signal_map() {

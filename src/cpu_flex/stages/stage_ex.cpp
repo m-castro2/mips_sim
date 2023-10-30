@@ -37,6 +37,7 @@ namespace mips_sim {
         syscall_struct.id = 0;
 
         if (hardware_manager->get_fp_stall()){
+            hardware_manager->set_stage_instruction(STAGE_EX, 0);
             return 0;
         }
 
