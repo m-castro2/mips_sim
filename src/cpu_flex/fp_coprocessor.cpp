@@ -53,6 +53,8 @@ namespace mips_sim
 
         dest_registers = std::shared_ptr<std::vector<uint32_t>>(new std::vector<uint32_t>({}));
 
+        forwarding_registers = std::shared_ptr<std::map<uint32_t, uint32_t>>(new std::map<uint32_t, uint32_t>({}));
+
         status_update();
     }
     
@@ -78,6 +80,12 @@ namespace mips_sim
     }
 
     seg_reg_t FPCoprocessor::work() {
+        if (erase_finished_forwarding_registers && forwarding_registers->at(finished_forwarding_registers[0].first) == finished_forwarding_registers[0].second) {
+            forwarding_registers->erase(finished_forwarding_registers[0].first);
+            forwarding_registers->erase(finished_forwarding_registers[1].first);
+            finished_forwarding_registers = {{},{}};
+            erase_finished_forwarding_registers = false;
+        }
         std::cout << "FPCoprocessor Stage:" << std::endl;
         int max_delay = 0; //identify the first issued instruction
         std::shared_ptr<fp_unit> finished_unit = nullptr;
@@ -105,12 +113,18 @@ namespace mips_sim
                 if (unit->cycles_elapsed == 0 ) {
                 }
 
+                if (unit->cycles_elapsed == unit->active_delay - 1) {
+                    // computing when delay - 1 allows for forwarding to other FPU ops
+                    fp_unit_compute(unit);
+                    //TODO compute when first received to get actual forwarded values, mark result as dirty until cycles passed?
+                }
+
+
                 //if instruction is done
                 if (unit->cycles_elapsed == unit->active_delay) {
                     if (unit->active_delay > max_delay){ // first issued instruction has priority
                         max_delay = unit->active_delay;
                         finished_unit = unit;
-                        fp_unit_compute(unit);
                     }
                 }
 
@@ -124,9 +138,13 @@ namespace mips_sim
             //send data to MEM
             finished_unit->cycles_elapsed = 0;
             finished_unit->available = true;
-            if (finished_unit->type < 3) { // comparisons dont need reg dest
+            if (finished_unit->type < 3) { // comparisons dont need reg dest, ¿TODO MOV?
                 auto position = std::find(dest_registers.get()->begin(), dest_registers.get()->end(), finished_unit->seg_reg.data[SR_REGDEST]);
                 dest_registers.get()->erase(position);
+
+                finished_forwarding_registers[0] = std::make_pair(finished_unit->seg_reg.data[SR_REGDEST], finished_unit->seg_reg.data[SR_ALUOUTPUT]);
+                finished_forwarding_registers[1] = std::make_pair(finished_unit->seg_reg.data[SR_REGDEST + 1], finished_unit->seg_reg.data[SR_FPOUTPUTUPPER]);
+                erase_finished_forwarding_registers = true;
             }
             return finished_unit->seg_reg;
         }
@@ -155,7 +173,7 @@ namespace mips_sim
 
                 unit->cycles_elapsed = 0;
                 unit->available = false;
-                unit->active_delay = unit->delay_d ? next_seg_reg.data[SR_FPPRECISION] : unit->delay_s;
+                unit->active_delay = next_seg_reg.data[SR_FPPRECISION] ? unit->delay_d : unit->delay_s;
 
                 if (unit_type < 3){ // comparisons dont need reg dest
                     dest_registers.get()->push_back(next_seg_reg.data[SR_REGDEST]);
@@ -268,6 +286,11 @@ namespace mips_sim
 
         unit->seg_reg.data[SR_ALUOUTPUT] = outputs[0];
         unit->seg_reg.data[SR_FPOUTPUTUPPER] = outputs[1];
+
+        // add finished instructions to possible values to forward
+        uint32_t reg_dest = unit->seg_reg.data[SR_REGDEST];
+        forwarding_registers->emplace(reg_dest, outputs[0]);
+        forwarding_registers->emplace(reg_dest + 1, outputs[1]);
     }
 
     void FPCoprocessor::reset() {
@@ -280,6 +303,8 @@ namespace mips_sim
             }   
         }
         dest_registers.get()->clear();
+        erase_finished_forwarding_registers = false;
+        forwarding_registers->clear();
     }
 
     uint32_t FPCoprocessor::get_conditional_bit() {
@@ -293,6 +318,10 @@ namespace mips_sim
 
     std::shared_ptr<std::vector<uint32_t>> FPCoprocessor::get_dest_registers(){
         return dest_registers;
+    }
+
+    std::shared_ptr<std::map<uint32_t, uint32_t>> FPCoprocessor::get_forwarding_registers() {
+        return forwarding_registers;
     }
 
 } /* namespace */

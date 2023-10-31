@@ -25,7 +25,7 @@ namespace mips_sim
         return enabled;
     }
 
-    uint32_t ForwardingUnit::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out) 
+    uint32_t ForwardingUnit::forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out, bool fpu) 
     {    
         if (!enabled)
             return UNDEF32;
@@ -117,6 +117,16 @@ namespace mips_sim
         return fwb_regvalue;
         }
 
+        if (fpu && fpu_forwarding_registers->find(reg_value) != fpu_forwarding_registers->end()) {
+            forwarded_from = 8;
+
+            out << " -- forward "
+            << Utils::get_fp_register_name(reg)
+            << " [0x" << Utils::hex32(fpu_forwarding_registers->at(reg_value)) << "] from FPU" << endl;
+
+            return fpu_forwarding_registers->at(reg_value);
+        }
+
         forwarded_from = 0;
         return reg_value;
     }
@@ -137,6 +147,10 @@ namespace mips_sim
         int tmp = forwarded_from;
         forwarded_from = -1;
         return tmp;
+    }
+
+    void ForwardingUnit::set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> p_forwarding_registers) {
+        fpu_forwarding_registers = p_forwarding_registers;
     }
   
 } /* namespace */

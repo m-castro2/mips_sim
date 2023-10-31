@@ -89,9 +89,9 @@ namespace mips_sim {
         // reset wrflag
         seg_reg_wrflag = false;
 
-        if (hardware_manager->get_fp_stall()){
-            return 0;
-        }
+        // if (hardware_manager->get_fp_stall()){
+        //     return 0;
+        // }
         
         // reset pipeline_flush
         pipeline_flush_signal = 0;
@@ -195,12 +195,14 @@ namespace mips_sim {
 
             if (hdu->is_enabled())
             {
-                bool can_forward = true; // TODO FPU forwarding
+                bool can_forward = (fu->is_enabled() && instruction.funct != SUBOP_FPCEQ
+                        && instruction.funct != SUBOP_FPCLE && instruction.funct != SUBOP_FPCLT);
 
-                stall = hdu->detect_hazard(instruction.rs, can_forward, false, true);
+                stall = hdu->detect_hazard(instruction.rs, can_forward, true, true);
 
-                if (instruction.opcode <= SUBOP_FPDIV) { // ADD, SUB, MUL, DIV
-                    stall |= hdu->detect_hazard(instruction.rt, can_forward, false, true);
+                if (instruction.funct <= SUBOP_FPDIV) { // ADD, SUB, MUL, DIV
+                    stall |= hdu->detect_hazard(instruction.rt, can_forward, true, true);
+                    stall |= hdu->detect_hazard(instruction.rd, can_forward, true, true); // check for WAW hazard
                 }
 
                 if (stall) {

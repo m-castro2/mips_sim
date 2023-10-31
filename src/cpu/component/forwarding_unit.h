@@ -5,6 +5,7 @@
 #include "../../global_defs.h"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 
 namespace mips_sim
@@ -26,12 +27,14 @@ namespace mips_sim
 
         int forwarded_from = -1;
 
+        std::shared_ptr<std::map<uint32_t, uint32_t>> fpu_forwarding_registers {};
+
     public:
     
         ForwardingUnit(std::shared_ptr<ControlUnit> control_unit, bool enabled);
         ~ForwardingUnit();
 
-        uint32_t forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out);
+        uint32_t forward_register( uint32_t reg, uint32_t reg_value, bool fp_reg, std::ostream &out, bool fpu = false);
 
         bool is_enabled();
 
@@ -44,6 +47,8 @@ namespace mips_sim
         void set_seg_reg_wb_fwb(std::shared_ptr<seg_reg_t> seg_reg);
 
         int get_forwarded_from();
+
+        void set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> forwarding_registers);
 
   }; 
 } /* namespace */

@@ -56,10 +56,12 @@ namespace mips_sim {
         fu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
         fu->set_seg_reg_mem_wb(wb_stage->get_seg_reg());
         fu->set_seg_reg_wb_fwb(fwb_stage->get_seg_reg());
+        fu->set_fpu_forwarding_registers(cp1->get_forwarding_registers());
 
         hdu->set_seg_reg_id_ex(ex_stage->get_seg_reg());
         hdu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
         hdu->set_fpu_dest_registers(cp1->get_dest_registers());
+        hdu->set_fpu_forwarding_registers(cp1->get_forwarding_registers());
 
         add_cpu_stage(if_stage);
         add_cpu_stage(id_stage);
@@ -99,16 +101,16 @@ namespace mips_sim {
         }
 
         // update diagram
-        for (size_t stage_id = 0; stage_id < STAGE_COUNT; ++stage_id)
-        {
-            size_t iindex = get_current_instruction(stage_id);
-            if (iindex >= MAX_DIAGRAM_SIZE || cycle >= MAX_DIAGRAM_SIZE)
-            {
-                // TODO: Allow for disabling diagram? Cyclic buffer?
-                //throw Exception::e(OVERFLOW_EXCEPTION, "Overflow in multicycle diagram");
-            }
-            diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
-        }
+        // for (size_t stage_id = 0; stage_id < STAGE_COUNT; ++stage_id)
+        // {
+        //     size_t iindex = get_current_instruction(stage_id);
+        //     if (iindex >= MAX_DIAGRAM_SIZE || cycle >= MAX_DIAGRAM_SIZE)
+        //     {
+        //         // TODO: Allow for disabling diagram? Cyclic buffer?
+        //         //throw Exception::e(OVERFLOW_EXCEPTION, "Overflow in multicycle diagram");
+        //     }
+        //     diagram[iindex][cycle] = static_cast<uint32_t>(stage_id+1);
+        // }
 
         //print_diagram(std::cout);
 

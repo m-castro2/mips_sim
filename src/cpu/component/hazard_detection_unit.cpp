@@ -55,11 +55,12 @@ namespace mips_sim
                 && !can_forward;
         
         if (!fpu) {
-            return hazard;          
+            return hazard;
         }
         
         for (auto dest_reg: *dest_registers) {
-            hazard |= (read_reg == dest_reg);
+            bool finished = (fpu_forwarding_registers->find(dest_reg) != fpu_forwarding_registers->end()); // FPU instruction is finished
+            hazard |= (read_reg == dest_reg && can_forward && !finished);
         }
 
         return hazard;
@@ -77,6 +78,10 @@ namespace mips_sim
 
     void HazardDetectionUnit::set_fpu_dest_registers(std::shared_ptr<std::vector<uint32_t>> p_dest_registers) {
         dest_registers = p_dest_registers;
+    }
+
+    void HazardDetectionUnit::set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> forwarding_registers) {
+        fpu_forwarding_registers = forwarding_registers;
     }
   
 } /* namespace */
