@@ -53,7 +53,7 @@ namespace mips_sim
 
         dest_registers = std::shared_ptr<std::vector<uint32_t>>(new std::vector<uint32_t>({}));
 
-        forwarding_registers = std::shared_ptr<std::map<uint32_t, uint32_t>>(new std::map<uint32_t, uint32_t>({}));
+        forwarding_registers = std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>>(new std::map<uint32_t, fpu_forwarding_value_t>({}));
 
         status_update();
     }
@@ -80,7 +80,10 @@ namespace mips_sim
     }
 
     seg_reg_t FPCoprocessor::work() {
-        if (erase_finished_forwarding_registers && forwarding_registers->at(finished_forwarding_registers[0].first) == finished_forwarding_registers[0].second) {
+        if (erase_finished_forwarding_registers 
+                && forwarding_registers->at(finished_forwarding_registers[0].first).ready
+                && forwarding_registers->at(finished_forwarding_registers[0].first).value == finished_forwarding_registers[0].second) {
+            
             forwarding_registers->erase(finished_forwarding_registers[0].first);
             forwarding_registers->erase(finished_forwarding_registers[1].first);
             finished_forwarding_registers = {{},{}};
@@ -111,14 +114,8 @@ namespace mips_sim
                 
                 //if instruction was just received, compute
                 if (unit->cycles_elapsed == 0 ) {
-                }
-
-                if (unit->cycles_elapsed == unit->active_delay - 1) {
-                    // computing when delay - 1 allows for forwarding to other FPU ops
                     fp_unit_compute(unit);
-                    //TODO compute when first received to get actual forwarded values, mark result as dirty until cycles passed?
                 }
-
 
                 //if instruction is done
                 if (unit->cycles_elapsed == unit->active_delay) {
@@ -126,6 +123,7 @@ namespace mips_sim
                         max_delay = unit->active_delay;
                         finished_unit = unit;
                     }
+                    forwarding_registers->at(unit->seg_reg.data[SR_REGDEST]).ready = true; // set result as ready for HDU
                 }
 
                 if (unit->cycles_elapsed < unit->active_delay) {
@@ -199,10 +197,10 @@ namespace mips_sim
             uint32_t rs = unit->seg_reg.data[SR_RS];
             uint32_t rt = unit->seg_reg.data[SR_RT];
             
-            rs_value = fu->forward_register(rs, rs_value, true, std::cout);
-            rs_value_upper = fu->forward_register(rs+1, rs_value_upper, true, std::cout);
+            rs_value = fu->forward_register(rs, rs_value, true, std::cout, true);
+            rs_value_upper = fu->forward_register(rs+1, rs_value_upper, true, std::cout, true);
             rt_value = fu->forward_register(rt, rt_value, true, std::cout);
-            rt_value_upper = fu->forward_register(rt+1, rt_value_upper, true, std::cout);
+            rt_value_upper = fu->forward_register(rt+1, rt_value_upper, true, std::cout, true);
         }
 
         uint32_t rs_words[] = {rs_value, rs_value_upper};
@@ -289,8 +287,8 @@ namespace mips_sim
 
         // add finished instructions to possible values to forward
         uint32_t reg_dest = unit->seg_reg.data[SR_REGDEST];
-        forwarding_registers->emplace(reg_dest, outputs[0]);
-        forwarding_registers->emplace(reg_dest + 1, outputs[1]);
+        forwarding_registers->emplace(reg_dest, fpu_forwarding_value_t({outputs[0], false}));
+        forwarding_registers->emplace(reg_dest + 1, fpu_forwarding_value_t({outputs[1], false}));
     }
 
     void FPCoprocessor::reset() {
@@ -320,7 +318,7 @@ namespace mips_sim
         return dest_registers;
     }
 
-    std::shared_ptr<std::map<uint32_t, uint32_t>> FPCoprocessor::get_forwarding_registers() {
+    std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> FPCoprocessor::get_forwarding_registers() {
         return forwarding_registers;
     }
 

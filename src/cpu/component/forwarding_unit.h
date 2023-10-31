@@ -27,7 +27,7 @@ namespace mips_sim
 
         int forwarded_from = -1;
 
-        std::shared_ptr<std::map<uint32_t, uint32_t>> fpu_forwarding_registers {};
+        std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> fpu_forwarding_registers {};
 
     public:
     
@@ -48,7 +48,7 @@ namespace mips_sim
 
         int get_forwarded_from();
 
-        void set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> forwarding_registers);
+        void set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> forwarding_registers);
 
   }; 
 } /* namespace */

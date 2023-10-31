@@ -24,7 +24,7 @@ namespace mips_sim
 
         std::shared_ptr<std::vector<uint32_t>> dest_registers {};
 
-        std::shared_ptr<std::map<uint32_t, uint32_t>> fpu_forwarding_registers {};
+        std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> fpu_forwarding_registers {};
 
     public:
     
@@ -43,7 +43,7 @@ namespace mips_sim
 
         void set_fpu_dest_registers(std::shared_ptr<std::vector<uint32_t>> dest_registers);
 
-        void set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> forwarding_registers);
+        void set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> forwarding_registers);
 
   };
 } /* namespace */

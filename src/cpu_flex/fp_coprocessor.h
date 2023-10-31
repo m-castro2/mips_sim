@@ -62,7 +62,7 @@ class FPCoprocessor
 
         std::shared_ptr<std::vector<uint32_t>> dest_registers {}; //vector[type][regdst]
 
-        std::shared_ptr<std::map<uint32_t, uint32_t>> forwarding_registers {};
+        std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> forwarding_registers {};
 
         std::vector<std::pair<uint32_t, uint32_t>> finished_forwarding_registers = {{}, {}};
         bool erase_finished_forwarding_registers = false;
@@ -95,7 +95,7 @@ class FPCoprocessor
 
         std::shared_ptr<std::vector<uint32_t>> get_dest_registers();
 
-        std::shared_ptr<std::map<uint32_t, uint32_t>> get_forwarding_registers();
+        std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> get_forwarding_registers();
 };
 
 } /* namespace */

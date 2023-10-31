@@ -285,4 +285,9 @@ typedef struct {
     uint32_t value;
 } syscall_struct_t;
 
+typedef struct {
+    uint32_t value;
+    bool ready;
+} fpu_forwarding_value_t;
+
 #endif

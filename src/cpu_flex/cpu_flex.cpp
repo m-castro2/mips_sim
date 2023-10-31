@@ -90,11 +90,11 @@ namespace mips_sim {
             stage->rising_flank();
         }
 
+        seg_reg_t cp1_seg_reg = cp1->work();
+
         for (auto stage: cpu_stages) {
             stage->work_h();
         }
-
-        seg_reg_t cp1_seg_reg = cp1->work();
 
         for (auto stage: cpu_stages) {
             stage->work_l();

@@ -117,14 +117,14 @@ namespace mips_sim
         return fwb_regvalue;
         }
 
-        if (fpu && fpu_forwarding_registers->find(reg_value) != fpu_forwarding_registers->end()) {
+        if (fpu && fpu_forwarding_registers->find(reg_value) != fpu_forwarding_registers->end() && fpu_forwarding_registers->at(reg_value).ready) {
             forwarded_from = 8;
 
             out << " -- forward "
             << Utils::get_fp_register_name(reg)
-            << " [0x" << Utils::hex32(fpu_forwarding_registers->at(reg_value)) << "] from FPU" << endl;
+            << " [0x" << Utils::hex32(fpu_forwarding_registers->at(reg_value).value) << "] from FPU" << endl;
 
-            return fpu_forwarding_registers->at(reg_value);
+            return fpu_forwarding_registers->at(reg_value).value;
         }
 
         forwarded_from = 0;
@@ -149,7 +149,7 @@ namespace mips_sim
         return tmp;
     }
 
-    void ForwardingUnit::set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, uint32_t>> p_forwarding_registers) {
+    void ForwardingUnit::set_fpu_forwarding_registers(std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> p_forwarding_registers) {
         fpu_forwarding_registers = p_forwarding_registers;
     }
   
