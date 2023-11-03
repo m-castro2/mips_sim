@@ -123,7 +123,9 @@ namespace mips_sim
                         max_delay = unit->active_delay;
                         finished_unit = unit;
                     }
-                    forwarding_registers->at(unit->seg_reg.data[SR_REGDEST]).ready = true; // set result as ready for HDU
+                    if (unit->type != 3 || unit->seg_reg.data[SR_FUNCT] == SUBOP_FPMOV){ //compare have no regdest
+                        forwarding_registers->at(unit->seg_reg.data[SR_REGDEST]).ready = true; // set result as ready for HDU
+                    }
                 }
 
                 if (unit->cycles_elapsed < unit->active_delay) {
@@ -136,7 +138,7 @@ namespace mips_sim
             //send data to MEM
             finished_unit->cycles_elapsed = 0;
             finished_unit->available = true;
-            if (finished_unit->type < 3) { // comparisons dont need reg dest, ¿TODO MOV?
+            if (finished_unit->type < 3 || finished_unit->seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) { // comparisons dont need reg dest, ¿TODO MOV?
                 auto position = std::find(dest_registers.get()->begin(), dest_registers.get()->end(), finished_unit->seg_reg.data[SR_REGDEST]);
                 dest_registers.get()->erase(position);
 
@@ -160,6 +162,7 @@ namespace mips_sim
                 if (unit_type == 3) {
                     if (next_seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) {
                         unit->active_delay = 1;
+                        dest_registers->push_back(next_seg_reg.data[SR_REGDEST]);
                     }
                     else { //CEQ, CLE, CLT
                         unit->active_delay = 2;
@@ -174,14 +177,14 @@ namespace mips_sim
                 unit->active_delay = next_seg_reg.data[SR_FPPRECISION] ? unit->delay_d : unit->delay_s;
 
                 if (unit_type < 3){ // comparisons dont need reg dest
-                    dest_registers.get()->push_back(next_seg_reg.data[SR_REGDEST]);
+                    dest_registers->push_back(next_seg_reg.data[SR_REGDEST]);
                 }
                 return;
             }      
         }
 
         if (unit_type == GENERAL_UNIT) { // if all are busy add a new one
-            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0}));
+            std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0, GENERAL_UNIT}));
             fp_units.at(GENERAL_UNIT).push_back(gen);
         }
 
@@ -248,6 +251,14 @@ namespace mips_sim
             else {
                 Utils::float_to_word(Utils::word_to_float(rs_words) /
                                     Utils::word_to_float(rt_words), outputs);
+            }
+            break; 
+        case SUBOP_FPMOV:
+            if (unit->seg_reg.data[SR_FPPRECISION]) {
+                Utils::float_to_word(Utils::word_to_float(rs_words), outputs);
+            }
+            else {
+                Utils::float_to_word(Utils::word_to_float(rs_words), outputs);
             }
             break;
         case SUBOP_FPCEQ:

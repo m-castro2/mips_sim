@@ -195,13 +195,12 @@ namespace mips_sim {
 
             if (hdu->is_enabled())
             {
-                bool can_forward = (fu->is_enabled() && instruction.funct != SUBOP_FPCEQ
-                        && instruction.funct != SUBOP_FPCLE && instruction.funct != SUBOP_FPCLT);
+                bool can_forward = fu->is_enabled(); // false for BC1T?
 
                 stall = hdu->detect_hazard(instruction.rs, can_forward, true, true);
+                stall |= hdu->detect_hazard(instruction.rt, can_forward, true, true);
 
                 if (instruction.funct <= SUBOP_FPDIV) { // ADD, SUB, MUL, DIV
-                    stall |= hdu->detect_hazard(instruction.rt, can_forward, true, true);
                     stall |= hdu->detect_hazard(instruction.rd, can_forward, true, true); // check for WAW hazard
                 }
 
