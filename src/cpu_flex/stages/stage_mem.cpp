@@ -55,9 +55,10 @@ namespace mips_sim {
 
         hardware_manager->add_instruction_signal(STAGE_MEM, "REL_BRANCH", branch_addr);
 
+        hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", control_unit->test(microinstruction, SIG_BRANCH));
+
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH))
         {
-            hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 1);
             /* if conditional branches are resolved here */
             if (hardware_manager->get_branch_type() == BRANCH_FLUSH
                 || (hardware_manager->get_branch_type() == BRANCH_NON_TAKEN && branch_taken))
@@ -82,10 +83,6 @@ namespace mips_sim {
             else {
                 sig_pcsrc = 0;
             }
-        }
-
-        else {
-            hardware_manager->add_instruction_signal(STAGE_MEM, "BRANCH", 0);
         }
 
         if (control_unit->test(microinstruction, SIG_MEMREAD))

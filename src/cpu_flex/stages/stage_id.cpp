@@ -300,6 +300,7 @@ namespace mips_sim {
             {
                 if (control_unit->test(microinstruction, SIG_BRANCH))
                 {
+                    hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
                     // unconditional branches are resolved here 
                     bool branch_taken = process_branch(instruction,
                                                     rs_value, rt_value, pc_value);
@@ -307,11 +308,6 @@ namespace mips_sim {
                     if (!branch_taken)
                     {
                         control_unit->set(microinstruction, SIG_PCSRC, 0);
-                    }
-                    else {
-                        if (hardware_manager->get_branch_stage() == STAGE_ID) {
-                            hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
-                        }
                     }
 
                     if (hardware_manager->get_branch_type() == BRANCH_FLUSH
@@ -366,6 +362,9 @@ namespace mips_sim {
                 sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
 
                 hardware_manager->add_instruction_signal(STAGE_ID, "INSTRUCTION", instruction_code);
+                uint32_t addr_i_32 = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
+                hardware_manager->add_instruction_signal(STAGE_ID, "ADDR_I32", addr_i_32);
+                hardware_manager->add_instruction_signal(STAGE_ID, "ADDR_I32_MEMBRANCH", addr_i_32 << 2);
        
             }
         }
