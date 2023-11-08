@@ -64,8 +64,10 @@ class FPCoprocessor
 
         std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> forwarding_registers {};
 
-        std::vector<std::pair<uint32_t, uint32_t>> finished_forwarding_registers = {{}, {}};
+        std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> finished_forwarding_registers = {{}, {}, {}};
         bool erase_finished_forwarding_registers = false;
+
+        int cycle = 0;
 
     public:
   

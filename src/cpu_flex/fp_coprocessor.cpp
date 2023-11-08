@@ -80,18 +80,12 @@ namespace mips_sim
     }
 
     seg_reg_t FPCoprocessor::work() {
-        if (erase_finished_forwarding_registers 
-                && forwarding_registers->at(finished_forwarding_registers[0].first).ready
-                && forwarding_registers->at(finished_forwarding_registers[0].first).value == finished_forwarding_registers[0].second) {
-            
-            forwarding_registers->erase(finished_forwarding_registers[0].first);
-            forwarding_registers->erase(finished_forwarding_registers[1].first);
-            finished_forwarding_registers = {{},{}};
-            erase_finished_forwarding_registers = false;
-        }
+        ++cycle;
         std::cout << "FPCoprocessor Stage:" << std::endl;
         int max_delay = 0; //identify the first issued instruction
         std::shared_ptr<fp_unit> finished_unit = nullptr;
+
+        seg_reg_t output_seg_reg = {};
 
         for (std::vector<std::shared_ptr<fp_unit>> unit_type: fp_units) {
             for (std::shared_ptr<fp_unit> unit: unit_type) {
@@ -125,6 +119,9 @@ namespace mips_sim
                     }
                     if (unit->type != 3 || unit->seg_reg.data[SR_FUNCT] == SUBOP_FPMOV){ //compare have no regdest
                         forwarding_registers->at(unit->seg_reg.data[SR_REGDEST]).ready = true; // set result as ready for HDU
+                        if (unit->seg_reg.data[SR_FPPRECISION]) { // if instruction is double precision, set paired register as ready as well
+                            forwarding_registers->at(unit->seg_reg.data[SR_REGDEST]+1).ready = true;
+                        }
                     }
                 }
 
@@ -142,19 +139,36 @@ namespace mips_sim
                 auto position = std::find(dest_registers.get()->begin(), dest_registers.get()->end(), finished_unit->seg_reg.data[SR_REGDEST]);
                 dest_registers.get()->erase(position);
 
-                finished_forwarding_registers[0] = std::make_pair(finished_unit->seg_reg.data[SR_REGDEST], finished_unit->seg_reg.data[SR_ALUOUTPUT]);
-                finished_forwarding_registers[1] = std::make_pair(finished_unit->seg_reg.data[SR_REGDEST + 1], finished_unit->seg_reg.data[SR_FPOUTPUTUPPER]);
+                finished_forwarding_registers[0] = std::make_tuple(finished_unit->seg_reg.data[SR_REGDEST], finished_unit->seg_reg.data[SR_ALUOUTPUT], cycle);
+                finished_forwarding_registers[1] = std::make_tuple(finished_unit->seg_reg.data[SR_REGDEST]+1, finished_unit->seg_reg.data[SR_FPOUTPUTUPPER], cycle);
                 erase_finished_forwarding_registers = true;
             }
-            return finished_unit->seg_reg;
+            output_seg_reg = finished_unit->seg_reg;
         }
 
-        return {};
+        if (erase_finished_forwarding_registers 
+                && forwarding_registers->at(std::get<0>(finished_forwarding_registers[0])).ready
+                && forwarding_registers->at(std::get<0>(finished_forwarding_registers[0])).cycle == std::get<2>(finished_forwarding_registers[0])) {
+            if (forwarding_registers->at(std::get<0>(finished_forwarding_registers[0])).just_finished){
+                forwarding_registers->at(std::get<0>(finished_forwarding_registers[0])).just_finished = false; //dont erase until next cycle so it can be forwarded to other FP units
+            }
+            else {
+                forwarding_registers->erase(std::get<0>(finished_forwarding_registers[0]));
+                forwarding_registers->erase(std::get<0>(finished_forwarding_registers[1]));
+                finished_forwarding_registers = {{},{},{}};
+                erase_finished_forwarding_registers = false;
+            }
+        }
+
+
+
+        return output_seg_reg;
     }
 
     void FPCoprocessor::set_seg_reg(int unit_type, seg_reg_t next_seg_reg) {
         for (std::shared_ptr<fp_unit> unit: fp_units.at(unit_type)) {
             if (unit->available) {
+                hardware_manager->add_to_fp_coprocessor_active_instructions_count(1);
                 for (int i=0; i < 32; ++i) {
                     unit->seg_reg.data[i] = next_seg_reg.data[i];
                 }
@@ -186,6 +200,7 @@ namespace mips_sim
         if (unit_type == GENERAL_UNIT) { // if all are busy add a new one
             std::shared_ptr<fp_unit> gen = std::shared_ptr<fp_unit>(new fp_unit({{}, 0, 0, 0, true, 0, GENERAL_UNIT}));
             fp_units.at(GENERAL_UNIT).push_back(gen);
+            hardware_manager->add_to_fp_coprocessor_active_instructions_count(1);
         }
 
     }
@@ -202,7 +217,7 @@ namespace mips_sim
             
             rs_value = fu->forward_register(rs, rs_value, true, std::cout, true);
             rs_value_upper = fu->forward_register(rs+1, rs_value_upper, true, std::cout, true);
-            rt_value = fu->forward_register(rt, rt_value, true, std::cout);
+            rt_value = fu->forward_register(rt, rt_value, true, std::cout, true);
             rt_value_upper = fu->forward_register(rt+1, rt_value_upper, true, std::cout, true);
         }
 
@@ -235,8 +250,8 @@ namespace mips_sim
             break;
         case SUBOP_FPMUL:
             if (unit->seg_reg.data[SR_FPPRECISION]) {
-                Utils::float_to_word(Utils::word_to_float(rs_words) *
-                                    Utils::word_to_float(rt_words), outputs);
+                Utils::double_to_word(Utils::word_to_double(rs_words) *
+                                    Utils::word_to_double(rt_words), outputs);
             }
             else {
                 Utils::float_to_word(Utils::word_to_float(rs_words) *
@@ -245,8 +260,8 @@ namespace mips_sim
             break;
         case SUBOP_FPDIV:
             if (unit->seg_reg.data[SR_FPPRECISION]) {
-                Utils::float_to_word(Utils::word_to_float(rs_words) /
-                                    Utils::word_to_float(rt_words), outputs);
+                Utils::double_to_word(Utils::word_to_double(rs_words) /
+                                    Utils::word_to_double(rt_words), outputs);
             }
             else {
                 Utils::float_to_word(Utils::word_to_float(rs_words) /
@@ -255,7 +270,7 @@ namespace mips_sim
             break; 
         case SUBOP_FPMOV:
             if (unit->seg_reg.data[SR_FPPRECISION]) {
-                Utils::float_to_word(Utils::word_to_float(rs_words), outputs);
+                Utils::double_to_word(Utils::word_to_double(rs_words), outputs);
             }
             else {
                 Utils::float_to_word(Utils::word_to_float(rs_words), outputs);
@@ -298,8 +313,14 @@ namespace mips_sim
 
         // add finished instructions to possible values to forward
         uint32_t reg_dest = unit->seg_reg.data[SR_REGDEST];
-        forwarding_registers->emplace(reg_dest, fpu_forwarding_value_t({outputs[0], false}));
-        forwarding_registers->emplace(reg_dest + 1, fpu_forwarding_value_t({outputs[1], false}));
+        auto inserted = forwarding_registers->emplace(reg_dest, fpu_forwarding_value_t({outputs[0], false, true, cycle}));
+        if (!inserted.second) {
+            forwarding_registers->at(reg_dest) = fpu_forwarding_value_t({outputs[0], false, true, cycle});
+        }
+        inserted = forwarding_registers->emplace(reg_dest + 1, fpu_forwarding_value_t({outputs[1], false, true, cycle}));
+        if (!inserted.second) {
+            forwarding_registers->at(reg_dest+1) = fpu_forwarding_value_t({outputs[1], false, true, cycle});
+        }
     }
 
     void FPCoprocessor::reset() {
@@ -314,6 +335,8 @@ namespace mips_sim
         dest_registers.get()->clear();
         erase_finished_forwarding_registers = false;
         forwarding_registers->clear();
+
+        cycle = 0;
     }
 
     uint32_t FPCoprocessor::get_conditional_bit() {

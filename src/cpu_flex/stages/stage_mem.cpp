@@ -116,6 +116,8 @@ namespace mips_sim {
         tmp_seg_reg.data[SR_ALUOUTPUT]   = mem_addr; // come from alu output
         tmp_seg_reg.data[SR_REGDEST]     = seg_reg->data[SR_REGDEST];
         tmp_seg_reg.data[SR_OPCODE]      = seg_reg->data[SR_OPCODE];
+        tmp_seg_reg.data[SR_FPOUTPUTUPPER] = seg_reg->data[SR_FPOUTPUTUPPER];
+        tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 

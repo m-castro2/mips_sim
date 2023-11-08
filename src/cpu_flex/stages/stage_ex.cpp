@@ -160,18 +160,20 @@ namespace mips_sim {
             << Utils::hex32(alu_input_b) << " = 0x"
             << Utils::hex32(alu_output) << endl;
 
-        /* send data to next stage */
-        tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-        tmp_seg_reg.data[SR_PC]         = pc_value; /* bypass PC */
-        tmp_seg_reg.data[SR_SIGNALS]    = microinstruction & sigmask;
-        tmp_seg_reg.data[SR_RELBRANCH]  = (addr_i32 << 2) + seg_reg->data[SR_PC];
-        tmp_seg_reg.data[SR_ALUZERO]    = ((alu_output == 0) && (opcode == OP_BEQ))
-                                                || ((alu_output != 0) && (opcode == OP_BNE));
-        tmp_seg_reg.data[SR_ALUOUTPUT]  = alu_output;
-        tmp_seg_reg.data[SR_RTVALUE]    = rt_value;
-        tmp_seg_reg.data[SR_REGDEST]    = seg_reg->data[SR_REGDEST];
+        if (instruction_code){
+            /* send data to next stage */
+            tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+            tmp_seg_reg.data[SR_PC]         = pc_value; /* bypass PC */
+            tmp_seg_reg.data[SR_SIGNALS]    = microinstruction & sigmask;
+            tmp_seg_reg.data[SR_RELBRANCH]  = (addr_i32 << 2) + seg_reg->data[SR_PC];
+            tmp_seg_reg.data[SR_ALUZERO]    = ((alu_output == 0) && (opcode == OP_BEQ))
+                                                    || ((alu_output != 0) && (opcode == OP_BNE));
+            tmp_seg_reg.data[SR_ALUOUTPUT]  = alu_output;
+            tmp_seg_reg.data[SR_RTVALUE]    = rt_value;
+            tmp_seg_reg.data[SR_REGDEST]    = seg_reg->data[SR_REGDEST];
 
-        tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
+            tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
+            }
 
         if (hardware_manager->get_branch_stage() == STAGE_MEM && control_unit->test(microinstruction, SIG_BRANCH)) {
             hardware_manager->add_instruction_signal(STAGE_EX, "BRANCH", 1);

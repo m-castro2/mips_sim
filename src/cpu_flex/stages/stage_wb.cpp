@@ -45,6 +45,7 @@ namespace mips_sim {
         uint32_t reg_dest         = seg_reg->data[SR_REGDEST];
         uint32_t mem_word_read    = seg_reg->data[SR_WORDREAD];
         uint32_t alu_output       = seg_reg->data[SR_ALUOUTPUT];
+        uint32_t fp_output_upper  = seg_reg->data[SR_FPOUTPUTUPPER];
 
         //if FPRegister, send data to FWB stage
         if (control_unit->test(microinstruction, SIG_REGBANK) || (seg_reg->data[SR_OPCODE] == OP_FTYPE)) {
@@ -54,7 +55,9 @@ namespace mips_sim {
             tmp_seg_reg.data[SR_REGDEST] = reg_dest;
             tmp_seg_reg.data[SR_WORDREAD] = mem_word_read;
             tmp_seg_reg.data[SR_ALUOUTPUT] = alu_output;
-             tmp_seg_reg.data[SR_OPCODE] = seg_reg->data[SR_OPCODE];
+            tmp_seg_reg.data[SR_OPCODE] = seg_reg->data[SR_OPCODE];
+            tmp_seg_reg.data[SR_FPOUTPUTUPPER] = fp_output_upper;
+            tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
 
             std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
             std::cout << "\t FPRegister, redirect to FWB Stage" << endl;

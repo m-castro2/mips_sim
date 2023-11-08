@@ -158,7 +158,8 @@ namespace mips_sim {
             //stalls until previous instructions finished
             stall = !(hardware_manager->get_stage_instruction(STAGE_MEM) == 0 &&
                         hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&
-                        hardware_manager->get_stage_instruction(STAGE_ID) == instruction_code); // previous cycle instruction is now in ex
+                        hardware_manager->get_stage_instruction(STAGE_ID) == instruction_code && // previous cycle instruction is now in ex
+                        hardware_manager->get_fp_coprocessor_active_instructions_count() == 0); //FP coprocessor is empty
         }
 
         if (instruction.opcode == OP_FTYPE && instruction.cop != 8) // BC1T and BC1F wont go to CP1
@@ -200,8 +201,16 @@ namespace mips_sim {
                 stall = hdu->detect_hazard(instruction.rs, can_forward, true, true);
                 stall |= hdu->detect_hazard(instruction.rt, can_forward, true, true);
 
+                if (instruction.cop != 0) {
+                    stall |= hdu->detect_hazard(instruction.rs+1, can_forward, true, true); //double precision uses a pair of registers
+                    stall |= hdu->detect_hazard(instruction.rt+1, can_forward, true, true);
+                }
+
                 if (instruction.funct <= SUBOP_FPDIV) { // ADD, SUB, MUL, DIV
                     stall |= hdu->detect_hazard(instruction.rd, can_forward, true, true); // check for WAW hazard
+                    if (instruction.cop != 0) {
+                        stall |= hdu->detect_hazard(instruction.rd+1, can_forward, true, true);
+                }
                 }
 
                 if (stall) {

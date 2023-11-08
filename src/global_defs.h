@@ -288,6 +288,8 @@ typedef struct {
 typedef struct {
     uint32_t value;
     bool ready;
+    bool just_finished;
+    int cycle;
 } fpu_forwarding_value_t;
 
 #endif

@@ -117,14 +117,14 @@ namespace mips_sim
         return fwb_regvalue;
         }
 
-        if (fpu && fpu_forwarding_registers->find(reg_value) != fpu_forwarding_registers->end() && fpu_forwarding_registers->at(reg_value).ready) {
+        if (fpu && fpu_forwarding_registers->find(reg) != fpu_forwarding_registers->end() && fpu_forwarding_registers->at(reg).ready) {
             forwarded_from = 8;
 
             out << " -- forward "
             << Utils::get_fp_register_name(reg)
-            << " [0x" << Utils::hex32(fpu_forwarding_registers->at(reg_value).value) << "] from FPU" << endl;
+            << " [0x" << Utils::hex32(fpu_forwarding_registers->at(reg).value) << "] from FPU" << endl;
 
-            return fpu_forwarding_registers->at(reg_value).value;
+            return fpu_forwarding_registers->at(reg).value;
         }
 
         forwarded_from = 0;

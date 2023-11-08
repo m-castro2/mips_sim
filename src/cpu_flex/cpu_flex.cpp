@@ -126,21 +126,27 @@ namespace mips_sim {
                 // if EX was already empty no need to stall
                 cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
             }
-
+            
+            hardware_manager->add_to_fp_coprocessor_active_instructions_count(-1); // instruction count modified here so ID can stall correctly
             cpu_stages.at(STAGE_MEM)->set_seg_reg(cp1_seg_reg);
         }
         else {
             // no FPU instruction finished
-            cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+            if (hardware_manager->get_stage_instruction(STAGE_EX) != 0) {
+                cpu_stages.at(STAGE_MEM)->set_seg_reg(cpu_stages.at(STAGE_EX)->get_next_seg_reg());
+            }
+            else {
+                cpu_stages.at(STAGE_MEM)->set_seg_reg({});
+            }
         }
 
         int fp_unit_type = dynamic_cast<StageID*>(cpu_stages.at(STAGE_ID))->send_to_cp1();
         if (fp_unit_type == 4) {
             // ID stall cause of FPU hazard
             hardware_manager->set_fp_stall(true); // if true, IF, ID, EX just resend their seg_regs without operating
-            if (!hardware_manager->get_fp_stall()) { // if EX wasnt empty, set_fp_stall(true) is still false, so EX can run
+            //if (!hardware_manager->get_fp_stall()) { // if EX wasnt empty, set_fp_stall(true) is still false, so EX can run
                 cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
-            }
+            //}
         }
         else {
             cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());

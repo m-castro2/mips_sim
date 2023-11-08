@@ -53,6 +53,7 @@ namespace mips_sim {
             status[i] = -1;
         }
         fp_stall = false;
+        fp_coprocessor_active_instruction_count = 0;
     }
 
     void HardwareManager::set_stage_instruction(int stage, uint32_t instruction) {
@@ -87,6 +88,14 @@ namespace mips_sim {
 
     void HardwareManager::set_flush_signal(int value){
         flush_signal = value;
+    }
+
+    int HardwareManager::get_fp_coprocessor_active_instructions_count(){
+        return fp_coprocessor_active_instruction_count;
+    }
+
+    void HardwareManager::add_to_fp_coprocessor_active_instructions_count(int value){
+        fp_coprocessor_active_instruction_count += value;
     }
 
 

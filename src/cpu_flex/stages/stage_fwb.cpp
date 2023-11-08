@@ -41,6 +41,7 @@ namespace mips_sim {
         uint32_t reg_dest         = seg_reg->data[SR_REGDEST];
         uint32_t mem_word_read    = seg_reg->data[SR_WORDREAD];
         uint32_t alu_output       = seg_reg->data[SR_ALUOUTPUT];
+        uint32_t fp_output_upper  = seg_reg->data[SR_FPOUTPUTUPPER];
 
         if (!control_unit->test(microinstruction, SIG_REGBANK) && (microinstruction != 0) && (seg_reg->data[SR_OPCODE] != OP_FTYPE)) {
             std::cout << "FWB Stage: " << Utils::decode_instruction(instruction_code) << endl;
@@ -67,6 +68,10 @@ namespace mips_sim {
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
             std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
+            if (seg_reg->data[SR_FPPRECISION]) {
+                std::cout << "   Result value: 0x" << Utils::hex32(fp_output_upper) << endl;
+                std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest+1) << endl;
+            }
             std::cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
 
             assert(reg_dest < 32);
@@ -75,6 +80,13 @@ namespace mips_sim {
             std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest8)
                 << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
             write_fp_register(reg_dest8, regwrite_value);
+            
+            if (seg_reg->data[SR_FPPRECISION]) {
+                uint8_t reg_dest28 = static_cast<uint8_t>(reg_dest+1);
+                std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest28)
+                    << " <-- 0x" << Utils::hex32(fp_output_upper) << endl;
+                write_fp_register(reg_dest28, fp_output_upper);
+            }
         }
 
         return 0;

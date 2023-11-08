@@ -60,6 +60,8 @@ namespace mips_sim {
             //For GUI program
             std::map<int, std::map<std::string_view, int>> instruction_signal_map {};
 
+            int fp_coprocessor_active_instruction_count;
+
         public:
 
             HardwareManager(int branch_type, int branch_stage);
@@ -99,6 +101,10 @@ namespace mips_sim {
             int get_flush_signal();
 
             void set_flush_signal(int value);
+
+            int get_fp_coprocessor_active_instructions_count();
+
+            void add_to_fp_coprocessor_active_instructions_count(int value);
 
     };
 } //namespace
