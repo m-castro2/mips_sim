@@ -149,14 +149,24 @@ namespace mips_sim {
             //}
         }
         else {
-            cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
             if (fp_unit_type != -1) { //FP instruction
                 cp1->set_seg_reg(fp_unit_type, cpu_stages.at(STAGE_ID)->get_next_seg_reg());
                 cpu_stages.at(STAGE_EX)->set_seg_reg({}); //send nop
+                cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
             }
             else { // regular EX instruction
-                if (!hardware_manager->get_fp_stall()) // if not stalled cause of an FPU instruction returning to the pipeline and EX being used already
-                    cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+                if (!hardware_manager->get_fp_stall()) {// if not stalled cause of an FPU instruction returning to the pipeline and EX being used already
+                    if (cpu_stages.at(STAGE_MEM)->get_seg_reg()->data[SR_INSTRUCTION] 
+                            == cpu_stages.at(STAGE_EX)->get_next_seg_reg().data[SR_INSTRUCTION]) { 
+                            // if EX inst was passed to MEM, get the new instruction else keep the old one
+                            
+                        cpu_stages.at(STAGE_EX)->set_seg_reg(cpu_stages.at(STAGE_ID)->get_next_seg_reg());
+
+                        if (static_cast<StageID*>(cpu_stages.at(STAGE_ID))->get_pc_write()){ // if PC write enabled get the new instruction, else keep the old one
+                            cpu_stages.at(STAGE_ID)->set_seg_reg(cpu_stages.at(STAGE_IF)->get_next_seg_reg());
+                        }          
+                    }
+                }
             }
         }
 
