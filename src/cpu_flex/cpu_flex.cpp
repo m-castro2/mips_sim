@@ -68,7 +68,7 @@ namespace mips_sim {
         add_cpu_stage(ex_stage);
         add_cpu_stage(mem_stage);
         add_cpu_stage(wb_stage);
-        add_cpu_stage(fwb_stage); 
+        add_cpu_stage(fwb_stage);
     }
 
   

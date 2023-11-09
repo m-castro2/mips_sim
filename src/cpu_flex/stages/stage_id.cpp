@@ -42,7 +42,7 @@ namespace mips_sim {
 
     //Stage ID
 
-    bool StageID::process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value)
+    bool StageID::process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value, bool fp)
     {
         uint32_t opcode = instruction.opcode;
         uint32_t funct = instruction.funct;
@@ -63,6 +63,11 @@ namespace mips_sim {
         bool branch_taken = conditional_branch
             || opcode == OP_J || opcode == OP_JAL
             || (opcode == OP_RTYPE && (funct == SUBOP_JR || funct == SUBOP_JALR));
+        
+        if (fp) {
+            uint32_t condition_bit = hardware_manager->get_signal(SIGNAL_FPCOND)();
+            branch_taken = (instruction.rs && condition_bit) || (!instruction.rs && !condition_bit);
+        }
 
         return branch_taken;
     }
@@ -312,7 +317,7 @@ namespace mips_sim {
                     hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
                     // unconditional branches are resolved here 
                     bool branch_taken = process_branch(instruction,
-                                                    rs_value, rt_value, pc_value);
+                                                    rs_value, rt_value, pc_value, (instruction.opcode == OP_FTYPE && instruction.cop == 8));
 
                     if (!branch_taken)
                     {

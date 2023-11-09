@@ -49,7 +49,7 @@ namespace mips_sim {
 
             int reset() override;
 
-            bool process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value);
+            bool process_branch(instruction_t instruction, uint32_t rs_value, uint32_t rt_value, uint32_t pc_value, bool fp = false);
 
             bool get_pc_write();
 
