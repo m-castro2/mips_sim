@@ -215,8 +215,15 @@ string Utils::decode_instruction(const instruction_t instruction)
     {
       if (instructions_def[instruction_index].symbols_count == 3)
       {
-        ss << registers_def[instruction.rs].regname_fp << ", ";
-        ss << registers_def[instruction.rt].regname_fp;
+        if (instructions_def[instruction_index].opname == "mov."){
+            ss << registers_def[instruction.rd].regname_fp << ", ";
+            ss << registers_def[instruction.rt].regname_fp;
+        }
+        else {
+            ss << registers_def[instruction.rs].regname_fp << ", ";
+            ss << registers_def[instruction.rt].regname_fp;
+        }
+        
       }
       else
       {
