@@ -64,6 +64,10 @@ namespace mips_sim {
             assert(0);
         }
 
+        if (seg_reg->data[SR_FUNCT] == SUBOP_FPMOV) {
+            regwrite_value = alu_output;
+        }
+
         if (control_unit->test(microinstruction, SIG_REGWRITE) || (seg_reg->data[SR_OPCODE] == OP_FTYPE))
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;

@@ -58,7 +58,7 @@ namespace mips_sim {
             tmp_seg_reg.data[SR_OPCODE] = seg_reg->data[SR_OPCODE];
             tmp_seg_reg.data[SR_FPOUTPUTUPPER] = fp_output_upper;
             tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
-            // tmp_seg_reg.data[SR_FUNCT] = seg_reg->data[SR_FUNCT];
+            tmp_seg_reg.data[SR_FUNCT] = seg_reg->data[SR_FUNCT];
             // tmp_seg_reg.data[SR_RT]       = seg_reg->data[SR_RT];
 
             std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;

@@ -234,8 +234,9 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words) +
-                                    Utils::word_to_float(rt_words), outputs);
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                Utils::float_to_word(float_rs + float_rt, outputs);
             }
             break;
         case SUBOP_FPSUB:
@@ -244,8 +245,9 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words) -
-                                    Utils::word_to_float(rt_words), outputs);
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                Utils::float_to_word(float_rs - float_rt, outputs);
             }
             break;
         case SUBOP_FPMUL:
@@ -254,8 +256,9 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words) *
-                                    Utils::word_to_float(rt_words), outputs);
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                Utils::float_to_word(float_rs * float_rt, outputs);
             }
             break;
         case SUBOP_FPDIV:
@@ -264,16 +267,19 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words) /
-                                    Utils::word_to_float(rt_words), outputs);
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                Utils::float_to_word(float_rs / float_rt, outputs);
             }
             break; 
         case SUBOP_FPMOV:
+            // MOV are encoded so they use RT as source
             if (unit->seg_reg.data[SR_FPPRECISION]) {
-                Utils::double_to_word(Utils::word_to_double(rt_words), outputs); // MOV are encoded so they use RT as source
+                Utils::double_to_word(Utils::word_to_double(rt_words), outputs); 
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rt_words), outputs);
+                double double_value = Utils::word_to_double(rt_words); // read as double
+                Utils::float_to_word((float)double_value, outputs); // from double
             }
             break;
         case SUBOP_FPCEQ:
@@ -281,7 +287,9 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) == Utils::word_to_double(rt_words));
             }
             else {
-                ctrl_status_reg.c = (Utils::word_to_float(rs_words) == Utils::word_to_float(rt_words));
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                ctrl_status_reg.c = (float_rs == float_rt);
             }
             return;
             break;
@@ -290,7 +298,9 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) <= Utils::word_to_double(rt_words));
             }
             else {
-                ctrl_status_reg.c = (Utils::word_to_float(rs_words) <= Utils::word_to_float(rt_words));
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                ctrl_status_reg.c = (float_rs <= float_rt);
             }
             return;
             break;
@@ -299,7 +309,9 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) < Utils::word_to_double(rt_words));
             }
             else {
-                ctrl_status_reg.c = (Utils::word_to_float(rs_words) < Utils::word_to_float(rt_words));
+                float float_rs = (float) Utils::word_to_double(rs_words);
+                float float_rt = (float) Utils::word_to_double(rt_words);
+                ctrl_status_reg.c = (float_rs < float_rt);
             }
             return;
             break;
