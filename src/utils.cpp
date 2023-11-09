@@ -73,9 +73,9 @@ static size_t find_instruction(instruction_t instruction)
         /* BC1T & BC1F are special cases */
         if (instruction.opcode == OP_FTYPE && instruction.cop == 8)
         {
-          if (instruction.rt == 0)
+          if (instruction.rs == 0)
             instruction_index = Utils::find_instruction_by_name("bc1f");
-          else if (instruction.rt == 1)
+          else if (instruction.rs == 1)
             instruction_index = Utils::find_instruction_by_name("bc1t");
           else
             assert(0);
@@ -526,6 +526,10 @@ uint32_t Utils::assemble_instruction(const string & instruction_str)
             instruction.addr_i = static_cast<uint16_t>(strtol(tok, nullptr, 16));
           else
             instruction.addr_i = static_cast<uint16_t>(atoi(tok));
+          if (instruction_cstr[3] == 't')
+                instruction.rs = 1;
+          if (instruction_cstr[3] == 'f')
+                instruction.rs = 0;
         }
         break;
         default:
