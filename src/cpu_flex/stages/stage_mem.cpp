@@ -118,6 +118,8 @@ namespace mips_sim {
         tmp_seg_reg.data[SR_OPCODE]      = seg_reg->data[SR_OPCODE];
         tmp_seg_reg.data[SR_FPOUTPUTUPPER] = seg_reg->data[SR_FPOUTPUTUPPER];
         tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
+        // tmp_seg_reg.data[SR_FUNCT]       = seg_reg->data[SR_FUNCT];
+        // tmp_seg_reg.data[SR_RT]       = seg_reg->data[SR_RT];
 
         tmp_seg_reg.data[SR_IID] = seg_reg->data[SR_IID];
 

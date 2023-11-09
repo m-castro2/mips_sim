@@ -176,7 +176,7 @@ namespace mips_sim
                 if (unit_type == 3) {
                     if (next_seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) {
                         unit->active_delay = 1;
-                        dest_registers->push_back(next_seg_reg.data[SR_REGDEST]);
+                        dest_registers->push_back(unit->seg_reg.data[SR_REGDEST]);
                     }
                     else { //CEQ, CLE, CLT
                         unit->active_delay = 2;
@@ -270,10 +270,10 @@ namespace mips_sim
             break; 
         case SUBOP_FPMOV:
             if (unit->seg_reg.data[SR_FPPRECISION]) {
-                Utils::double_to_word(Utils::word_to_double(rs_words), outputs);
+                Utils::double_to_word(Utils::word_to_double(rt_words), outputs); // MOV are encoded so they use RT as source
             }
             else {
-                Utils::float_to_word(Utils::word_to_float(rs_words), outputs);
+                Utils::float_to_word(Utils::word_to_float(rt_words), outputs);
             }
             break;
         case SUBOP_FPCEQ:
@@ -313,6 +313,10 @@ namespace mips_sim
 
         // add finished instructions to possible values to forward
         uint32_t reg_dest = unit->seg_reg.data[SR_REGDEST];
+        // if (unit->seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) { //MOVs use RT as destination
+        //     reg_dest = unit->seg_reg.data[SR_RT];
+        //     // unit->seg_reg.data[SR_REGDEST] = unit->seg_reg.data[SR_RT];
+        // }
         auto inserted = forwarding_registers->emplace(reg_dest, fpu_forwarding_value_t({outputs[0], false, true, cycle}));
         if (!inserted.second) {
             forwarding_registers->at(reg_dest) = fpu_forwarding_value_t({outputs[0], false, true, cycle});
