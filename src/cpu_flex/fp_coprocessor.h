@@ -83,7 +83,7 @@ class FPCoprocessor
 
         seg_reg_t work();
 
-        bool is_unit_available(int unit_type);
+        uint32_t get_available_units();
 
         void set_seg_reg(int unit_type, seg_reg_t seg_reg);
 

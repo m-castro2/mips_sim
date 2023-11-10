@@ -197,13 +197,18 @@ namespace mips_sim {
             default:
                 break;
             }
+
+            uint32_t available_units = hardware_manager->get_signal(SIGNAL_FP_UNIT_AVAIL)();
+            // available units is a uint32 where bit fp_unit_type is 1 if available else 0
+            bool bit = available_units & (1 << fp_unit_type); 
+            stall |= !bit;
             
 
             if (hdu->is_enabled())
             {
                 bool can_forward = fu->is_enabled(); // false for BC1T?
 
-                stall = hdu->detect_hazard(instruction.rs, can_forward, true, true);
+                stall |= hdu->detect_hazard(instruction.rs, can_forward, true, true);
                 stall |= hdu->detect_hazard(instruction.rt, can_forward, true, true);
 
                 if (instruction.cop != 0) {

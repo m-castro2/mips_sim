@@ -71,12 +71,15 @@ namespace mips_sim
         enabled = value;
     }
 
-    bool FPCoprocessor::is_unit_available(int unit_type) {
-        for (std::shared_ptr<fp_unit> unit: fp_units[unit_type]) {
-            if (unit->available)
-                return true;
+    uint32_t FPCoprocessor::get_available_units() {
+        uint32_t bit_field = 0;
+        for (int unit_type = ADD_UNIT; unit_type < 4; ++unit_type) {
+            for (std::shared_ptr<fp_unit> unit: fp_units[unit_type]) {
+                if (unit->available)
+                    bit_field |= 1 << unit_type;
+            }
         }
-        return false;
+        return bit_field;
     }
 
     seg_reg_t FPCoprocessor::work() {
@@ -362,6 +365,7 @@ namespace mips_sim
     void FPCoprocessor::status_update() {
         /* bind functions */
         hardware_manager->set_signal(SIGNAL_FPCOND, std::bind(&FPCoprocessor::get_conditional_bit, this));
+        hardware_manager->set_signal(SIGNAL_FP_UNIT_AVAIL, std::bind(&FPCoprocessor::get_available_units, this));
     }
 
     std::shared_ptr<std::vector<uint32_t>> FPCoprocessor::get_dest_registers(){

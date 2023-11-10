@@ -36,6 +36,7 @@
 #define SIGNAL_JBRANCH "s_jbranch_addr"
 #define SIGNAL_FLUSH   "s_pipeline_flush"
 #define SIGNAL_FPCOND  "s_fp_conditional_bit"
+#define SIGNAL_FP_UNIT_AVAIL "s_unit_avaiable"
 
 namespace mips_sim {
     
