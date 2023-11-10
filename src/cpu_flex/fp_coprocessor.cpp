@@ -237,8 +237,8 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 Utils::float_to_word(float_rs + float_rt, outputs);
             }
             break;
@@ -248,8 +248,8 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 Utils::float_to_word(float_rs - float_rt, outputs);
             }
             break;
@@ -259,8 +259,8 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 Utils::float_to_word(float_rs * float_rt, outputs);
             }
             break;
@@ -270,8 +270,8 @@ namespace mips_sim
                                     Utils::word_to_double(rt_words), outputs);
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 Utils::float_to_word(float_rs / float_rt, outputs);
             }
             break; 
@@ -281,8 +281,8 @@ namespace mips_sim
                 Utils::double_to_word(Utils::word_to_double(rt_words), outputs); 
             }
             else {
-                double double_value = Utils::word_to_double(rt_words); // read as double
-                Utils::float_to_word((float)double_value, outputs); // from double
+                float value = Utils::word_to_float(rt_words); // read as double
+                Utils::float_to_word(value, outputs); // from double
             }
             break;
         case SUBOP_FPCEQ:
@@ -290,8 +290,8 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) == Utils::word_to_double(rt_words));
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs == float_rt);
             }
             return;
@@ -301,8 +301,8 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) <= Utils::word_to_double(rt_words));
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs <= float_rt);
             }
             return;
@@ -312,8 +312,8 @@ namespace mips_sim
                 ctrl_status_reg.c = (Utils::word_to_double(rs_words) < Utils::word_to_double(rt_words));
             }
             else {
-                float float_rs = (float) Utils::word_to_double(rs_words);
-                float float_rt = (float) Utils::word_to_double(rt_words);
+                float float_rs = (float) Utils::word_to_float(rs_words);
+                float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs < float_rt);
             }
             return;
@@ -328,10 +328,7 @@ namespace mips_sim
 
         // add finished instructions to possible values to forward
         uint32_t reg_dest = unit->seg_reg.data[SR_REGDEST];
-        // if (unit->seg_reg.data[SR_FUNCT] == SUBOP_FPMOV) { //MOVs use RT as destination
-        //     reg_dest = unit->seg_reg.data[SR_RT];
-        //     // unit->seg_reg.data[SR_REGDEST] = unit->seg_reg.data[SR_RT];
-        // }
+
         auto inserted = forwarding_registers->emplace(reg_dest, fpu_forwarding_value_t({outputs[0], false, true, cycle}));
         if (!inserted.second) {
             forwarding_registers->at(reg_dest) = fpu_forwarding_value_t({outputs[0], false, true, cycle});
