@@ -69,6 +69,8 @@ class FPCoprocessor
 
         int cycle = 0;
 
+        int condition_delay {};
+
     public:
   
         FPCoprocessor(std::vector<int> delays_s, std::vector<int> delays_d, std::vector<int> counts, 
@@ -98,6 +100,8 @@ class FPCoprocessor
         std::shared_ptr<std::vector<uint32_t>> get_dest_registers();
 
         std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> get_forwarding_registers();
+
+        uint32_t get_conditional_bit_ready();
 };
 
 } /* namespace */

@@ -192,7 +192,6 @@ namespace mips_sim {
             case SUBOP_FPCLT:
                 //no FU needed
                 fp_unit_type = 3;
-                //check for dependencies
                 break;
             default:
                 break;
@@ -258,6 +257,8 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_RS]      = instruction.rs;
                 tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
+
+                hardware_manager->set_fp_stall(false); //reset fp stall
             }   
             
         }
@@ -306,6 +307,10 @@ namespace mips_sim {
                     }
                 }
 
+                if (instruction.cop == 8) { //BC1 stalls if the conditional bit is not ready
+                    stall |= !hardware_manager->get_signal(SIGNAL_FPCONDRD)();
+                }
+
                 if (stall) cout << "   Hazard detected: Pipeline stall" << endl;
             } 
             hardware_manager->add_instruction_signal(STAGE_ID, "STALL", stall);
@@ -317,7 +322,9 @@ namespace mips_sim {
             }
             else
             {
-                if (control_unit->test(microinstruction, SIG_BRANCH))
+                uint32_t bc1_taken = 0;
+
+                if (control_unit->test(microinstruction, SIG_BRANCH) || (instruction.opcode == OP_FTYPE && instruction.cop == 8)) // BC1 dont have sig branch
                 {
                     hardware_manager->add_instruction_signal(STAGE_ID, "BRANCH", 1);
                     // unconditional branches are resolved here 
@@ -327,6 +334,9 @@ namespace mips_sim {
                     if (!branch_taken)
                     {
                         control_unit->set(microinstruction, SIG_PCSRC, 0);
+                    }
+                    else if ((instruction.opcode == OP_FTYPE && instruction.cop == 8)){
+                        bc1_taken = 1;
                     }
 
                     if (hardware_manager->get_branch_type() == BRANCH_FLUSH
@@ -378,7 +388,7 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
 
-                sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
+                sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC) || bc1_taken;
 
                 hardware_manager->add_instruction_signal(STAGE_ID, "INSTRUCTION", instruction_code);
                 uint32_t addr_i_32 = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);

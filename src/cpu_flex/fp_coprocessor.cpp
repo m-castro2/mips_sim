@@ -83,6 +83,8 @@ namespace mips_sim
     }
 
     seg_reg_t FPCoprocessor::work() {
+        if (condition_delay)
+            --condition_delay;
         ++cycle;
         std::cout << "FPCoprocessor Stage:" << std::endl;
         int max_delay = 0; //identify the first issued instruction
@@ -294,6 +296,7 @@ namespace mips_sim
                 float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs == float_rt);
             }
+            condition_delay = 2;
             return;
             break;
         case SUBOP_FPCLE:
@@ -305,6 +308,7 @@ namespace mips_sim
                 float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs <= float_rt);
             }
+            condition_delay = 2;
             return;
             break;
         case SUBOP_FPCLT:
@@ -316,6 +320,7 @@ namespace mips_sim
                 float float_rt = (float) Utils::word_to_float(rt_words);
                 ctrl_status_reg.c = (float_rs < float_rt);
             }
+            condition_delay = 2;
             return;
             break;
         default:
@@ -363,6 +368,7 @@ namespace mips_sim
         /* bind functions */
         hardware_manager->set_signal(SIGNAL_FPCOND, std::bind(&FPCoprocessor::get_conditional_bit, this));
         hardware_manager->set_signal(SIGNAL_FP_UNIT_AVAIL, std::bind(&FPCoprocessor::get_available_units, this));
+        hardware_manager->set_signal(SIGNAL_FPCONDRD, std::bind(&FPCoprocessor::get_conditional_bit_ready, this));
     }
 
     std::shared_ptr<std::vector<uint32_t>> FPCoprocessor::get_dest_registers(){
@@ -371,6 +377,10 @@ namespace mips_sim
 
     std::shared_ptr<std::map<uint32_t, fpu_forwarding_value_t>> FPCoprocessor::get_forwarding_registers() {
         return forwarding_registers;
+    }
+
+    uint32_t FPCoprocessor::get_conditional_bit_ready(){
+        return (condition_delay == 0);
     }
 
 } /* namespace */
