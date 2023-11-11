@@ -47,24 +47,26 @@ namespace mips_sim {
         uint32_t alu_output       = seg_reg->data[SR_ALUOUTPUT];
         uint32_t fp_output_upper  = seg_reg->data[SR_FPOUTPUTUPPER];
 
-        //if FPRegister, send data to FWB stage
-        if (control_unit->test(microinstruction, SIG_REGBANK) || (seg_reg->data[SR_OPCODE] == OP_FTYPE)) {
-            tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
-            tmp_seg_reg.data[SR_PC] = pc_value;
-            tmp_seg_reg.data[SR_SIGNALS] = microinstruction;
-            tmp_seg_reg.data[SR_REGDEST] = reg_dest;
-            tmp_seg_reg.data[SR_WORDREAD] = mem_word_read;
-            tmp_seg_reg.data[SR_ALUOUTPUT] = alu_output;
-            tmp_seg_reg.data[SR_OPCODE] = seg_reg->data[SR_OPCODE];
-            tmp_seg_reg.data[SR_FPOUTPUTUPPER] = fp_output_upper;
-            tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
-            tmp_seg_reg.data[SR_FUNCT] = seg_reg->data[SR_FUNCT];
-            // tmp_seg_reg.data[SR_RT]       = seg_reg->data[SR_RT];
+        bool fp_register = (control_unit->test(microinstruction, SIG_REGBANK));
 
-            std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
-            std::cout << "\t FPRegister, redirect to FWB Stage" << endl;
-            return 0;
-        }
+        //if FPRegister, send data to FWB stage
+        // if (control_unit->test(microinstruction, SIG_REGBANK) || (seg_reg->data[SR_OPCODE] == OP_FTYPE)) {
+        //     tmp_seg_reg.data[SR_INSTRUCTION] = instruction_code;
+        //     tmp_seg_reg.data[SR_PC] = pc_value;
+        //     tmp_seg_reg.data[SR_SIGNALS] = microinstruction;
+        //     tmp_seg_reg.data[SR_REGDEST] = reg_dest;
+        //     tmp_seg_reg.data[SR_WORDREAD] = mem_word_read;
+        //     tmp_seg_reg.data[SR_ALUOUTPUT] = alu_output;
+        //     tmp_seg_reg.data[SR_OPCODE] = seg_reg->data[SR_OPCODE];
+        //     tmp_seg_reg.data[SR_FPOUTPUTUPPER] = fp_output_upper;
+        //     tmp_seg_reg.data[SR_FPPRECISION] = seg_reg->data[SR_FPPRECISION];
+        //     tmp_seg_reg.data[SR_FUNCT] = seg_reg->data[SR_FUNCT];
+        //     // tmp_seg_reg.data[SR_RT]       = seg_reg->data[SR_RT];
+
+        //     std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
+        //     std::cout << "\t FPRegister, redirect to FWB Stage" << endl;
+        //     return 0;
+        // }
 
         std::cout << "WB Stage: " << Utils::decode_instruction(instruction_code) << endl;
         //current_state[STAGE_WB] = pc_value-4;
@@ -85,7 +87,7 @@ namespace mips_sim {
 
         uint32_t reg_write = control_unit->test(microinstruction, SIG_REGWRITE);
         hardware_manager->add_instruction_signal(STAGE_WB, "REG_WRITE", reg_write);
-        if (reg_write)
+        if (reg_write && !fp_register)
         {
             std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
             std::cout << "   Register dest: " << Utils::get_register_name(reg_dest) << endl;
@@ -98,6 +100,34 @@ namespace mips_sim {
                 << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
             write_register(reg_dest8, regwrite_value);
     
+        }
+        else if (reg_write && fp_register || (seg_reg->data[SR_OPCODE] == OP_FTYPE)) { //mov has no regbank signal
+
+            if (seg_reg->data[SR_FUNCT] == SUBOP_FPMOV) {
+                regwrite_value = alu_output; //mov value comes from alu output
+            }
+
+            std::cout << "   Result value: 0x" << Utils::hex32(regwrite_value) << endl;
+            std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest) << endl;
+            if (seg_reg->data[SR_FPPRECISION]) {
+                std::cout << "   Result value: 0x" << Utils::hex32(fp_output_upper) << endl;
+                std::cout << "   Register dest: " << Utils::get_fp_register_name(reg_dest+1) << endl;
+            }
+            std::cout << "   Signal Mem2Reg: " << control_unit->test(microinstruction, SIG_MEM2REG) << endl;
+
+            assert(reg_dest < 32);
+            uint8_t reg_dest8 = static_cast<uint8_t>(reg_dest);
+
+            std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest8)
+                << " <-- 0x" << Utils::hex32(regwrite_value) << endl;
+            write_fp_register(reg_dest8, regwrite_value);
+            
+            if (seg_reg->data[SR_FPPRECISION]) {
+                uint8_t reg_dest28 = static_cast<uint8_t>(reg_dest+1);
+                std::cout << "   REG write " << Utils::get_fp_register_name(reg_dest28)
+                    << " <-- 0x" << Utils::hex32(fp_output_upper) << endl;
+                write_fp_register(reg_dest28, fp_output_upper);
+            }
         }
 
         // FU values

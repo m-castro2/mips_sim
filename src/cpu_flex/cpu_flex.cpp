@@ -55,7 +55,7 @@ namespace mips_sim {
 
         fu->set_seg_reg_ex_mem(mem_stage->get_seg_reg());
         fu->set_seg_reg_mem_wb(wb_stage->get_seg_reg());
-        fu->set_seg_reg_wb_fwb(fwb_stage->get_seg_reg());
+        //fu->set_seg_reg_wb_fwb(fwb_stage->get_seg_reg());
         fu->set_fpu_forwarding_registers(cp1->get_forwarding_registers());
 
         hdu->set_seg_reg_id_ex(ex_stage->get_seg_reg());
@@ -68,7 +68,7 @@ namespace mips_sim {
         add_cpu_stage(ex_stage);
         add_cpu_stage(mem_stage);
         add_cpu_stage(wb_stage);
-        add_cpu_stage(fwb_stage);
+        //add_cpu_stage(fwb_stage);
     }
 
   
@@ -171,7 +171,7 @@ namespace mips_sim {
         }
 
         cpu_stages.at(STAGE_WB)->set_seg_reg(cpu_stages.at(STAGE_MEM)->get_next_seg_reg());
-        cpu_stages.at(STAGE_FWB)->set_seg_reg(cpu_stages.at(STAGE_WB)->get_next_seg_reg());
+        //cpu_stages.at(STAGE_FWB)->set_seg_reg(cpu_stages.at(STAGE_WB)->get_next_seg_reg());
 
         
         int stages_to_flush = hardware_manager->get_flush_signal();

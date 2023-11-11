@@ -36,9 +36,9 @@ namespace mips_sim
         uint32_t wb_regdest   = seg_reg_mem_wb->data[SR_REGDEST];
         uint32_t wb_regvalue; /* can come from ALU output or Memory */
         uint32_t wb_fpwrite  = control_unit->test(seg_reg_mem_wb->data[SR_SIGNALS], SIG_REGBANK);
-        uint32_t fwb_regdest = seg_reg_wb_fwb->data[SR_REGDEST];
-        uint32_t fwb_regvalue; /* can come from ALU output or Memory */
-        uint32_t fwb_fpwrite  = control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGBANK);
+        // uint32_t fwb_regdest = seg_reg_wb_fwb->data[SR_REGDEST];
+        // uint32_t fwb_regvalue; /* can come from ALU output or Memory */
+        // uint32_t fwb_fpwrite  = control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGBANK);
 
         if (reg == 0 && !fp_reg) {
             forwarded_from = 0;
@@ -89,33 +89,33 @@ namespace mips_sim
         }
 
         /* check WB/FWB register */
-        if (fwb_regdest == reg
-            && !(fwb_fpwrite ^ fp_reg)
-            && control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGWRITE))
-        {
-        switch (control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_MEM2REG))
-        {
-            case 0:
-            forwarded_from = 5;
-            fwb_regvalue = seg_reg_wb_fwb->data[SR_WORDREAD];
-            break;
-            case 1:
-            forwarded_from = 6;
-            fwb_regvalue = seg_reg_wb_fwb->data[SR_ALUOUTPUT];
-            break;
-            case 2:
-            forwarded_from = 7;
-            fwb_regvalue = seg_reg_wb_fwb->data[SR_PC];
-            break;
-            default:
-            assert(0);
-        }
-        out << " -- forward "
-            << (fp_reg?Utils::get_fp_register_name(reg)
-                        :Utils::get_register_name(reg))
-            << " [0x" << Utils::hex32(fwb_regvalue) << "] from WB/FWB" << endl;
-        return fwb_regvalue;
-        }
+        // if (fwb_regdest == reg
+        //     && !(fwb_fpwrite ^ fp_reg)
+        //     && control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_REGWRITE))
+        // {
+        // switch (control_unit->test(seg_reg_wb_fwb->data[SR_SIGNALS], SIG_MEM2REG))
+        // {
+        //     case 0:
+        //     forwarded_from = 5;
+        //     fwb_regvalue = seg_reg_wb_fwb->data[SR_WORDREAD];
+        //     break;
+        //     case 1:
+        //     forwarded_from = 6;
+        //     fwb_regvalue = seg_reg_wb_fwb->data[SR_ALUOUTPUT];
+        //     break;
+        //     case 2:
+        //     forwarded_from = 7;
+        //     fwb_regvalue = seg_reg_wb_fwb->data[SR_PC];
+        //     break;
+        //     default:
+        //     assert(0);
+        // }
+        // out << " -- forward "
+        //     << (fp_reg?Utils::get_fp_register_name(reg)
+        //                 :Utils::get_register_name(reg))
+        //     << " [0x" << Utils::hex32(fwb_regvalue) << "] from WB/FWB" << endl;
+        // return fwb_regvalue;
+        // }
 
         if (fpu && fpu_forwarding_registers->find(reg) != fpu_forwarding_registers->end() && fpu_forwarding_registers->at(reg).ready) {
             forwarded_from = 8;
