@@ -290,7 +290,7 @@ namespace mips_sim {
                 //TODO: Branch stage can be decided using additional signals.
                 // That way we don't need explicit comparisons here
                 bool can_forward = fu->is_enabled() &&
-                                ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ && instruction.cop != 8) //added check for BC1T/F here
+                                ((instruction.opcode != OP_BNE && instruction.opcode != OP_BEQ && !(instruction.opcode == OP_FTYPE && instruction.cop == 8)) //added check for BC1T/F here
                                     || hardware_manager->get_branch_stage() > STAGE_ID);
 
                 // check for hazards
@@ -388,7 +388,11 @@ namespace mips_sim {
                 tmp_seg_reg.data[SR_SHAMT]   = instruction.shamt;
                 tmp_seg_reg.data[SR_IID]     = seg_reg->data[SR_IID];
 
-                sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC) || bc1_taken;
+                sig_pcsrc = control_unit->test(microinstruction & sigmask, SIG_PCSRC);
+
+                if (bc1_taken){
+                    sig_pcsrc = 1;
+                }
 
                 hardware_manager->add_instruction_signal(STAGE_ID, "INSTRUCTION", instruction_code);
                 uint32_t addr_i_32 = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
