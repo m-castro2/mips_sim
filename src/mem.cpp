@@ -6,6 +6,7 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
+#include <map>
 
 namespace mips_sim
 {
@@ -293,6 +294,37 @@ void Memory::print_memory( uint32_t start, uint32_t length, ostream &out ) const
   ss << "Read access to invalid memory space: Start "
      << Utils::hex32(start) << " / size " << length << " Bytes";
   throw Exception::e(MEMORY_ALLOC_EXCEPTION, ss.str());
+}
+
+void Memory::set_memory_values(uint32_t start, uint32_t length, std::map<uint32_t, std::vector<uint32_t>> values){
+    for (size_t i = 0; i < MEM_NREGIONS; i++)
+    {
+    if (start >= MEM_REGIONS[i].start &&
+      start+length <= (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
+  {
+    try
+    {
+      for (uint32_t mem_addr=start; mem_addr<start+length; mem_addr+=16)
+      {
+        if (auto search = values.find(mem_addr); search == values.end())
+            continue;
+        int v_length = values[mem_addr].size();
+        if (v_length > 0) 
+            mem_write_32(mem_addr, values[mem_addr][0]);
+        if (v_length > 1)
+            mem_write_32(mem_addr+4, values[mem_addr][1]);
+        if (v_length > 2)
+            mem_write_32(mem_addr+8, values[mem_addr][2]);
+        if (v_length > 3)
+            mem_write_32(mem_addr+12, values[mem_addr][3]);
+      }
+    }
+    catch (int)
+    {
+      /* ignore */
+    }
+  }
+    }
 }
 
 } /* namespace */

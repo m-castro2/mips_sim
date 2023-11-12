@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include<map>
 
 #define MEM_TEXT_REGION  0
 #define MEM_DATA_REGION  1
@@ -67,6 +68,9 @@ class Memory
     /* these 2 functions allow to recover a specific state */
     void snapshot(int region);
     void reset(int region);
+
+    // restore memory from backup file, for GUI
+    void set_memory_values(uint32_t start, uint32_t length, std::map<uint32_t, std::vector<uint32_t>> values);
 
   private:
 
