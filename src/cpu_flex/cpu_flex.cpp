@@ -188,7 +188,8 @@ namespace mips_sim {
 
         syscall_struct_t syscall_struct = static_cast<StageEX*>(cpu_stages.at(STAGE_EX))->get_syscall_struct();
         if (syscall_struct.id != 0) {
-            throw Exception::e(syscall_struct.id, syscall_struct.message, syscall_struct.value);
+            //throw Exception::e(syscall_struct.id, syscall_struct.message, syscall_struct.value);
+            syscall_info = syscall_struct;
         }
 
         return ready;

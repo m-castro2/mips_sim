@@ -9,6 +9,8 @@ namespace mips_sim
 class Alu
 {
   public:
+    
+    bool is_syscall = false;
   
     Alu(int mult_delay, int div_delay);
     
@@ -23,7 +25,7 @@ class Alu
                            uint8_t shift_amount,
                            uint32_t alu_subop,
                            uint32_t *HI, uint32_t *LO,
-                           int *execution_stall);
+                           int *execution_stall, bool exception_disabled = false);
                                
   private:
     

@@ -128,7 +128,7 @@ namespace mips_sim {
                     {
                         alu_output = alu->compute_subop(alu_input_a, alu_input_b,
                                                     static_cast<uint8_t>(shamt), funct,
-                                                    &hi_reg, &lo_reg, &stall_cycles);
+                                                    &hi_reg, &lo_reg, &stall_cycles, true);
                         hi_lo_updated = true;
                     }
                     else
@@ -146,6 +146,12 @@ namespace mips_sim {
         else
             throw Exception::e(e, err_msg, err_v);
         }
+
+        if (alu->is_syscall) {
+            syscall_struct = syscall(gpr_bank->get("$v0"));
+            alu->is_syscall = false;
+        }
+
 
         hardware_manager->add_instruction_signal(STAGE_EX, "ALU_OUT", alu_output);
 
@@ -210,6 +216,7 @@ namespace mips_sim {
 
     int StageEX::reset() {
         syscall_struct.id = 0;
+        alu->is_syscall = false;
         return 0;
     }
 

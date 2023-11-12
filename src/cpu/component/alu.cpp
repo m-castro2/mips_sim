@@ -53,7 +53,7 @@ uint32_t Alu::compute_op(uint32_t alu_input_a, uint32_t alu_input_b, uint32_t al
 
 uint32_t Alu::compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
                             uint8_t shift_amount, uint32_t alu_op,
-                            uint32_t *HI, uint32_t *LO, int *execution_stall)
+                            uint32_t *HI, uint32_t *LO, int *execution_stall, bool exception_disabled)
 {
   uint32_t alu_output = 0xFFFFFFFF;
 
@@ -61,7 +61,10 @@ uint32_t Alu::compute_subop(uint32_t alu_input_a, uint32_t alu_input_b,
   {
     case SUBOP_SYSCALL:
       /* Syscall. The processor should handle it */
-      throw Exception::e(SYSCALL_EXCEPTION, "syscall");
+      if (!exception_disabled)
+        throw Exception::e(SYSCALL_EXCEPTION, "syscall");
+      else
+        is_syscall = true;
       break;
     case SUBOP_SLL:
       alu_output = alu_input_b << shift_amount; break;

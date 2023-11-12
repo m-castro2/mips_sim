@@ -68,6 +68,8 @@ namespace mips_sim {
 
             std::vector<std::string> get_memory_data();
 
+            syscall_struct_t syscall_info {0, "", 0};
+
     };
 } //namespace
 #endif
