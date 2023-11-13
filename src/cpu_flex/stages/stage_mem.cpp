@@ -145,6 +145,14 @@ namespace mips_sim {
             hardware_manager->set_flush_signal(pipeline_flush_signal);
         }
 
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REG_WRITE", control_unit->test(microinstruction, SIG_REGWRITE));
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "REG_BANK", control_unit->test(microinstruction, SIG_REGBANK));
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_WRITE", control_unit->test(microinstruction, SIG_MEMWRITE));
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
+
         return 0;
     }
 

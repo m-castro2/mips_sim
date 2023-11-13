@@ -203,6 +203,14 @@ namespace mips_sim {
 
         hardware_manager->add_instruction_signal(STAGE_EX, "REL_BRANCH_IMM", addr_i32 << 2);
 
+        hardware_manager->add_instruction_signal(STAGE_EX, "REG_WRITE", control_unit->test(microinstruction, SIG_REGWRITE));
+
+        hardware_manager->add_instruction_signal(STAGE_EX, "REG_BANK", control_unit->test(microinstruction, SIG_REGBANK));
+
+        hardware_manager->add_instruction_signal(STAGE_EX, "MEM_READ", control_unit->test(microinstruction, SIG_MEMREAD));
+
+        hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
+
         return 0;
     }
 

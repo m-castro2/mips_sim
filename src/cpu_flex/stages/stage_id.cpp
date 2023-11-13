@@ -398,6 +398,13 @@ namespace mips_sim {
                 uint32_t addr_i_32 = static_cast<uint32_t>(static_cast<int>(instruction.addr_i) << 16 >> 16);
                 hardware_manager->add_instruction_signal(STAGE_ID, "ADDR_I32", addr_i_32);
                 hardware_manager->add_instruction_signal(STAGE_ID, "ADDR_I32_MEMBRANCH", addr_i_32 << 2);
+
+                hardware_manager->add_instruction_signal(STAGE_ID, "FP_REG1", 
+                        (instruction.opcode == OP_FTYPE && instruction.cop != 8));
+                hardware_manager->add_instruction_signal(STAGE_ID, "FP_REG2", 
+                        (instruction.opcode == OP_FTYPE && instruction.cop != 8) || (instruction.opcode == OP_SWC1));
+
+                hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
        
             }
         }
