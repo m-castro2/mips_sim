@@ -261,13 +261,13 @@ syscall_struct_t Cpu::syscall_struct( uint32_t value )
       /* print_float $f12 */
       cout << "[SYSCALL] " << fpr_bank->read_float("$f12") << endl;
       message = "Print $f12";
-      value = gpr_bank->read_float("$f12");
+      value = fpr_bank->read_float("$f12");
       break;
     case 3:
       /* print_double $f12 */
       cout << "[SYSCALL] " << fpr_bank->read_double("$f12") << endl;
       message = "Print $a0";
-      value = gpr_bank->read_double("$f12");
+      value = fpr_bank->read_double("$f12");
       break;
     case 4:
       {
@@ -349,7 +349,14 @@ syscall_struct_t Cpu::syscall_struct( uint32_t value )
 
         address = memory->allocate_space(block_size);
 
-        cout << "[SYSCALL] " << block_size << " Bytes allocated at " << Utils::hex32(address) << endl;
+        stringstream ss;
+
+        ss << block_size << " Bytes allocated at " << Utils::hex32(address) << endl;
+
+        message = "Allocate $a0: ";
+        message.append(ss.str());
+
+        cout << "[SYSCALL] " << ss.str(); 
 
         gpr_bank->set("$v0", address);
       }
