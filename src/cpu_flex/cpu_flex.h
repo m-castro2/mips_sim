@@ -70,6 +70,8 @@ namespace mips_sim {
 
             syscall_struct_t syscall_info {0, "", 0};
 
+            void execute_syscall_callback(syscall_struct_t p_syscall_info);
+
     };
 } //namespace
 #endif

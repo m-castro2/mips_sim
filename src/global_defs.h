@@ -283,6 +283,7 @@ typedef struct {
     uint32_t id;
     std::string message;
     uint32_t value;
+    int syscall_id;
 } syscall_struct_t;
 
 typedef struct {

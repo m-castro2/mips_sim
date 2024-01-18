@@ -248,6 +248,7 @@ void Cpu::syscall( uint32_t value )
 
 syscall_struct_t Cpu::syscall_struct( uint32_t value )
 {
+  int syscall_id = value;
   string message {};
   switch(value)
   {
@@ -298,20 +299,22 @@ syscall_struct_t Cpu::syscall_struct( uint32_t value )
       {
         /* read_float -> $f0 */
         //TODO: Fails in CLI mode
-        float readvalue;
-        cout << "[SYSCALL] Input a float value: ";
-        cin >> readvalue;
-        fpr_bank->write_float("$f0", readvalue);
+        // float readvalue;
+        // cout << "[SYSCALL] Input a float value: ";
+        // cin >> readvalue;
+        // fpr_bank->write_float("$f0", readvalue);
+        message = "Input a float value: ";
       }
       break;
     case 7:
       {
         /* read_double -> $f0 */
         //TODO: Fails in CLI mode
-        double readvalue;
-        cout << "[SYSCALL] Input a double value: ";
-        cin >> readvalue;
-        fpr_bank->write_double("$f0", readvalue);
+        // double readvalue;
+        // cout << "[SYSCALL] Input a double value: ";
+        // cin >> readvalue;
+        // fpr_bank->write_double("$f0", readvalue);      
+        message = "Input a double value: ";
       }
       break;
     case 8:
@@ -321,19 +324,22 @@ syscall_struct_t Cpu::syscall_struct( uint32_t value )
         string readvalue;
         uint32_t address = gpr_bank->get("$a0");
         uint32_t max_length = gpr_bank->get("$a1");
-        uint32_t str_len;
+        // uint32_t str_len;
 
-        cout << "[SYSCALL] Input a string value [max_length=" << max_length << "]: ";
-        cin >> readvalue;
-        str_len = static_cast<uint32_t>(readvalue.length());
+        // cout << "[SYSCALL] Input a string value [max_length=" << max_length << "]: ";
+        // cin >> readvalue;
+        // str_len = static_cast<uint32_t>(readvalue.length());
 
-        if (str_len > max_length)
-          str_len = max_length;
+        // if (str_len > max_length)
+        //   str_len = max_length;
 
-        for (uint32_t i=0; i<str_len; i++)
-        {
-          memory->mem_write_8(address + i, static_cast<uint8_t>(readvalue[i]));
-        }
+        // for (uint32_t i=0; i<str_len; i++)
+        // {
+        //   memory->mem_write_8(address + i, static_cast<uint8_t>(readvalue[i]));
+        // }
+
+        message = "Input a string value [max_length=" + std::to_string(max_length) + "]";
+        value = address;
 
         //gpr[Utils::find_register_by_name("$a1")] = static_cast<uint32_t>(str_len);
       }
@@ -420,7 +426,7 @@ syscall_struct_t Cpu::syscall_struct( uint32_t value )
     default:
       throw Exception::e(CPU_SYSCALL_EXCEPTION, "Undefined syscall", value);
   }
-  return syscall_struct_t {CPU_SYSCALL_EXCEPTION, message, value};
+  return syscall_struct_t {CPU_SYSCALL_EXCEPTION, message, value, syscall_id};
 }
 
 string Cpu::register_str(uint8_t reg_id, bool fp, bool show_value, bool show_double) const

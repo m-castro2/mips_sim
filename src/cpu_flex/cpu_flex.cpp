@@ -371,4 +371,36 @@ namespace mips_sim {
         return data_array;
     }
 
+    void CpuFlex::execute_syscall_callback(syscall_struct_t p_syscall_info){
+        switch (p_syscall_info.syscall_id)
+        {
+        case 6:
+            fpr_bank->write_float("$f0", p_syscall_info.value);
+            break;
+        case 7:
+            fpr_bank->write_double("$f0", p_syscall_info.value);  
+            break;
+        case 8: {
+            uint32_t address = gpr_bank->get("$a0");
+            uint32_t max_length = gpr_bank->get("$a1");
+            uint32_t str_len;
+            str_len = static_cast<uint32_t>(p_syscall_info.message.length());
+
+            if (str_len > max_length)
+              str_len = max_length;
+
+            for (uint32_t i=0; i<str_len; i++)
+            {
+              memory->mem_write_8(address + i, static_cast<uint8_t>(p_syscall_info.message[i]));
+            }
+
+            gpr_bank->set_at(Utils::find_register_by_name("$a1"), static_cast<uint32_t>(str_len));
+
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
 } //namespace
