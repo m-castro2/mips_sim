@@ -293,4 +293,10 @@ typedef struct {
     int cycle;
 } fpu_forwarding_value_t;
 
+typedef struct {
+    int id;
+    std::string message;
+    uint32_t address;
+} error_exception_t;
+
 #endif

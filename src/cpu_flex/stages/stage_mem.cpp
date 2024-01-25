@@ -88,14 +88,21 @@ namespace mips_sim {
         if (control_unit->test(microinstruction, SIG_MEMREAD))
         {
             std::cout << "   MEM read 0x" << Utils::hex32(mem_addr);
-            word_read = memory->mem_read_32(mem_addr);
+            uint32_t word_read {};
+            error = memory->mem_read_32_no_excep(mem_addr, &word_read);
+            if (error.id){ // exception happened
+                return 1;
+            }
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_READ", 1);
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_WRITE", 0);
         }
         else if (control_unit->test(microinstruction, SIG_MEMWRITE))
         {
             std::cout << "   MEM write 0x" << Utils::hex32(rt_value) << " to 0x" << Utils::hex32(mem_addr) << endl;
-            memory->mem_write_32(mem_addr, rt_value);
+            error = memory->mem_write_32_no_excep(mem_addr, rt_value);
+            if (error.id){ // exception happened
+                return 1;
+            }
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_READ", 0);
             hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_WRITE", 1);
         }

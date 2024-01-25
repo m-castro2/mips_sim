@@ -51,4 +51,8 @@ namespace mips_sim {
         return true;
     }
 
+    error_exception_t CpuStage::get_error(){
+        return error;
+    }
+
 } //namespace

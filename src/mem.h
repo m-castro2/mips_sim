@@ -1,6 +1,8 @@
 #ifndef MIPS_SIM_MEM_H
 #define MIPS_SIM_MEM_H
 
+#include "global_defs.h"
+
 #include <cstring>
 #include <cstdint>
 #include <cstdlib>
@@ -72,9 +74,17 @@ class Memory
     // restore memory from backup file, for GUI
     void set_memory_values(uint32_t start, uint32_t length, std::map<uint32_t, std::vector<uint32_t>> values);
 
+    // functions using error codes instead of exceptions
+    error_exception_t mem_write_32_no_excep(uint32_t address, uint32_t value);
+    error_exception_t mem_write_8_no_excep(uint32_t address, uint8_t value);
+    error_exception_t mem_read_32_no_excep(uint32_t address, uint32_t* value) const;
+    error_exception_t mem_read_8_no_excep(uint32_t address, uint8_t* value) const;
+
   private:
 
     mem_region_t get_memory_region(uint32_t address) const;
+    error_exception_t get_memory_region_no_excep(uint32_t address, mem_region_t* region) const;
+    
 
     bool locked; /* if true, only reserved space can be accessed */
 

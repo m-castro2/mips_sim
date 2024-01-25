@@ -208,6 +208,128 @@ mem_region_t Memory::get_memory_region(uint32_t address) const
                       address);
 }
 
+error_exception_t Memory::get_memory_region_no_excep(uint32_t address, mem_region_t* region) const
+{
+  bool valid_address = !locked;
+  error_exception_t error = {0, "", 0};
+
+  if (locked)
+  {
+    /* check if address is valid */
+    for (mem_region_t region : allocated_regions)
+    {
+      if (address >= region.start &&
+          address < (region.start + region.size))
+      {
+        valid_address = true;
+        break;
+      }
+    }
+  }
+
+
+  if (valid_address)
+  {
+    for (size_t i = 0; i < MEM_NREGIONS; i++)
+    {
+      if (address >= MEM_REGIONS[i].start &&
+              address < (MEM_REGIONS[i].start + MEM_REGIONS[i].size))
+      {
+        *region = MEM_REGIONS[i];
+        return error;
+      }
+    }
+  }
+  else
+  {
+    error.id = MEMORY_ACCESS_EXCEPTION;
+    error.message = "Invalid memory address";
+    return error;
+  }
+
+  error.id = MEMORY_LOCK_EXCEPTION;
+  error.message = "Access to invalid memory space";
+  error.address = address;
+  return error;
+}
+
+error_exception_t Memory::mem_read_32_no_excep(uint32_t address, uint32_t* value) const
+{
+  error_exception_t error {};
+  if (address & 0x3) {
+    error = {MEMORY_ALIGN_EXCEPTION,
+                       "Memory address is not aligned",
+                       address};
+    return error;
+  }
+
+  mem_region_t mem_region {};
+  error = get_memory_region_no_excep(address, &mem_region);
+  uint32_t offset = address - mem_region.start;
+
+  uint32_t v = static_cast<uint32_t>
+           ((mem_region.mem[offset+3] << 24) |
+            (mem_region.mem[offset+2] << 16) |
+            (mem_region.mem[offset+1] <<  8) |
+            (mem_region.mem[offset+0] <<  0));
+
+  *value = v;
+  return error;
+}
+
+error_exception_t Memory::mem_read_8_no_excep(uint32_t address, uint8_t* value) const
+{
+  error_exception_t error {};
+  mem_region_t mem_region {};
+  error = get_memory_region_no_excep(address, &mem_region);
+  uint32_t offset = address - mem_region.start;
+
+  uint8_t v = mem_region.mem[offset];
+
+  *value = v;
+
+  return error;
+}
+
+error_exception_t Memory::mem_write_32_no_excep(uint32_t address, uint32_t value)
+{
+  error_exception_t error {};
+  if (address & 0x3) {
+    error = {MEMORY_ALIGN_EXCEPTION,
+                       "Memory address is not aligned",
+                       address};
+    return error;
+  }
+
+  mem_region_t mem_region {};
+  error = get_memory_region_no_excep(address, &mem_region);
+
+  if (error.id) {
+    return error;
+  }
+  
+  uint32_t offset = address - mem_region.start;
+
+  mem_region.mem[offset+3] = (value >> 24) & 0xFF;
+  mem_region.mem[offset+2] = (value >> 16) & 0xFF;
+  mem_region.mem[offset+1] = (value >>  8) & 0xFF;
+  mem_region.mem[offset+0] = (value >>  0) & 0xFF;
+
+  return error;
+}
+
+error_exception_t Memory::mem_write_8_no_excep(uint32_t address, uint8_t value)
+{
+  error_exception_t error {};
+  mem_region_t mem_region {};
+  error = get_memory_region_no_excep(address, &mem_region);
+  uint32_t offset = address - mem_region.start;
+
+  mem_region.mem[offset] = value;
+
+  return error;
+}
+
 uint32_t Memory::mem_read_32(uint32_t address) const
 {
   if (address & 0x3)
@@ -261,6 +383,7 @@ void Memory::mem_write_8(uint32_t address, uint8_t value)
 
   mem_region.mem[offset] = value;
 }
+
 
 void Memory::print_memory( uint32_t start, uint32_t length, ostream &out ) const
 {

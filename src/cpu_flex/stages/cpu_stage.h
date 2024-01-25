@@ -43,6 +43,8 @@ namespace mips_sim {
 
             std::shared_ptr<ForwardingUnit> fu {};
 
+            error_exception_t error {};
+
         
         public:
 
@@ -73,6 +75,8 @@ namespace mips_sim {
             void set_sigmask(uint32_t p_sigmask);
 
             bool write_segmentation_register(seg_reg_t value);
+
+            error_exception_t get_error();
 
     };
 

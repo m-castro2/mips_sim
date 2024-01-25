@@ -93,7 +93,11 @@ namespace mips_sim {
         seg_reg_t cp1_seg_reg = cp1->work();
 
         for (auto stage: cpu_stages) {
-            stage->work_h();
+            if (stage->work_h()) {
+                error = stage->get_error();
+                syscall_info = {static_cast<uint32_t>(error.id), error.message, error.address};
+                return ready;
+            }
         }
 
         for (auto stage: cpu_stages) {
@@ -374,13 +378,20 @@ namespace mips_sim {
     void CpuFlex::execute_syscall_callback(syscall_struct_t p_syscall_info){
         switch (p_syscall_info.syscall_id)
         {
+        case 5:
+            // Read int to $v0
+            gpr_bank->set("$v0", static_cast<uint32_t>(p_syscall_info.value));
+            break;
         case 6:
+            // Read float to $f0
             fpr_bank->write_float("$f0", p_syscall_info.value);
             break;
         case 7:
+            // Read double to $f0
             fpr_bank->write_double("$f0", p_syscall_info.value);  
             break;
         case 8: {
+            // read_string -> $a0 of up to $a1 chars ma
             uint32_t address = gpr_bank->get("$a0");
             uint32_t max_length = gpr_bank->get("$a1");
             uint32_t str_len;

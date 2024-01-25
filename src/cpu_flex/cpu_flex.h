@@ -29,6 +29,8 @@ namespace mips_sim {
 
             std::shared_ptr<FPCoprocessor> cp1 {};
 
+            error_exception_t error {};
+
 
         public:
             CpuFlex(std::shared_ptr<Memory>,
