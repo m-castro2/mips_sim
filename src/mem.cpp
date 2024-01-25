@@ -265,6 +265,11 @@ error_exception_t Memory::mem_read_32_no_excep(uint32_t address, uint32_t* value
 
   mem_region_t mem_region {};
   error = get_memory_region_no_excep(address, &mem_region);
+
+  if (error.id) {
+    return error;
+  }
+
   uint32_t offset = address - mem_region.start;
 
   uint32_t v = static_cast<uint32_t>
@@ -282,6 +287,11 @@ error_exception_t Memory::mem_read_8_no_excep(uint32_t address, uint8_t* value) 
   error_exception_t error {};
   mem_region_t mem_region {};
   error = get_memory_region_no_excep(address, &mem_region);
+
+  if (error.id) {
+    return error;
+  }
+
   uint32_t offset = address - mem_region.start;
 
   uint8_t v = mem_region.mem[offset];
@@ -323,6 +333,11 @@ error_exception_t Memory::mem_write_8_no_excep(uint32_t address, uint8_t value)
   error_exception_t error {};
   mem_region_t mem_region {};
   error = get_memory_region_no_excep(address, &mem_region);
+
+  if (error.id) {
+    return error;
+  }
+  
   uint32_t offset = address - mem_region.start;
 
   mem_region.mem[offset] = value;
