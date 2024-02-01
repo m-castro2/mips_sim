@@ -74,6 +74,10 @@ namespace mips_sim {
 
             void execute_syscall_callback(syscall_struct_t p_syscall_info);
 
+            bool is_fu_enabled();
+
+            bool is_hdu_enabled();
+
     };
 } //namespace
 #endif

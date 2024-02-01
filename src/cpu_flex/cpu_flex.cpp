@@ -414,4 +414,13 @@ namespace mips_sim {
         }
     }
 
+    bool CpuFlex::is_hdu_enabled(){
+        return hdu->is_enabled();
+    }
+
+    bool CpuFlex::is_fu_enabled(){
+        return fu->is_enabled();
+    }
+    
+
 } //namespace

@@ -158,6 +158,8 @@ namespace mips_sim {
 
         bool stall = false;
 
+        int is_syscall = 0;
+
         if (instruction.opcode == 0 && instruction.funct == SUBOP_SYSCALL)
         {   
             //stalls until previous instructions finished
@@ -165,7 +167,11 @@ namespace mips_sim {
                         hardware_manager->get_stage_instruction(STAGE_EX) == 0 &&
                         hardware_manager->get_stage_instruction(STAGE_ID) == instruction_code && // previous cycle instruction is now in ex
                         hardware_manager->get_fp_coprocessor_active_instructions_count() == 0); //FP coprocessor is empty
+            
+            is_syscall = true;
         }
+
+        hardware_manager->add_instruction_signal(STAGE_ID, "SYSCALL", is_syscall);
 
         if (instruction.opcode == OP_FTYPE && instruction.cop != 8) // BC1T and BC1F wont go to CP1
         {
@@ -267,6 +273,7 @@ namespace mips_sim {
             /* integer unit */
             uint32_t rs_value = read_register(instruction.rs);
             uint32_t rt_value;
+            int use_rt = 0;
             if (control_unit->test(microinstruction, SIG_REGBANK))
                 rt_value = read_fp_register(instruction.rt);
             else
@@ -304,6 +311,7 @@ namespace mips_sim {
                         || instruction.opcode == OP_SWC1)
                     {
                         stall |= hdu->detect_hazard(instruction.rt, can_forward, (instruction.opcode == OP_SWC1), (instruction.opcode == OP_SWC1 || instruction.opcode == OP_LWC1));
+                        use_rt = 1;
                     }
                 }
 
@@ -312,7 +320,9 @@ namespace mips_sim {
                 }
 
                 if (stall) cout << "   Hazard detected: Pipeline stall" << endl;
-            } 
+            }
+            
+            hardware_manager->add_instruction_signal(STAGE_ID, "USE_RT", use_rt);
             hardware_manager->add_instruction_signal(STAGE_ID, "STALL", stall);
             pc_write = !stall;
             if (stall)
