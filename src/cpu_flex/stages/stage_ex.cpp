@@ -79,7 +79,6 @@ namespace mips_sim {
         /* forwarding unit */
         if (fu->is_enabled())
         {   
-            uint32_t rt_value;
             rs_value = fu->forward_register(rs, rs_value, false, std::cout);
             int rs_forward = fu->get_forwarded_from();
             hardware_manager->add_instruction_signal(STAGE_EX, "RS_FU", rs_forward);
