@@ -88,7 +88,6 @@ namespace mips_sim {
         if (control_unit->test(microinstruction, SIG_MEMREAD))
         {
             std::cout << "   MEM read 0x" << Utils::hex32(mem_addr);
-            uint32_t word_read {};
             error = memory->mem_read_32_no_excep(mem_addr, &word_read);
             if (error.id){ // exception happened
                 return 1;
