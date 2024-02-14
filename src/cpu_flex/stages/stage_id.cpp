@@ -414,7 +414,7 @@ namespace mips_sim {
                 hardware_manager->add_instruction_signal(STAGE_ID, "FP_REG2", 
                         (instruction.opcode == OP_FTYPE && instruction.cop != 8) || (instruction.opcode == OP_SWC1));
 
-                hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
+                hardware_manager->add_instruction_signal(STAGE_ID, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
        
             }
         }

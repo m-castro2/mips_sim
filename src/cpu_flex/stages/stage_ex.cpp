@@ -208,7 +208,7 @@ namespace mips_sim {
 
         hardware_manager->add_instruction_signal(STAGE_EX, "MEM_READ", control_unit->test(microinstruction, SIG_MEMREAD));
 
-        hardware_manager->add_instruction_signal(STAGE_MEM, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
+        hardware_manager->add_instruction_signal(STAGE_EX, "MEM_2_REG", control_unit->test(microinstruction, SIG_MEM2REG));
 
         return 0;
     }
